@@ -1,0 +1,275 @@
+﻿using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+
+namespace HazunaV2;
+
+public partial class MainWindow : Window
+{
+    private static readonly Dictionary<string, string> Descriptions = new()
+    {
+        ["Dashboard"] = "Ringkasan aplikasi dan status koneksi.",
+        ["Gift Rules"] = "Hubungkan gift dengan tombol, suara, dan media dari pustaka. Durasi = lama satu giliran. Per gift = tiap gift dalam kombo jadi satu giliran.",
+        ["Media & Sounds"] = "Pustaka suara dan media. Atur urutan dengan ▲▼, pilih jenisnya, lalu pakai di Gift Rules.",
+        ["Top Gifters"] = "Overlay leaderboard penonton. Saat ini memakai data uji, belum terhubung ke TikTok.",
+        ["Settings"] = "Pengaturan aplikasi. Klik Simpan Pengaturan agar perubahan tersimpan.",
+        ["Text to Speech"] = "Membaca komentar TikTok LIVE dengan suara. Komentar dibersihkan dulu, lalu dibaca satu per satu.",
+        ["Voice Changer"] = "Mengubah suara mikrofon Anda secara real-time (nada dan efek). Kirim ke VB-Cable agar terdengar di LIVE.",
+        ["AI Reply"] = "Menjawab komentar penonton secara otomatis dengan AI, lalu membacakannya lewat suara. Memakai API berbayar.",
+    };
+
+    private static readonly string[] TestNames =
+        { "Rina", "Budi", "Sari", "Dimas", "Putri", "Andi", "Wulan", "Fajar" };
+    private static readonly int[] TestDiamonds = { 1, 5, 10, 30, 100, 500 };
+
+    private readonly ObservableCollection<GiftRule> _rules;
+    private readonly ObservableCollection<MediaItem> _library = AppData.Library;
+    private readonly Leaderboard _board = new();
+    private readonly MediaPlayer _player = new();
+    private OverlayWindow? _overlay;
+    private string _currentPage = "";
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        SourceInitialized += (s, e) => DarkTitleBar.Apply(this);
+
+        _rules = RuleStore.Load();
+        RulesGrid.ItemsSource = _rules;
+
+        InitLibrary();
+
+        BoardGrid.ItemsSource = _board.Top;
+
+        _player.MediaFailed += (s, e) =>
+            AddLog("   ! Gagal memutar suara: " + e.ErrorException?.Message);
+
+        InitSettings();
+        InitSidebar();
+        InitGifts();
+        InitDashboard();
+        InitTts();
+        InitAi();
+        InitVoiceChanger();
+        InitConnection();
+        ShowPage("Dashboard");
+    }
+
+    // ---------- Navigasi ----------
+
+    private void Nav_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string name)
+            ShowPage(name);
+    }
+
+    private void ShowPage(string name)
+    {
+        bool changed = name != _currentPage;
+        _currentPage = name;
+
+        PageTitle.Text = name;
+        PageDesc.Text = Descriptions.TryGetValue(name, out var d) ? d : "";
+
+        DashboardPage.Visibility = name == "Dashboard" ? Visibility.Visible : Visibility.Collapsed;
+        GiftRulesPage.Visibility = name == "Gift Rules" ? Visibility.Visible : Visibility.Collapsed;
+        MediaPage.Visibility = name == "Media & Sounds" ? Visibility.Visible : Visibility.Collapsed;
+        TopGiftersPage.Visibility = name == "Top Gifters" ? Visibility.Visible : Visibility.Collapsed;
+        TtsPage.Visibility = name == "Text to Speech" ? Visibility.Visible : Visibility.Collapsed;
+        AiPage.Visibility = name == "AI Reply" ? Visibility.Visible : Visibility.Collapsed;
+        VcPage.Visibility = name == "Voice Changer" ? Visibility.Visible : Visibility.Collapsed;
+        SettingsPage.Visibility = name == "Settings" ? Visibility.Visible : Visibility.Collapsed;
+
+        if (name == "Media & Sounds")
+            LibraryGrid.Items.Refresh();
+        if (name == "Dashboard")
+            RefreshDashboard();
+
+        foreach (var child in NavPanel.Children)
+        {
+            if (child is RadioButton rb)
+                rb.IsChecked = (rb.Tag as string) == name;
+        }
+
+        if (changed)
+        {
+            FrameworkElement? page = name switch
+            {
+                "Dashboard" => DashboardPage,
+                "Gift Rules" => GiftRulesPage,
+                "Media & Sounds" => MediaPage,
+                "Top Gifters" => TopGiftersPage,
+                "Text to Speech" => TtsPage,
+                "AI Reply" => AiPage,
+                "Voice Changer" => VcPage,
+                "Settings" => SettingsPage,
+                _ => null
+            };
+            if (page != null)
+                AnimateIn(page);
+        }
+    }
+
+    private static void AnimateIn(FrameworkElement el)
+    {
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var slide = new TranslateTransform(0, 14);
+        el.RenderTransform = slide;
+
+        el.BeginAnimation(UIElement.OpacityProperty,
+            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)) { EasingFunction = ease });
+        slide.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(14, 0, TimeSpan.FromMilliseconds(320)) { EasingFunction = ease });
+    }
+
+    // ---------- Suara ----------
+
+    private void PlaySound(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            MessageBox.Show("Belum ada file suara yang dipilih.");
+            return;
+        }
+        if (!System.IO.File.Exists(path))
+        {
+            MessageBox.Show("File tidak ditemukan:\n" + path);
+            return;
+        }
+
+        _player.Stop();
+        _player.Open(new Uri(path));
+        _player.Volume = _settings.SoundVolume / 100.0;
+        _player.Play();
+    }
+
+    private void StopSound_Click(object sender, RoutedEventArgs e) => _player.Stop();
+
+    // ---------- Gift Rules ----------
+
+    private void AddRule_Click(object sender, RoutedEventArgs e)
+    {
+                _rules.Add(new GiftRule { GiftName = "", Key = "" });
+        RuleStore.Save(_rules);
+    }
+
+    private void TriggerChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        // Simpan hanya kalau diubah pengguna (bukan saat baris dimuat)
+        if (sender is System.Windows.Controls.ComboBox cb && (cb.IsDropDownOpen || cb.IsKeyboardFocusWithin))
+            RuleStore.Save(_rules);
+    }
+
+    private void DeleteRule_Click(object sender, RoutedEventArgs e)
+    {
+        if (RulesGrid.SelectedItem is GiftRule r)
+        {
+            _rules.Remove(r);
+            RuleStore.Save(_rules);
+        }
+    }
+
+    private void PickKey_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not GiftRule rule) return;
+
+        var dlg = new KeyPickerWindow(rule.Key) { Owner = this };
+        if (dlg.ShowDialog() == true)
+        {
+            rule.Key = dlg.Result;
+            RuleStore.Save(_rules);
+        }
+    }
+
+    // ---------- Top Gifters ----------
+
+    private void ToggleOverlay_Click(object sender, RoutedEventArgs e)
+    {
+        if (_overlay != null)
+        {
+            _overlay.Close();
+            return;
+        }
+
+        _overlay = new OverlayWindow(_board);
+        _overlay.SetChromaKey(ChromaCheck.IsChecked == true);
+        _overlay.Closed += (s, args) =>
+        {
+            _overlay = null;
+            OverlayToggleBtn.Content = "Buka Overlay";
+        };
+        _overlay.Show();
+        OverlayToggleBtn.Content = "Tutup Overlay";
+    }
+
+    private GiftMenuOverlay? _menuOverlay;
+
+    private void ToggleMenuOverlay_Click(object sender, RoutedEventArgs e)
+    {
+        if (_menuOverlay != null)
+        {
+            _menuOverlay.Close();
+            return;
+        }
+
+        _menuOverlay = new GiftMenuOverlay(_rules);
+        _menuOverlay.SetChromaKey(ChromaCheck.IsChecked == true);
+        _menuOverlay.Closed += (s, args) =>
+        {
+            _menuOverlay = null;
+            MenuOverlayBtn.Content = "Buka Overlay Menu Gift";
+        };
+        _menuOverlay.Show();
+        MenuOverlayBtn.Content = "Tutup Overlay Menu Gift";
+    }
+
+    private void AddTestGift_Click(object sender, RoutedEventArgs e)
+    {
+        var name = TestNames[Random.Shared.Next(TestNames.Length)];
+        var diamonds = TestDiamonds[Random.Shared.Next(TestDiamonds.Length)];
+        _board.AddGift(name, diamonds);
+    }
+
+    private void ResetBoard_Click(object sender, RoutedEventArgs e)
+    {
+        _board.Reset();
+        _overlay?.Refresh();
+    }
+
+    private void SortCombo_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox combo) return;
+        _board.SortByDiamonds = combo.SelectedIndex == 0;
+        _board.Rebuild();
+        _overlay?.Refresh();
+    }
+
+    private void ChromaCheck_Click(object sender, RoutedEventArgs e)
+    {
+        bool on = ChromaCheck.IsChecked == true;
+        _overlay?.SetChromaKey(on);
+        _menuOverlay?.SetChromaKey(on);
+        _settings.OverlayChromaKey = on;
+        SettingsStore.Save(_settings);
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        RulesGrid.CommitEdit(DataGridEditingUnit.Row, true);
+        RuleStore.Save(_rules);
+        LibraryStore.Save(_library);
+        _connector.Disconnect();
+        GiftCatalog.Flush();
+        _queue.Clear();
+        FlushTtsSettings();
+        FlushVcSettings();
+        _vc.Dispose();
+        _tts?.Dispose();
+        _overlay?.Close();
+        _menuOverlay?.Close();
+        _player.Close();
+        base.OnClosing(e);
+    }
+}
