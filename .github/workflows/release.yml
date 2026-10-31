@@ -19,7 +19,12 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Publish
-        run: dotnet publish HazunaV2/HazunaV2.csproj -c Release -r win-x64 --self-contained false -p:Version=1.0.${{ github.run_number }} -o out
+        shell: pwsh
+        run: |
+          $proj = Get-ChildItem -Recurse -Filter HazunaV2.csproj | Select-Object -First 1
+          if (-not $proj) { Write-Host "HazunaV2.csproj tidak ditemukan. Isi repo:"; Get-ChildItem -Recurse -Depth 2 | Select-Object -ExpandProperty FullName; exit 1 }
+          Write-Host "Proyek: $($proj.FullName)"
+          dotnet publish $proj.FullName -c Release -r win-x64 --self-contained false -p:Version=1.0.${{ github.run_number }} -o out
 
       - name: Zip
         shell: pwsh
