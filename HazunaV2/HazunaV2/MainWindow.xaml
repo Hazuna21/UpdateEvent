@@ -249,17 +249,35 @@
                             Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
                     <Button Content="Hapus Terpilih" Click="DeleteRule_Click"
                             Style="{StaticResource DangerButton}" Padding="16,8" Margin="0,0,8,0"/>
+                    <Button Content="Duplikat Terpilih" Click="DuplicateRule_Click"
+                            Style="{StaticResource GhostButton}" Padding="16,8" Margin="0,0,8,0"/>
                     <Button Content="Impor Daftar Gift" Click="LoadCatalog_Click"
                             Style="{StaticResource GhostButton}" Padding="16,8"/>
+                    <TextBlock Text="Geser ☰ untuk mengubah urutan. Aturan dengan nama efek yang sama digabung di overlay."
+                               Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
+                               Margin="14,0,0,0" TextWrapping="Wrap" MaxWidth="420"/>
                 </StackPanel>
 
-                <DataGrid x:Name="RulesGrid" Grid.Row="1"
+                <DataGrid x:Name="RulesGrid" Grid.Row="1" CanUserSortColumns="False" AllowDrop="True"
+                          DragOver="RulesGrid_DragOver" Drop="RulesGrid_Drop" DragLeave="RulesGrid_DragLeave"
                           AutoGenerateColumns="False" CanUserAddRows="False"
                           Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextBrush}"
                           RowBackground="{StaticResource SurfaceBrush}"
                           AlternatingRowBackground="{StaticResource Surface2Brush}"
                           HeadersVisibility="Column" SelectionMode="Single">
                     <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="" Width="40" IsReadOnly="True"
+                                                CanUserSort="False" CanUserReorder="False" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="☰" FontSize="18" Foreground="#8C97C2" Background="Transparent"
+                                               Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Cursor="SizeAll" ToolTip="Tahan dan geser untuk mengubah urutan"
+                                               PreviewMouseLeftButtonDown="RuleHandle_Down" PreviewMouseMove="RuleHandle_Move"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
                         <DataGridTemplateColumn Header="Aktif" Width="60">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>

@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
@@ -122,9 +123,16 @@ public class GiftMenuOverlay : Window
     }
 
     // ----- Status kartu -----
+    // Satu muka kartu = satu efek. Sumbernya bisa lebih dari satu (mis. Tap-tap + gift Heart Me).
+    private sealed class Face
+    {
+        public string Effect = "";
+        public List<GiftRule> Rules = new();
+    }
+
     private sealed class CardState
     {
-        public List<GiftRule> Rules = new();
+        public List<Face> Faces = new();
         public int Face;
         public int Index;
         public Grid Root = null!;
@@ -251,7 +259,7 @@ public class GiftMenuOverlay : Window
         Loaded += (s, e) =>
         {
             StartFloating();
-            _signature = Signature(Groups());
+            _signature = Signature(Cards());
             BuildPage(entrance: true);
             _pageTimer.Start();
             _flipTimer.Start();
@@ -304,8 +312,7 @@ public class GiftMenuOverlay : Window
             return;
         }
 
-        var groups = Groups();
-        var sig = Signature(groups);
+        var sig = Signature(Cards());
         if (sig == _signature && !_forceRefresh) return;
 
         _signature = sig;
@@ -319,26 +326,67 @@ public class GiftMenuOverlay : Window
     private List<GiftRule> Visible() =>
         _rules.Where(r => r.Enabled && !string.IsNullOrWhiteSpace(r.EffectName)).ToList();
 
-    // Gift yang sama digabung dalam satu kartu (Tap-tap, Follow, Share juga masing-masing satu kartu)
-    private List<List<GiftRule>> Groups()
+    // Susunan kartu:
+    // 1) Aturan dengan nama efek yang sama digabung jadi satu muka (satu efek, banyak sumber).
+    // 2) Muka-muka yang berbagi sumber yang sama (gift yang sama, atau sama-sama Tap-tap) ditaruh
+    //    dalam satu kartu dan berputar bergantian.
+    // Urutan kartu dan muka mengikuti urutan aturan di Gift Rules.
+    private List<List<Face>> Cards()
     {
-        var groups = new List<List<GiftRule>>();
-        var index = new Dictionary<string, List<GiftRule>>();
+        var faces = new List<Face>();
+        var byEffect = new Dictionary<string, Face>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var r in Visible())
         {
-            string key = GroupKey(r);
-            if (!index.TryGetValue(key, out var list))
+            string effect = r.EffectName.Trim();
+            if (!byEffect.TryGetValue(effect, out var face))
             {
-                list = new List<GiftRule>();
-                index[key] = list;
-                groups.Add(list);
+                face = new Face { Effect = effect };
+                byEffect[effect] = face;
+                faces.Add(face);
             }
-            list.Add(r);
+            face.Rules.Add(r);
         }
-        return groups;
+
+        // Gabungkan muka yang berbagi sumber (union-find sederhana)
+        int[] parent = Enumerable.Range(0, faces.Count).ToArray();
+        int Find(int x) { while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }
+
+        var firstBySource = new Dictionary<string, int>();
+        for (int i = 0; i < faces.Count; i++)
+        {
+            foreach (var r in faces[i].Rules)
+            {
+                string key = GroupKey(r);
+                if (firstBySource.TryGetValue(key, out int j))
+                {
+                    int a = Find(i), b = Find(j);
+                    if (a != b) parent[Math.Max(a, b)] = Math.Min(a, b);
+                }
+                else
+                {
+                    firstBySource[key] = i;
+                }
+            }
+        }
+
+        var cards = new List<List<Face>>();
+        var byRoot = new Dictionary<int, List<Face>>();
+        for (int i = 0; i < faces.Count; i++)
+        {
+            int root = Find(i);
+            if (!byRoot.TryGetValue(root, out var list))
+            {
+                list = new List<Face>();
+                byRoot[root] = list;
+                cards.Add(list);
+            }
+            list.Add(faces[i]);
+        }
+        return cards;
     }
 
+    // Identitas sumber: gift yang sama (per ID atau nama), atau jenis Tap-tap / Follow / Share
     private static string GroupKey(GiftRule r) => r.Trigger switch
     {
         RuleTrigger.Gift => r.GiftId != 0 ? "G#" + r.GiftId : "G:" + r.GiftName.Trim().ToLowerInvariant(),
@@ -347,9 +395,9 @@ public class GiftMenuOverlay : Window
         _ => "S"
     };
 
-    private static string Signature(List<List<GiftRule>> groups) =>
-        string.Join("||", groups.Select(g => string.Join("|",
-            g.Select(r => $"{r.Trigger}:{r.GiftId}:{r.GiftName}:{r.LikeCount}:{r.EffectName}"))));
+    private static string Signature(List<List<Face>> cards) =>
+        string.Join("||", cards.Select(c => string.Join("//", c.Select(f =>
+            f.Effect + "=" + string.Join("|", f.Rules.Select(r => $"{r.Trigger}:{r.GiftId}:{r.GiftName}:{r.LikeCount}"))))));
 
     private static int PageCount(int groups) => Math.Max(1, (int)Math.Ceiling(groups / (double)PerPage));
 
@@ -357,7 +405,7 @@ public class GiftMenuOverlay : Window
 
     private void NextPage()
     {
-        int pages = PageCount(Groups().Count);
+        int pages = PageCount(Cards().Count);
         if (pages <= 1 || _transitioning)
         {
             RestartProgress(pages);
@@ -398,15 +446,15 @@ public class GiftMenuOverlay : Window
 
     private void BuildPage(bool entrance)
     {
-        var groups = Groups();
-        int pages = PageCount(groups.Count);
+        var cards = Cards();
+        int pages = PageCount(cards.Count);
         if (_page >= pages) _page = 0;
 
         _cards.Clear();
         _byRule.Clear();
         _rowsPanel.Children.Clear();
 
-        var pageGroups = groups.Skip(_page * PerPage).Take(PerPage).ToList();
+        var pageGroups = cards.Skip(_page * PerPage).Take(PerPage).ToList();
 
         if (pageGroups.Count == 0)
         {
@@ -422,7 +470,7 @@ public class GiftMenuOverlay : Window
                 {
                     var st = BuildCard(pageGroups[i], i, entrance);
                     _cards.Add(st);
-                    foreach (var r in pageGroups[i]) _byRule[r] = st;
+                    foreach (var f in pageGroups[i]) foreach (var r in f.Rules) _byRule[r] = st;
                     row.Children.Add(st.Root);
                 }
                 _rowsPanel.Children.Add(row);
@@ -482,9 +530,9 @@ public class GiftMenuOverlay : Window
 
     // ---------- Kartu ----------
 
-    private CardState BuildCard(List<GiftRule> rules, int index, bool entrance)
+    private CardState BuildCard(List<Face> faces, int index, bool entrance)
     {
-        var st = new CardState { Rules = rules, Index = index };
+        var st = new CardState { Faces = faces, Index = index };
 
         // Bingkai statis (judul, efek, garis): di-cache sebagai bitmap supaya tidak digambar ulang tiap frame
         var inner = new Grid();
@@ -579,14 +627,14 @@ public class GiftMenuOverlay : Window
         return st;
     }
 
-    // Menampilkan satu efek (muka) dari kartu: judul, ikon, dan nama efek
+    // Menampilkan satu muka kartu: judul (semua sumbernya), ikon-ikon sumber, dan nama efek
     private void SetFace(CardState st, int face)
     {
-        st.Face = face % st.Rules.Count;
-        var rule = st.Rules[st.Face];
+        st.Face = face % st.Faces.Count;
+        var f = st.Faces[st.Face];
 
-        string title = rule.OverlayTitle.ToUpperInvariant();
-        string effect = rule.EffectName.Trim().ToUpperInvariant();
+        string title = string.Join(" + ", f.Rules.Select(r => r.OverlayTitle.ToUpperInvariant()).Distinct());
+        string effect = f.Effect.ToUpperInvariant();
 
         st.Title.Text = title;
         st.Title.FontSize = FontFor(title);
@@ -594,10 +642,23 @@ public class GiftMenuOverlay : Window
         st.Effect.FontSize = FontFor(effect);
 
         st.IconHost.Children.Clear();
-        st.IconHost.Children.Add(BuildIcon(rule, st.Index));
+        st.IconHost.Children.Add(BuildFaceIcons(f, st.Index));
     }
 
-    private static double FontFor(string text) => text.Length <= 12 ? 36 : text.Length <= 18 ? 30 : 25;
+    // Satu ikon per sumber yang berbeda (maksimal 3), berdampingan kalau lebih dari satu
+    private FrameworkElement BuildFaceIcons(Face face, int index)
+    {
+        var sources = face.Rules.GroupBy(GroupKey).Select(g => g.First()).Take(3).ToList();
+        if (sources.Count == 1)
+            return BuildIcon(sources[0], index);
+
+        var grid = new UniformGrid { Rows = 1, Columns = sources.Count };
+        foreach (var rule in sources)
+            grid.Children.Add(new Viewbox { Stretch = Stretch.Uniform, Margin = new Thickness(2), Child = BuildIcon(rule, index) });
+        return grid;
+    }
+
+    private static double FontFor(string text) => text.Length <= 12 ? 36 : text.Length <= 18 ? 30 : text.Length <= 26 ? 25 : 20;
 
     private static Border Divider(VerticalAlignment va, double offset) => new()
     {
@@ -714,7 +775,7 @@ public class GiftMenuOverlay : Window
         int k = 0;
         foreach (var st in _cards)
         {
-            if (st.Rules.Count < 2) continue;
+            if (st.Faces.Count < 2) continue;
             var card = st;
             int delay = k++ * 160;
             Dispatcher.InvokeAsync(async () =>
@@ -763,8 +824,8 @@ public class GiftMenuOverlay : Window
     {
         Dispatcher.InvokeAsync(async () =>
         {
-            var groups = Groups();
-            int idx = groups.FindIndex(g => g.Contains(rule));
+            var cards = Cards();
+            int idx = cards.FindIndex(c => c.Any(f => f.Rules.Contains(rule)));
             if (idx < 0) return;
 
             int page = idx / PerPage;
@@ -777,7 +838,7 @@ public class GiftMenuOverlay : Window
 
             if (!_byRule.TryGetValue(rule, out var st)) return;
 
-            int face = st.Rules.IndexOf(rule);
+            int face = st.Faces.FindIndex(f => f.Rules.Contains(rule));
             if (face >= 0 && face != st.Face)
                 SetFace(st, face);
 
