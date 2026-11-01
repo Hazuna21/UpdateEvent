@@ -28,7 +28,8 @@ public partial class MainWindow
         _engine = new GiftEngine(_rules, _board, _queue)
         {
             OnLog = AddLog,
-            OnRulesChanged = () => RuleStore.Save(_rules)
+            OnRulesChanged = () => RuleStore.Save(_rules),
+            OnRuleFired = r => _menuOverlay?.Pulse(r)
         };
 
         UpdateQueueText();

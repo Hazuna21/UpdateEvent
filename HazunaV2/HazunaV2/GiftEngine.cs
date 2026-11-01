@@ -11,6 +11,7 @@ public class GiftEngine
 
     public Action<string>? OnLog { get; set; }
     public Action? OnRulesChanged { get; set; }
+    public Action<GiftRule>? OnRuleFired { get; set; }
 
     public GiftEngine(IEnumerable<GiftRule> rules, Leaderboard board, ActionQueue queue)
     {
@@ -123,6 +124,7 @@ public class GiftEngine
                 i == 1 ? firstDelay : 0));
         }
         _queue.EnqueueRange(batch);
+        OnRuleFired?.Invoke(rule);
 
         OnLog?.Invoke($"   Masuk antrean: {units}x, {duration:0.#} dtk per giliran " +
                       $"(≈ {ActionQueue.FormatSeconds(units * duration)})");
