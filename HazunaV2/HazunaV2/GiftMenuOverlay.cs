@@ -1,9 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
@@ -13,45 +14,160 @@ using System.Windows.Threading;
 
 namespace HazunaV2;
 
-// Overlay "menu gift": kartu berisi judul (gift / tap-tap / follow / share), gambar, dan nama efek.
-// Maksimal 15 kartu per halaman (5 kolom x 3 baris). Kalau lebih, halaman bergantian tiap 30 detik.
-// Animasi: kartu muncul bergantian, ikon melayang, kilau menyapu kartu, halaman bergeser halus,
-// dan kartu "menyala" saat aturannya terpicu.
+// Overlay "menu gift" berukuran tetap 9 x 5 inci (kanvas HD 1920 x 1067, digambar vektor jadi tetap tajam).
+// - Gift yang sama digabung dalam satu kartu; kartu berputar (depan/belakang) bergantian antar efeknya.
+// - Kartu mengisi dari atas dan rata tengah; setelah penuh (15 kartu) pindah ke halaman berikutnya (30 dtk).
+// - Dioptimalkan: bagian statis di-cache sebagai bitmap, animasi hanya menggerakkan transform,
+//   gambar gift diunduh di latar belakang, dan rebuild hanya jika isi benar-benar berubah.
 public class GiftMenuOverlay : Window
 {
+    // ----- Ukuran -----
+    private const double WidthInches = 9, HeightInches = 5;
+    private const double ScreenScale = 1.0;             // 1 = 9x5 inci (96 dpi). Ubah ke ~2.22 untuk jendela 1920 px asli.
+    private const double DesignW = 1920, DesignH = 1067;// kanvas HD (9:5)
+
+    // ----- Tata letak -----
     private const int PerPage = 15;
     private const int Columns = 5;
-    private const double CardW = 190, CardH = 240, Gap = 6, Radius = 18;
+    private const double CardW = 356, CardH = 300, CardGap = 7, CardRadius = 26;
+    private const double TopPad = 24, PagerHeight = 56;
+
     private static readonly TimeSpan PageInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan FlipInterval = TimeSpan.FromMilliseconds(3400);
+    private static readonly TimeSpan ShineInterval = TimeSpan.FromMilliseconds(1700);
 
-    // Tema ungu gelap: kartu gelap, garis ungu neon, tulisan putih tebal dengan kontur gelap
-    private static readonly Brush Neon = new SolidColorBrush(Color.FromRgb(0xA7, 0x6B, 0xFF));
-    private static readonly Brush TextWhite = new SolidColorBrush(Colors.White);
-    private static readonly Brush TextLilac = new SolidColorBrush(Color.FromRgb(0xF0, 0xC8, 0xFF));
+    // ----- Gaya (semua beku supaya murah) -----
+    private static readonly Brush Neon = Frozen(new SolidColorBrush(Color.FromRgb(0xA7, 0x6B, 0xFF)));
+    private static readonly Brush TextWhite = Frozen(new SolidColorBrush(Colors.White));
+    private static readonly Brush TextLilac = Frozen(new SolidColorBrush(Color.FromRgb(0xF0, 0xC8, 0xFF)));
+    private static readonly Brush DividerBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x66, 0xC0, 0x84, 0xFC)));
+    private static readonly Brush FlashBrush = Frozen(new SolidColorBrush(Colors.White));
+    private static readonly Brush GoldBrush = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0xC8, 0x3D)));
     private static readonly FontFamily CardFont = new("Segoe UI Black, Segoe UI, Arial");
-    private static readonly Dictionary<string, ImageSource> ImageCache = new();
 
-    // Pasangan warna atas -> bawah tiap kartu (berganti-ganti)
-    private static readonly (Color Top, Color Bottom)[] Palettes =
+    private static readonly DropShadowEffect TextShadow = FrozenEffect(new DropShadowEffect
     {
-        (Color.FromRgb(0x3E, 0x1C, 0x72), Color.FromRgb(0x16, 0x0A, 0x2E)),
-        (Color.FromRgb(0x4B, 0x20, 0x84), Color.FromRgb(0x1D, 0x0B, 0x3A)),
-        (Color.FromRgb(0x33, 0x16, 0x62), Color.FromRgb(0x12, 0x08, 0x26)),
-        (Color.FromRgb(0x56, 0x26, 0x96), Color.FromRgb(0x20, 0x0D, 0x40)),
+        Color = Color.FromRgb(0x0A, 0x02, 0x1A), BlurRadius = 8, ShadowDepth = 3, Direction = 270, Opacity = 1
+    });
+
+    private static readonly Brush[] FrameBrushes =
+    {
+        Gradient(Color.FromRgb(0x3E, 0x1C, 0x72), Color.FromRgb(0x16, 0x0A, 0x2E)),
+        Gradient(Color.FromRgb(0x4B, 0x20, 0x84), Color.FromRgb(0x1D, 0x0B, 0x3A)),
+        Gradient(Color.FromRgb(0x33, 0x16, 0x62), Color.FromRgb(0x12, 0x08, 0x26)),
+        Gradient(Color.FromRgb(0x56, 0x26, 0x96), Color.FromRgb(0x20, 0x0D, 0x40)),
+    };
+
+    private static readonly Brush ShineBrush = Frozen(new LinearGradientBrush(new GradientStopCollection
+    {
+        new GradientStop(Color.FromArgb(0x00, 0xFF, 0xFF, 0xFF), 0),
+        new GradientStop(Color.FromArgb(0x70, 0xFF, 0xFF, 0xFF), 0.5),
+        new GradientStop(Color.FromArgb(0x00, 0xFF, 0xFF, 0xFF), 1)
+    }, 0));
+
+    private static readonly BitmapCache Cache = FrozenCache(new BitmapCache(1.0));
+
+    // Cahaya di belakang ikon (statis)
+    private static readonly Brush IconGlowBrush = Frozen(new RadialGradientBrush(
+        Color.FromArgb(0x90, 0xA8, 0x55, 0xF7), Color.FromArgb(0x00, 0xA8, 0x55, 0xF7)));
+
+    private static T Frozen<T>(T f) where T : Freezable { f.Freeze(); return f; }
+    private static DropShadowEffect FrozenEffect(DropShadowEffect e) { e.Freeze(); return e; }
+    private static BitmapCache FrozenCache(BitmapCache c) { c.Freeze(); return c; }
+    private static Brush Gradient(Color top, Color bottom) => Frozen(new LinearGradientBrush(top, bottom, 90));
+
+    private static T Fps<T>(T t, int fps) where T : Timeline
+    {
+        Timeline.SetDesiredFrameRate(t, fps);
+        return t;
+    }
+
+    // ----- Gambar gift (diunduh di latar belakang, tidak menahan UI) -----
+    private static readonly Dictionary<string, ImageSource> ImageCache = new();
+    private static readonly HashSet<string> ImageLoading = new();
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private static event Action? ImageReady;
+
+    private static ImageSource? GetImage(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return null;
+        lock (ImageCache)
+            if (ImageCache.TryGetValue(url, out var cached)) return cached;
+
+        lock (ImageLoading)
+            if (!ImageLoading.Add(url)) return null;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var bytes = await Http.GetByteArrayAsync(url);
+                using var ms = new MemoryStream(bytes);
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.DecodePixelWidth = 400;     // HD
+                bmp.StreamSource = ms;
+                bmp.EndInit();
+                bmp.Freeze();
+                lock (ImageCache) ImageCache[url] = bmp;
+                ImageReady?.Invoke();
+            }
+            catch
+            {
+                // gagal: tetap pakai ikon emoji
+            }
+        });
+        return null;
+    }
+
+    // ----- Status kartu -----
+    private sealed class CardState
+    {
+        public List<GiftRule> Rules = new();
+        public int Face;
+        public int Index;
+        public Grid Root = null!;
+        public TextBlock Title = null!;
+        public TextBlock Effect = null!;
+        public Grid IconHost = null!;
+        public ScaleTransform Flip = new(1, 1);
+        public ScaleTransform Pop = new(1, 1);
+        public Border Ring = null!;
+        public Border Flash = null!;
+        public Rectangle Shine = null!;
+        public TranslateTransform ShineMove = new();
+        public bool Flipping;
+    }
+
+    private static readonly HashSet<string> RelevantProps = new()
+    {
+        nameof(GiftRule.Enabled), nameof(GiftRule.EffectName), nameof(GiftRule.Trigger),
+        nameof(GiftRule.LikeCount), nameof(GiftRule.GiftName), nameof(GiftRule.GiftId)
     };
 
     private readonly ObservableCollection<GiftRule> _rules;
-    private readonly Border _strip = new();
+    private readonly StackPanel _rowsPanel = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top };
     private readonly StackPanel _dots = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Border _progressBack = new();
     private readonly Border _progressFill = new();
     private readonly ScaleTransform _progressScale = new(0, 1);
+    private readonly TranslateTransform _rowsMove = new();
+    private readonly TranslateTransform[] _floats = { new(), new(), new() };
+
     private readonly DispatcherTimer _pageTimer = new() { Interval = PageInterval };
+    private readonly DispatcherTimer _flipTimer = new() { Interval = FlipInterval };
+    private readonly DispatcherTimer _shineTimer = new() { Interval = ShineInterval };
     private readonly DispatcherTimer _refreshTimer = new() { Interval = TimeSpan.FromMilliseconds(300) };
-    private readonly Dictionary<GiftRule, Border> _cards = new();
+
+    private readonly List<CardState> _cards = new();
+    private readonly Dictionary<GiftRule, CardState> _byRule = new();
 
     private int _page;
+    private int _shineIndex;
     private bool _transitioning;
+    private bool _forceRefresh;
+    private string _signature = "";
 
     public GiftMenuOverlay(ObservableCollection<GiftRule> rules)
     {
@@ -59,7 +175,7 @@ public class GiftMenuOverlay : Window
 
         Title = "Menu Gift Overlay";
         WindowStyle = WindowStyle.None;
-        ResizeMode = ResizeMode.CanResizeWithGrip;
+        ResizeMode = ResizeMode.NoResize;
         AllowsTransparency = true;
         Background = Brushes.Transparent;
         Topmost = true;
@@ -67,59 +183,79 @@ public class GiftMenuOverlay : Window
         ShowActivated = false;
         Left = 40;
         Top = 40;
+        Width = WidthInches * 96 * ScreenScale;
+        Height = HeightInches * 96 * ScreenScale;
 
-        _strip.RenderTransform = new TranslateTransform();
+        UseLayoutRounding = false;
+        SnapsToDevicePixels = false;
+        RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
+        TextOptions.SetTextFormattingMode(this, TextFormattingMode.Ideal);
+        TextOptions.SetTextRenderingMode(this, TextRenderingMode.Grayscale);
 
-        // Bilah waktu menuju halaman berikutnya
-        _progressBack.Height = 5;
-        _progressBack.CornerRadius = new CornerRadius(3);
-        _progressBack.Background = new SolidColorBrush(Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF));
-        _progressBack.Margin = new Thickness(Gap, 10, Gap, 0);
+        // ----- Kanvas HD -----
+        var canvas = new Grid { Width = DesignW, Height = DesignH };
+
+        _rowsPanel.Margin = new Thickness(0, TopPad, 0, 0);
+        _rowsPanel.RenderTransform = _rowsMove;
+        canvas.Children.Add(_rowsPanel);
+
+        _progressBack.Height = 8;
+        _progressBack.Width = 760;
+        _progressBack.CornerRadius = new CornerRadius(4);
+        _progressBack.Background = Frozen(new SolidColorBrush(Color.FromArgb(0x55, 0xC0, 0x84, 0xFC)));
         _progressBack.ClipToBounds = true;
-        _progressFill.CornerRadius = new CornerRadius(3);
-        _progressFill.Background = new LinearGradientBrush(
-            Color.FromRgb(0xE8, 0x79, 0xF9), Color.FromRgb(0x8B, 0x5C, 0xF6), 0);
+        _progressFill.CornerRadius = new CornerRadius(4);
+        _progressFill.Background = Frozen(new LinearGradientBrush(
+            Color.FromRgb(0xE8, 0x79, 0xF9), Color.FromRgb(0x8B, 0x5C, 0xF6), 0));
         _progressFill.RenderTransformOrigin = new Point(0, 0.5);
         _progressFill.RenderTransform = _progressScale;
         _progressBack.Child = _progressFill;
 
-        _dots.Margin = new Thickness(0, 8, 0, 0);
+        var pager = new StackPanel
+        {
+            VerticalAlignment = VerticalAlignment.Bottom,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 14),
+            Height = PagerHeight - 14
+        };
+        pager.Children.Add(_progressBack);
+        _dots.Margin = new Thickness(0, 10, 0, 0);
+        pager.Children.Add(_dots);
+        canvas.Children.Add(pager);
 
-        var stack = new StackPanel { Margin = new Thickness(10) };
-        stack.Children.Add(_strip);
-        stack.Children.Add(_progressBack);
-        stack.Children.Add(_dots);
-        Content = new Viewbox { Stretch = Stretch.Uniform, Child = stack };
+        Content = new Viewbox { Stretch = Stretch.Uniform, Child = canvas };
 
         // Geser jendela dengan menahan klik kiri
-        MouseLeftButtonDown += (s, e) =>
-        {
-            if (e.OriginalSource is not ResizeGrip) DragMove();
-        };
+        MouseLeftButtonDown += (s, e) => DragMove();
 
-        // Ikuti perubahan aturan (tambah/hapus/ubah) dengan jeda singkat
         _rules.CollectionChanged += OnRulesChanged;
         foreach (var r in _rules) r.PropertyChanged += OnRuleProperty;
+        ImageReady += OnImageReady;
 
-        _refreshTimer.Tick += (s, e) => { _refreshTimer.Stop(); ShowPage(false); };
+        _refreshTimer.Tick += (s, e) => RefreshTick();
         _pageTimer.Tick += (s, e) => NextPage();
+        _flipTimer.Tick += (s, e) => FlipAll();
+        _shineTimer.Tick += (s, e) => ShineNext();
 
         Closed += (s, e) =>
         {
             _pageTimer.Stop();
+            _flipTimer.Stop();
+            _shineTimer.Stop();
             _refreshTimer.Stop();
+            ImageReady -= OnImageReady;
             _rules.CollectionChanged -= OnRulesChanged;
             foreach (var r in _rules) r.PropertyChanged -= OnRuleProperty;
         };
 
-        var rows = Math.Max(1, (int)Math.Ceiling(Math.Min(Visible().Count, PerPage) / (double)Columns));
-        Width = Columns * (CardW + Gap * 2) * 0.8 + 40;
-        Height = rows * (CardH + Gap * 2) * 0.8 + 90;
-
         Loaded += (s, e) =>
         {
+            StartFloating();
+            _signature = Signature(Groups());
             BuildPage(entrance: true);
             _pageTimer.Start();
+            _flipTimer.Start();
+            _shineTimer.Start();
         };
     }
 
@@ -137,7 +273,21 @@ public class GiftMenuOverlay : Window
         ScheduleRefresh();
     }
 
-    private void OnRuleProperty(object? s, PropertyChangedEventArgs e) => ScheduleRefresh();
+    private void OnRuleProperty(object? s, PropertyChangedEventArgs e)
+    {
+        // Hanya properti yang memengaruhi tampilan yang memicu pembaruan
+        if (e.PropertyName != null && RelevantProps.Contains(e.PropertyName))
+            ScheduleRefresh();
+    }
+
+    private void OnImageReady()
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            _forceRefresh = true;
+            ScheduleRefresh();
+        });
+    }
 
     private void ScheduleRefresh()
     {
@@ -145,17 +295,69 @@ public class GiftMenuOverlay : Window
         _refreshTimer.Start();
     }
 
+    private void RefreshTick()
+    {
+        _refreshTimer.Stop();
+        if (_transitioning)
+        {
+            _refreshTimer.Start();
+            return;
+        }
+
+        var groups = Groups();
+        var sig = Signature(groups);
+        if (sig == _signature && !_forceRefresh) return;
+
+        _signature = sig;
+        _forceRefresh = false;
+        BuildPage(entrance: false);
+    }
+
+    // ---------- Data ----------
+
     // Aturan yang tampil: aktif dan punya nama efek
     private List<GiftRule> Visible() =>
         _rules.Where(r => r.Enabled && !string.IsNullOrWhiteSpace(r.EffectName)).ToList();
 
-    private int PageCount(int items) => Math.Max(1, (int)Math.Ceiling(items / (double)PerPage));
+    // Gift yang sama digabung dalam satu kartu (Tap-tap, Follow, Share juga masing-masing satu kartu)
+    private List<List<GiftRule>> Groups()
+    {
+        var groups = new List<List<GiftRule>>();
+        var index = new Dictionary<string, List<GiftRule>>();
+
+        foreach (var r in Visible())
+        {
+            string key = GroupKey(r);
+            if (!index.TryGetValue(key, out var list))
+            {
+                list = new List<GiftRule>();
+                index[key] = list;
+                groups.Add(list);
+            }
+            list.Add(r);
+        }
+        return groups;
+    }
+
+    private static string GroupKey(GiftRule r) => r.Trigger switch
+    {
+        RuleTrigger.Gift => r.GiftId != 0 ? "G#" + r.GiftId : "G:" + r.GiftName.Trim().ToLowerInvariant(),
+        RuleTrigger.Like => "L",
+        RuleTrigger.Follow => "F",
+        _ => "S"
+    };
+
+    private static string Signature(List<List<GiftRule>> groups) =>
+        string.Join("||", groups.Select(g => string.Join("|",
+            g.Select(r => $"{r.Trigger}:{r.GiftId}:{r.GiftName}:{r.LikeCount}:{r.EffectName}"))));
+
+    private static int PageCount(int groups) => Math.Max(1, (int)Math.Ceiling(groups / (double)PerPage));
 
     // ---------- Halaman ----------
 
     private void NextPage()
     {
-        int pages = PageCount(Visible().Count);
+        int pages = PageCount(Groups().Count);
         if (pages <= 1 || _transitioning)
         {
             RestartProgress(pages);
@@ -163,61 +365,68 @@ public class GiftMenuOverlay : Window
         }
 
         _page = (_page + 1) % pages;
-        ShowPage(true);
+        TransitionToPage();
     }
 
-    // Menampilkan halaman saat ini. transition = geser keluar lalu masuk.
-    private void ShowPage(bool transition)
+    // Halaman lama bergeser keluar, halaman baru masuk. Selama bergeser, isinya di-cache jadi satu bitmap.
+    private void TransitionToPage()
     {
-        if (!transition || _strip.Child == null)
-        {
-            BuildPage(entrance: _strip.Child == null);
-            return;
-        }
-
         _transitioning = true;
-        var tt = (TranslateTransform)_strip.RenderTransform;
+        _rowsPanel.CacheMode = Cache;
 
-        var outX = new DoubleAnimation(0, -90, TimeSpan.FromMilliseconds(260)) { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } };
-        var outO = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(260));
+        var outX = Fps(new DoubleAnimation(0, -110, TimeSpan.FromMilliseconds(240))
+            { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } }, 60);
+        var outO = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(240));
         outO.Completed += (s, e) =>
         {
-            BuildPage(entrance: true);
+            BuildPage(entrance: false);
 
-            var inX = new DoubleAnimation(90, 0, TimeSpan.FromMilliseconds(420)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+            var inX = new DoubleAnimation(110, 0, TimeSpan.FromMilliseconds(380))
+                { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
             var inO = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300));
-            inO.Completed += (s2, e2) => _transitioning = false;
-            tt.BeginAnimation(TranslateTransform.XProperty, inX);
-            _strip.BeginAnimation(OpacityProperty, inO);
+            inO.Completed += (s2, e2) =>
+            {
+                _rowsPanel.CacheMode = null;
+                _transitioning = false;
+            };
+            _rowsMove.BeginAnimation(TranslateTransform.XProperty, inX);
+            _rowsPanel.BeginAnimation(OpacityProperty, inO);
         };
-        tt.BeginAnimation(TranslateTransform.XProperty, outX);
-        _strip.BeginAnimation(OpacityProperty, outO);
+        _rowsMove.BeginAnimation(TranslateTransform.XProperty, outX);
+        _rowsPanel.BeginAnimation(OpacityProperty, outO);
     }
 
     private void BuildPage(bool entrance)
     {
-        var items = Visible();
-        int pages = PageCount(items.Count);
+        var groups = Groups();
+        int pages = PageCount(groups.Count);
         if (_page >= pages) _page = 0;
 
         _cards.Clear();
-        var pageItems = items.Skip(_page * PerPage).Take(PerPage).ToList();
+        _byRule.Clear();
+        _rowsPanel.Children.Clear();
 
-        if (pageItems.Count == 0)
+        var pageGroups = groups.Skip(_page * PerPage).Take(PerPage).ToList();
+
+        if (pageGroups.Count == 0)
         {
-            _strip.Child = BuildEmptyCard();
+            _rowsPanel.Children.Add(BuildEmptyCard());
         }
         else
         {
-            var grid = new UniformGrid { Columns = Columns };
-            for (int i = 0; i < pageItems.Count; i++)
+            // Kartu mengisi dari atas, tiap baris rata tengah
+            for (int start = 0; start < pageGroups.Count; start += Columns)
             {
-                var card = BuildCard(pageItems[i], i);
-                _cards[pageItems[i]] = card;
-                grid.Children.Add(card);
-                if (entrance) PlayEntrance(card, i);
+                var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+                for (int i = start; i < Math.Min(start + Columns, pageGroups.Count); i++)
+                {
+                    var st = BuildCard(pageGroups[i], i, entrance);
+                    _cards.Add(st);
+                    foreach (var r in pageGroups[i]) _byRule[r] = st;
+                    row.Children.Add(st.Root);
+                }
+                _rowsPanel.Children.Add(row);
             }
-            _strip.Child = grid;
         }
 
         BuildDots(pages);
@@ -232,22 +441,20 @@ public class GiftMenuOverlay : Window
         for (int i = 0; i < pages; i++)
         {
             bool active = i == _page;
-            var dot = new Border
+            _dots.Children.Add(new Border
             {
-                Height = 10,
-                Width = 10,
-                CornerRadius = new CornerRadius(5),
-                Margin = new Thickness(4, 0, 4, 0),
-                Background = new SolidColorBrush(active ? Color.FromRgb(0xC0, 0x84, 0xFC) : Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF))
-            };
-            if (active)
-                dot.BeginAnimation(WidthProperty, new DoubleAnimation(10, 30, TimeSpan.FromMilliseconds(350))
-                    { EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.4 } });
-            _dots.Children.Add(dot);
+                Height = 14,
+                Width = active ? 44 : 14,
+                CornerRadius = new CornerRadius(7),
+                Margin = new Thickness(6, 0, 6, 0),
+                Background = active
+                    ? Frozen(new SolidColorBrush(Color.FromRgb(0xC0, 0x84, 0xFC)))
+                    : Frozen(new SolidColorBrush(Color.FromArgb(0x88, 0xFF, 0xFF, 0xFF)))
+            });
         }
     }
 
-    // Bilah waktu terisi penuh selama 30 detik, lalu halaman berganti
+    // Bilah waktu terisi selama 30 detik, lalu halaman berganti
     private void RestartProgress(int pages)
     {
         _progressBack.Visibility = pages > 1 ? Visibility.Visible : Visibility.Collapsed;
@@ -255,305 +462,309 @@ public class GiftMenuOverlay : Window
         _progressScale.ScaleX = 0;
 
         if (pages > 1)
-            _progressScale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0, 1, PageInterval));
+            _progressScale.BeginAnimation(ScaleTransform.ScaleXProperty, Fps(new DoubleAnimation(0, 1, PageInterval), 10));
 
         _pageTimer.Stop();
         _pageTimer.Start();
     }
 
-    private Border BuildEmptyCard()
+    private static Border BuildEmptyCard() => new()
     {
-        var text = Label("Belum ada efek.\nIsi kolom \"Efek (overlay)\" di Gift Rules.", 16, FontWeights.Black);
-        return new Border
-        {
-            Width = CardW * 3,
-            Height = 110,
-            Margin = new Thickness(Gap),
-            CornerRadius = new CornerRadius(Radius),
-            BorderBrush = Neon,
-            BorderThickness = new Thickness(3),
-            Background = new LinearGradientBrush(Palettes[0].Top, Palettes[0].Bottom, 90),
-            Child = text
-        };
-    }
+        Width = CardW * 3,
+        Height = 150,
+        Margin = new Thickness(CardGap),
+        CornerRadius = new CornerRadius(CardRadius),
+        BorderBrush = Neon,
+        BorderThickness = new Thickness(5),
+        Background = FrameBrushes[0],
+        Child = Label("Belum ada efek.\nIsi kolom \"Efek (overlay)\" di Gift Rules.", 30, TextWhite)
+    };
 
     // ---------- Kartu ----------
 
-    private Border BuildCard(GiftRule rule, int index)
+    private CardState BuildCard(List<GiftRule> rules, int index, bool entrance)
     {
-        var palette = Palettes[index % Palettes.Length];
+        var st = new CardState { Rules = rules, Index = index };
 
-        var grid = new Grid { Clip = new RectangleGeometry(new Rect(0, 0, CardW - 6, CardH - 6), Radius - 3, Radius - 3) };
-        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(58) });
-        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(58) });
+        // Bingkai statis (judul, efek, garis): di-cache sebagai bitmap supaya tidak digambar ulang tiap frame
+        var inner = new Grid();
+        inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(84) });
+        inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(84) });
 
-        var title = Label(rule.OverlayTitle.ToUpperInvariant(), 20, FontWeights.Black, TextWhite);
-        var icon = BuildIconArea(rule, index);
-        var effect = Label(rule.EffectName.Trim().ToUpperInvariant(), 20, FontWeights.Black, TextLilac);
+        st.Title = Label("", 36, TextWhite);
+        st.Effect = Label("", 36, TextLilac);
+        Grid.SetRow(st.Title, 0);
+        Grid.SetRow(st.Effect, 2);
+        inner.Children.Add(st.Title);
+        inner.Children.Add(st.Effect);
+        inner.Children.Add(Divider(VerticalAlignment.Top, 84));
+        inner.Children.Add(Divider(VerticalAlignment.Bottom, 84));
 
-        Grid.SetRow(title, 0);
-        Grid.SetRow(icon, 1);
-        Grid.SetRow(effect, 2);
-        grid.Children.Add(title);
-        grid.Children.Add(icon);
-        grid.Children.Add(effect);
-
-        // Garis pemisah tipis di bawah judul dan di atas efek
-        grid.Children.Add(Divider(0, VerticalAlignment.Bottom, 58));
-        grid.Children.Add(Divider(2, VerticalAlignment.Top, 0));
-
-        // Kilau yang menyapu kartu
-        var shine = BuildShine(index);
-        Grid.SetRowSpan(shine, 3);
-        grid.Children.Add(shine);
-
-        // Kilatan putih saat aturan terpicu
-        var flash = new Border
+        var frame = new Border
         {
-            Background = Brushes.White,
-            Opacity = 0,
-            IsHitTestVisible = false
-        };
-        Grid.SetRowSpan(flash, 3);
-        grid.Children.Add(flash);
-
-        var card = new Border
-        {
-            Width = CardW,
-            Height = CardH,
-            Margin = new Thickness(Gap),
-            CornerRadius = new CornerRadius(Radius),
+            CornerRadius = new CornerRadius(CardRadius),
             BorderBrush = Neon,
-            BorderThickness = new Thickness(3),
-            Background = new LinearGradientBrush(palette.Top, palette.Bottom, 90),
-            Effect = BaseShadow(),
-            RenderTransformOrigin = new Point(0.5, 0.5),
-            RenderTransform = new ScaleTransform(1, 1),
-            Child = grid,
-            Tag = flash
+            BorderThickness = new Thickness(5),
+            Background = FrameBrushes[index % FrameBrushes.Length],
+            CacheMode = Cache,
+            Child = inner
         };
-        return card;
-    }
 
-    private static DropShadowEffect BaseShadow() => new()
-    {
-        Color = Color.FromRgb(0x7C, 0x3A, 0xED),
-        BlurRadius = 18,
-        ShadowDepth = 0,
-        Opacity = 0.65
-    };
+        // Ikon (lapisan sendiri, di-cache; hanya digeser naik-turun)
+        st.IconHost = new Grid { Margin = new Thickness(0, 84, 0, 84), IsHitTestVisible = false };
 
-    private static Border Divider(int row, VerticalAlignment va, double marginTop)
-    {
-        var d = new Border
+        // Kilau (hanya aktif sebentar), kilatan putih, dan cincin emas saat terpicu
+        st.Shine = new Rectangle
         {
-            Height = 2,
-            Margin = new Thickness(14, 0, 14, 0),
-            Background = new SolidColorBrush(Color.FromArgb(0x66, 0xC0, 0x84, 0xFC)),
-            VerticalAlignment = va
-        };
-        Grid.SetRow(d, row);
-        return d;
-    }
-
-    private static Rectangle BuildShine(int index)
-    {
-        var move = new TranslateTransform(-140, 0);
-        var group = new TransformGroup();
-        group.Children.Add(new RotateTransform(20));
-        group.Children.Add(move);
-
-        var shine = new Rectangle
-        {
-            Width = 56,
+            Width = 110,
             Height = CardH * 1.8,
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Center,
             IsHitTestVisible = false,
-            RenderTransform = group,
-            Fill = new LinearGradientBrush(new GradientStopCollection
-            {
-                new GradientStop(Color.FromArgb(0x00, 0xFF, 0xFF, 0xFF), 0),
-                new GradientStop(Color.FromArgb(0x90, 0xFF, 0xFF, 0xFF), 0.5),
-                new GradientStop(Color.FromArgb(0x00, 0xFF, 0xFF, 0xFF), 1)
-            }, 0)
+            Visibility = Visibility.Collapsed,
+            Fill = ShineBrush,
+            RenderTransformOrigin = new Point(0.5, 0.5)
         };
+        var shineGroup = new TransformGroup();
+        shineGroup.Children.Add(new RotateTransform(20));
+        shineGroup.Children.Add(st.ShineMove);
+        st.Shine.RenderTransform = shineGroup;
 
-        // Menyapu sekali (1,3 dtk), lalu diam sampai putaran 7 dtk berikutnya
-        var anim = new DoubleAnimationUsingKeyFrames
+        st.Flash = new Border
         {
-            Duration = TimeSpan.FromSeconds(7),
-            RepeatBehavior = RepeatBehavior.Forever,
-            BeginTime = TimeSpan.FromMilliseconds(700 + index * 450)
+            Background = FlashBrush,
+            Opacity = 0,
+            IsHitTestVisible = false,
+            CornerRadius = new CornerRadius(CardRadius)
         };
-        anim.KeyFrames.Add(new LinearDoubleKeyFrame(-140, KeyTime.FromPercent(0)));
-        anim.KeyFrames.Add(new EasingDoubleKeyFrame(CardW + 140, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1300)),
-            new SineEase { EasingMode = EasingMode.EaseInOut }));
-        anim.KeyFrames.Add(new LinearDoubleKeyFrame(CardW + 140, KeyTime.FromPercent(1)));
-        move.BeginAnimation(TranslateTransform.XProperty, anim);
 
-        return shine;
+        var overlay = new Grid
+        {
+            IsHitTestVisible = false,
+            Clip = Frozen(new RectangleGeometry(new Rect(0, 0, CardW, CardH), CardRadius, CardRadius))
+        };
+        overlay.Children.Add(st.Shine);
+        overlay.Children.Add(st.Flash);
+
+        st.Ring = new Border
+        {
+            BorderBrush = GoldBrush,
+            BorderThickness = new Thickness(9),
+            CornerRadius = new CornerRadius(CardRadius),
+            Opacity = 0,
+            IsHitTestVisible = false
+        };
+
+        var root = new Grid
+        {
+            Width = CardW,
+            Height = CardH,
+            Margin = new Thickness(CardGap),
+            RenderTransformOrigin = new Point(0.5, 0.5)
+        };
+        var group = new TransformGroup();
+        group.Children.Add(st.Flip);
+        group.Children.Add(st.Pop);
+        root.RenderTransform = group;
+
+        root.Children.Add(frame);
+        root.Children.Add(st.IconHost);
+        root.Children.Add(overlay);
+        root.Children.Add(st.Ring);
+        st.Root = root;
+
+        SetFace(st, 0);
+        if (entrance) PlayEntrance(st, index);
+        return st;
     }
 
-    private static TextBlock Label(string text, double size, FontWeight weight, Brush? color = null) => new()
+    // Menampilkan satu efek (muka) dari kartu: judul, ikon, dan nama efek
+    private void SetFace(CardState st, int face)
+    {
+        st.Face = face % st.Rules.Count;
+        var rule = st.Rules[st.Face];
+
+        string title = rule.OverlayTitle.ToUpperInvariant();
+        string effect = rule.EffectName.Trim().ToUpperInvariant();
+
+        st.Title.Text = title;
+        st.Title.FontSize = FontFor(title);
+        st.Effect.Text = effect;
+        st.Effect.FontSize = FontFor(effect);
+
+        st.IconHost.Children.Clear();
+        st.IconHost.Children.Add(BuildIcon(rule, st.Index));
+    }
+
+    private static double FontFor(string text) => text.Length <= 12 ? 36 : text.Length <= 18 ? 30 : 25;
+
+    private static Border Divider(VerticalAlignment va, double offset) => new()
+    {
+        Height = 3,
+        Margin = new Thickness(22, va == VerticalAlignment.Top ? offset : 0, 22, va == VerticalAlignment.Bottom ? offset : 0),
+        Background = DividerBrush,
+        VerticalAlignment = va
+    };
+
+    private static TextBlock Label(string text, double size, Brush color) => new()
     {
         Text = text,
         FontFamily = CardFont,
         FontSize = size,
-        FontWeight = weight,
-        Foreground = color ?? TextWhite,
+        FontWeight = FontWeights.Black,
+        Foreground = color,
         TextWrapping = TextWrapping.Wrap,
         TextAlignment = TextAlignment.Center,
         TextTrimming = TextTrimming.CharacterEllipsis,
         VerticalAlignment = VerticalAlignment.Center,
         HorizontalAlignment = HorizontalAlignment.Center,
-        Margin = new Thickness(8, 0, 8, 0),
-        Effect = new DropShadowEffect { Color = Color.FromRgb(0x0A, 0x02, 0x1A), BlurRadius = 5, ShadowDepth = 1.5, Direction = 270, Opacity = 1 }
+        Margin = new Thickness(12, 0, 12, 0),
+        Effect = TextShadow
     };
 
-    // ---------- Ikon (melayang + cahaya) ----------
+    // ---------- Ikon ----------
 
-    private static FrameworkElement BuildIconArea(GiftRule rule, int index)
+    private FrameworkElement BuildIcon(GiftRule rule, int index)
     {
-        var area = new Grid();
-
-        // Cahaya lembut di belakang ikon, berdenyut pelan
-        var glowScale = new ScaleTransform(0.9, 0.9);
-        var glow = new Ellipse
-        {
-            Width = 124,
-            Height = 124,
-            RenderTransformOrigin = new Point(0.5, 0.5),
-            RenderTransform = glowScale,
-            Fill = new RadialGradientBrush(Color.FromArgb(0xA0, 0xA8, 0x55, 0xF7), Color.FromArgb(0x00, 0xA8, 0x55, 0xF7))
-        };
-        var pulse = new DoubleAnimation(0.9, 1.15, TimeSpan.FromSeconds(1.8))
-        {
-            AutoReverse = true,
-            RepeatBehavior = RepeatBehavior.Forever,
-            EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
-            BeginTime = TimeSpan.FromMilliseconds(index * 120)
-        };
-        glowScale.BeginAnimation(ScaleTransform.ScaleXProperty, pulse);
-        glowScale.BeginAnimation(ScaleTransform.ScaleYProperty, pulse);
-        area.Children.Add(glow);
-
-        var icon = BuildIcon(rule);
-        icon.RenderTransformOrigin = new Point(0.5, 0.5);
-
-        var float_ = new TranslateTransform();
-        var tilt = new RotateTransform();
-        var group = new TransformGroup();
-        group.Children.Add(tilt);
-        group.Children.Add(float_);
-        icon.RenderTransform = group;
-
-        var begin = TimeSpan.FromMilliseconds(index * 170);
-        float_.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-5, 5, TimeSpan.FromSeconds(1.9))
-        {
-            AutoReverse = true,
-            RepeatBehavior = RepeatBehavior.Forever,
-            EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
-            BeginTime = begin
-        });
-        tilt.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(-4, 4, TimeSpan.FromSeconds(2.4))
-        {
-            AutoReverse = true,
-            RepeatBehavior = RepeatBehavior.Forever,
-            EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
-            BeginTime = begin
-        });
-
-        area.Children.Add(icon);
-        return area;
-    }
-
-    private static FrameworkElement BuildIcon(GiftRule rule)
-    {
-        string glyph;
+        FrameworkElement icon;
+        string? glyph = null;
         Brush color = TextWhite;
 
         switch (rule.Trigger)
         {
-            case RuleTrigger.Like: glyph = "❤"; color = new SolidColorBrush(Color.FromRgb(0xE5, 0x20, 0x2A)); break;
+            case RuleTrigger.Like: glyph = "❤"; color = Frozen(new SolidColorBrush(Color.FromRgb(0xE5, 0x20, 0x2A))); break;
             case RuleTrigger.Follow: glyph = "\U0001F464"; break;
             case RuleTrigger.Share: glyph = "\U0001F517"; break;
             default:
                 var known = rule.GiftId != 0 ? GiftCatalog.FindById(rule.GiftId) : GiftCatalog.FindByName(rule.GiftName);
-                var img = LoadImage(known?.ImageUrl);
+                var img = GetImage(known?.ImageUrl);
                 if (img != null)
-                    return new Image
-                    {
-                        Source = img,
-                        Stretch = Stretch.Uniform,
-                        Margin = new Thickness(14, 6, 14, 6),
-                        Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 8, ShadowDepth = 3, Opacity = 0.3 }
-                    };
+                {
+                    icon = new Image { Source = img, Stretch = Stretch.Uniform, Margin = new Thickness(26, 10, 26, 10) };
+                    RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.HighQuality);
+                    return WrapIcon(icon, index);
+                }
                 glyph = "\U0001F381";
                 break;
         }
 
-        return new TextBlock
+        icon = new TextBlock
         {
             Text = glyph,
             FontFamily = new FontFamily("Segoe UI Emoji"),
-            FontSize = 84,
+            FontSize = 150,
             Foreground = color,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
+        return WrapIcon(icon, index);
     }
 
-    private static ImageSource? LoadImage(string? url)
+    // Ikon + cahaya di belakangnya jadi satu lapisan cache yang hanya digeser (murah)
+    private FrameworkElement WrapIcon(FrameworkElement icon, int index)
     {
-        if (string.IsNullOrWhiteSpace(url)) return null;
-        if (ImageCache.TryGetValue(url, out var cached)) return cached;
+        var holder = new Grid { CacheMode = Cache, RenderTransform = _floats[index % _floats.Length] };
+        holder.Children.Add(new Ellipse { Width = 230, Height = 230, Fill = IconGlowBrush });
+        holder.Children.Add(icon);
+        return holder;
+    }
 
-        try
+    // Tiga transform bersama menggerakkan semua ikon (fase berbeda), jadi hanya 3 animasi yang berjalan
+    private void StartFloating()
+    {
+        for (int i = 0; i < _floats.Length; i++)
         {
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.UriSource = new Uri(url);
-            bmp.DecodePixelWidth = 220;
-            bmp.CacheOption = BitmapCacheOption.OnLoad;
-            bmp.EndInit();
-            ImageCache[url] = bmp;
-            return bmp;
-        }
-        catch
-        {
-            return null;
+            _floats[i].BeginAnimation(TranslateTransform.YProperty, Fps(new DoubleAnimation(-9, 9, TimeSpan.FromSeconds(2))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+                BeginTime = TimeSpan.FromMilliseconds(i * 650)
+            }, 30));
         }
     }
 
-    // ---------- Animasi kartu ----------
+    // ---------- Animasi ----------
 
     // Kartu muncul satu per satu: membesar dengan sedikit memantul sambil memudar masuk
-    private static void PlayEntrance(Border card, int index)
+    private static void PlayEntrance(CardState st, int index)
     {
-        var scale = (ScaleTransform)card.RenderTransform;
-        var begin = TimeSpan.FromMilliseconds(index * 55);
+        var begin = TimeSpan.FromMilliseconds(index * 45);
 
-        var pop = new DoubleAnimation(0.55, 1, TimeSpan.FromMilliseconds(520))
+        st.Pop.ScaleX = 0.55;
+        st.Pop.ScaleY = 0.55;
+        var pop = new DoubleAnimation(0.55, 1, TimeSpan.FromMilliseconds(480))
         {
             BeginTime = begin,
-            EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.7 }
+            EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.6 }
         };
-        scale.BeginAnimation(ScaleTransform.ScaleXProperty, pop);
-        scale.BeginAnimation(ScaleTransform.ScaleYProperty, pop);
+        st.Pop.BeginAnimation(ScaleTransform.ScaleXProperty, pop);
+        st.Pop.BeginAnimation(ScaleTransform.ScaleYProperty, pop);
 
-        card.Opacity = 0;
-        card.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)) { BeginTime = begin });
+        st.Root.Opacity = 0;
+        st.Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) { BeginTime = begin });
     }
 
-    // Dipanggil saat aturan terpicu: pindah ke halamannya kalau perlu, lalu kartu membesar dan menyala
+    // Kartu yang punya lebih dari satu efek berputar (depan/belakang) bergantian
+    private void FlipAll()
+    {
+        if (_transitioning) return;
+
+        int k = 0;
+        foreach (var st in _cards)
+        {
+            if (st.Rules.Count < 2) continue;
+            var card = st;
+            int delay = k++ * 160;
+            Dispatcher.InvokeAsync(async () =>
+            {
+                await Task.Delay(delay);
+                if (_cards.Contains(card)) FlipTo(card, card.Face + 1);
+            });
+        }
+    }
+
+    // Memutar kartu: menyempit sampai tipis, ganti muka, lalu melebar lagi
+    private void FlipTo(CardState st, int face)
+    {
+        if (st.Flipping) return;
+        st.Flipping = true;
+
+        var close = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(170))
+            { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } };
+        close.Completed += (s, e) =>
+        {
+            SetFace(st, face);
+            var open = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(190))
+                { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+            open.Completed += (s2, e2) => st.Flipping = false;
+            st.Flip.BeginAnimation(ScaleTransform.ScaleXProperty, open);
+        };
+        st.Flip.BeginAnimation(ScaleTransform.ScaleXProperty, close);
+    }
+
+    // Kilau menyapu satu kartu pada satu waktu, bergiliran
+    private void ShineNext()
+    {
+        if (_cards.Count == 0 || _transitioning) return;
+
+        var st = _cards[_shineIndex++ % _cards.Count];
+        st.Shine.Visibility = Visibility.Visible;
+
+        var move = Fps(new DoubleAnimation(-220, CardW + 220, TimeSpan.FromMilliseconds(900))
+            { EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut } }, 30);
+        move.Completed += (s, e) => st.Shine.Visibility = Visibility.Collapsed;
+        st.ShineMove.BeginAnimation(TranslateTransform.XProperty, move);
+    }
+
+    // Dipanggil saat aturan terpicu: pindah ke halamannya kalau perlu, putar ke efeknya, lalu kartu menyala
     public void Pulse(GiftRule rule)
     {
         Dispatcher.InvokeAsync(async () =>
         {
-            var items = Visible();
-            int idx = items.IndexOf(rule);
+            var groups = Groups();
+            int idx = groups.FindIndex(g => g.Contains(rule));
             if (idx < 0) return;
 
             int page = idx / PerPage;
@@ -564,39 +775,35 @@ public class GiftMenuOverlay : Window
                 await Task.Delay(120);
             }
 
-            if (_cards.TryGetValue(rule, out var card))
-                PulseCard(card);
+            if (!_byRule.TryGetValue(rule, out var st)) return;
+
+            int face = st.Rules.IndexOf(rule);
+            if (face >= 0 && face != st.Face)
+                SetFace(st, face);
+
+            PulseCard(st);
         });
     }
 
-    private static void PulseCard(Border card)
+    private static void PulseCard(CardState st)
     {
-        var scale = (ScaleTransform)card.RenderTransform;
-
-        var bump = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(900) };
-        bump.KeyFrames.Add(new EasingDoubleKeyFrame(1.14, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(160)),
+        var bump = Fps(new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(900) }, 60);
+        bump.KeyFrames.Add(new EasingDoubleKeyFrame(1.14, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(150)),
             new CubicEase { EasingMode = EasingMode.EaseOut }));
         bump.KeyFrames.Add(new EasingDoubleKeyFrame(1.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(900)),
             new ElasticEase { EasingMode = EasingMode.EaseOut, Oscillations = 2, Springiness = 5 }));
-        scale.BeginAnimation(ScaleTransform.ScaleXProperty, bump);
-        scale.BeginAnimation(ScaleTransform.ScaleYProperty, bump);
+        st.Pop.BeginAnimation(ScaleTransform.ScaleXProperty, bump);
+        st.Pop.BeginAnimation(ScaleTransform.ScaleYProperty, bump);
 
-        // Cahaya emas di sekeliling kartu
-        var glow = new DropShadowEffect { Color = Color.FromRgb(0xFF, 0xC8, 0x3D), BlurRadius = 0, ShadowDepth = 0, Opacity = 1 };
-        card.Effect = glow;
-        var blur = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(1100) };
-        blur.KeyFrames.Add(new EasingDoubleKeyFrame(42, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(180))));
-        blur.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1100))));
-        blur.Completed += (s, e) => card.Effect = BaseShadow();
-        glow.BeginAnimation(DropShadowEffect.BlurRadiusProperty, blur);
+        // Cincin emas (tanpa blur, jadi ringan)
+        var ring = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(1100) };
+        ring.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(130))));
+        ring.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1100))));
+        st.Ring.BeginAnimation(OpacityProperty, ring);
 
-        // Kilatan putih singkat
-        if (card.Tag is Border flash)
-        {
-            var f = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(600) };
-            f.KeyFrames.Add(new LinearDoubleKeyFrame(0.65, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(90))));
-            f.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(600))));
-            flash.BeginAnimation(OpacityProperty, f);
-        }
+        var flash = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(550) };
+        flash.KeyFrames.Add(new LinearDoubleKeyFrame(0.55, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(90))));
+        flash.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(550))));
+        st.Flash.BeginAnimation(OpacityProperty, flash);
     }
 }
