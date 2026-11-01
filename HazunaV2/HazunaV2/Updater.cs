@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace HazunaV2;
 
-public record UpdateInfo(Version Version, string Tag, string AssetApiUrl, string Notes);
+public record UpdateInfo(Version Version, string Tag, string AssetApiUrl, string Notes, bool IsNewer = true);
 
 // Memeriksa GitHub Releases, mengunduh HazunaV2.zip, lalu mengganti file aplikasi
 // lewat skrip kecil setelah aplikasi ditutup, dan membuka aplikasi lagi.
@@ -35,8 +35,11 @@ public static class Updater
         return http;
     }
 
-    // Mengembalikan null kalau sudah versi terbaru
-    public static async Task<UpdateInfo?> CheckAsync(string repo, string token)
+    public static string ResultFile => Path.Combine(SettingsStore.Folder, "update_result.txt");
+    public static string LogFile => Path.Combine(SettingsStore.Folder, "update.log");
+
+    // IsNewer = false kalau versi terpasang sudah sama atau lebih baru dari rilis terakhir di GitHub
+    public static async Task<UpdateInfo> CheckAsync(string repo, string token)
     {
         repo = (repo ?? "").Trim().Trim('/');
         if (!repo.Contains('/') || repo.Contains(' '))
@@ -56,7 +59,7 @@ public static class Updater
         if (!Version.TryParse(tag.TrimStart('v', 'V'), out var latest))
             throw new InvalidOperationException("Tag release tidak dikenali: " + tag);
 
-        if (latest <= Current) return null;
+        if (latest <= Current) return new UpdateInfo(latest, tag, "", "", false);
 
         string? assetUrl = null;
         foreach (var a in root.GetProperty("assets").EnumerateArray())
@@ -105,15 +108,46 @@ public static class Updater
         if (!File.Exists(Path.Combine(extract, Path.GetFileName(exe))))
             throw new InvalidOperationException("Isi update tidak berisi " + Path.GetFileName(exe) + ". Update dibatalkan.");
 
-        // Skrip: tunggu aplikasi tertutup, salin file baru, buka lagi
+        // Folder aplikasi harus bisa ditulis, kalau tidak file baru tidak bisa menimpa yang lama
+        try
+        {
+            string probe = Path.Combine(appDir, ".update_probe");
+            File.WriteAllText(probe, "x");
+            File.Delete(probe);
+        }
+        catch
+        {
+            throw new InvalidOperationException(
+                "Folder aplikasi tidak bisa ditulis (" + appDir + "). Pindahkan aplikasi ke folder biasa " +
+                "seperti C:\\Hazuna, atau jalankan sebagai administrator.");
+        }
+
+        Directory.CreateDirectory(SettingsStore.Folder);
+        try { File.Delete(ResultFile); } catch { }
+
+        // Skrip: tunggu aplikasi tertutup, salin file baru (diulang kalau terkunci), catat hasilnya, buka lagi
         int pid = Environment.ProcessId;
         string cmd = Path.Combine(work, "update.cmd");
         File.WriteAllText(cmd,
             "@echo off\r\n" +
+            "set n=0\r\n" +
+            $"echo [%date% %time%] mulai update ke {info.Tag} > \"{LogFile}\"\r\n" +
             ":wait\r\n" +
             $"tasklist /fi \"pid eq {pid}\" | find \"{pid}\" >nul\r\n" +
-            "if not errorlevel 1 (timeout /t 1 /nobreak >nul & goto wait)\r\n" +
-            $"xcopy \"{extract}\\*\" \"{appDir}\\\" /e /y /q >nul\r\n" +
+            "if errorlevel 1 goto copy\r\n" +
+            "set /a n+=1\r\n" +
+            "if %n% GEQ 60 goto copy\r\n" +
+            "ping -n 2 127.0.0.1 >nul\r\n" +
+            "goto wait\r\n" +
+            ":copy\r\n" +
+            $"echo aplikasi lama tertutup, menyalin dari {extract} ke {appDir} >> \"{LogFile}\"\r\n" +
+            $"robocopy \"{extract}\" \"{appDir}\" /E /R:15 /W:1 /NFL /NDL /NP >> \"{LogFile}\" 2>&1\r\n" +
+            "if %errorlevel% GEQ 8 goto fail\r\n" +
+            $"echo OK {info.Tag} > \"{ResultFile}\"\r\n" +
+            "goto run\r\n" +
+            ":fail\r\n" +
+            $"echo GAGAL: file tidak bisa ditimpa (kode %errorlevel%). Lihat {LogFile} > \"{ResultFile}\"\r\n" +
+            ":run\r\n" +
             $"start \"\" \"{exe}\"\r\n");
 
         Process.Start(new ProcessStartInfo("cmd.exe", $"/c \"{cmd}\"")

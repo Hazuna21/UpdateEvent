@@ -11,6 +11,25 @@ public partial class MainWindow
         UpdateRepoBox.Text = _settings.UpdateRepo;
         UpdateTokenBox.Password = _settings.UpdateToken;
         UpdateVersionText.Text = "Versi terpasang: " + Updater.Current;
+
+        // Hasil update sebelumnya (ditulis oleh skrip pemasang setelah aplikasi ditutup)
+        try
+        {
+            if (System.IO.File.Exists(Updater.ResultFile))
+            {
+                string result = System.IO.File.ReadAllText(Updater.ResultFile).Trim();
+                System.IO.File.Delete(Updater.ResultFile);
+
+                bool failed = result.StartsWith("GAGAL", StringComparison.OrdinalIgnoreCase);
+                UpdateStatus.Text = failed ? result : "Update berhasil: " + result.Replace("OK", "").Trim();
+                if (failed)
+                    Dispatcher.InvokeAsync(() => MessageBox.Show(result, "Update Hazuna"));
+            }
+        }
+        catch
+        {
+            // abaikan
+        }
     }
 
     private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
@@ -28,9 +47,9 @@ public partial class MainWindow
         try
         {
             var info = await Updater.CheckAsync(_settings.UpdateRepo, _settings.UpdateToken);
-            if (info == null)
+            if (!info.IsNewer)
             {
-                UpdateStatus.Text = "Sudah versi terbaru (" + Updater.Current + ").";
+                UpdateStatus.Text = $"Sudah versi terbaru. Terpasang {Updater.Current}, rilis terakhir di GitHub {info.Tag}.";
                 return;
             }
 
