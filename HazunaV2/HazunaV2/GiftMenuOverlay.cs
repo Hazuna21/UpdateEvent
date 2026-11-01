@@ -46,6 +46,11 @@ public class GiftMenuOverlay : Window
     private static readonly Brush GoldBrush = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0xC8, 0x3D)));
     private static readonly FontFamily CardFont = new("Segoe UI Black, Segoe UI, Arial");
 
+    private static readonly DropShadowEffect IconShadow = FrozenEffect(new DropShadowEffect
+    {
+        Color = Color.FromRgb(0x2A, 0x0A, 0x5E), BlurRadius = 14, ShadowDepth = 5, Direction = 270, Opacity = 0.75
+    });
+
     private static readonly DropShadowEffect TextShadow = FrozenEffect(new DropShadowEffect
     {
         Color = Color.FromRgb(0x0A, 0x02, 0x1A), BlurRadius = 8, ShadowDepth = 3, Direction = 270, Opacity = 1
@@ -67,6 +72,15 @@ public class GiftMenuOverlay : Window
     }, 0));
 
     private static readonly BitmapCache Cache = FrozenCache(new BitmapCache(1.0));
+
+    private static readonly Brush GlossBrush = Frozen(new LinearGradientBrush(
+        Color.FromArgb(0x30, 0xFF, 0xFF, 0xFF), Color.FromArgb(0x00, 0xFF, 0xFF, 0xFF), 90));
+    private static readonly Brush InnerLineBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x55, 0xC0, 0x84, 0xFC)));
+    private static readonly Brush ShadowBrush = Frozen(new RadialGradientBrush(
+        Color.FromArgb(0x90, 0x00, 0x00, 0x00), Color.FromArgb(0x00, 0x00, 0x00, 0x00)));
+    private static readonly Brush SparkleBrush = Frozen(new SolidColorBrush(Color.FromRgb(0xF5, 0xE1, 0xFF)));
+    private static readonly Geometry StarGeometry = Frozen(Geometry.Parse(
+        "M 0,-10 L 2.4,-2.4 L 10,0 L 2.4,2.4 L 0,10 L -2.4,2.4 L -10,0 L -2.4,-2.4 Z"));
 
     // Cahaya di belakang ikon (statis)
     private static readonly Brush IconGlowBrush = Frozen(new RadialGradientBrush(
@@ -107,7 +121,7 @@ public class GiftMenuOverlay : Window
                 var bmp = new BitmapImage();
                 bmp.BeginInit();
                 bmp.CacheOption = BitmapCacheOption.OnLoad;
-                bmp.DecodePixelWidth = 400;     // HD
+                bmp.DecodePixelWidth = 512;     // HD
                 bmp.StreamSource = ms;
                 bmp.EndInit();
                 bmp.Freeze();
@@ -141,6 +155,8 @@ public class GiftMenuOverlay : Window
         public Grid IconHost = null!;
         public ScaleTransform Flip = new(1, 1);
         public ScaleTransform Pop = new(1, 1);
+        public RotateTransform Tilt = new(0);
+        public List<ScaleTransform> Spins = new();   // putaran depan/belakang tiap ikon
         public Border Ring = null!;
         public Border Flash = null!;
         public Rectangle Shine = null!;
@@ -162,6 +178,11 @@ public class GiftMenuOverlay : Window
     private readonly ScaleTransform _progressScale = new(0, 1);
     private readonly TranslateTransform _rowsMove = new();
     private readonly TranslateTransform[] _floats = { new(), new(), new() };
+    private readonly RotateTransform[] _tilts = { new(), new(), new() };
+    private readonly ScaleTransform[] _shadowScales = { new(1, 1), new(1, 1), new(1, 1) };
+    private readonly ScaleTransform[] _twinkles = { new(0.2, 0.2), new(0.2, 0.2), new(0.2, 0.2) };
+    private readonly DispatcherTimer _spinTimer = new() { Interval = TimeSpan.FromMilliseconds(1300) };
+    private int _spinIndex;
 
     private readonly DispatcherTimer _pageTimer = new() { Interval = PageInterval };
     private readonly DispatcherTimer _flipTimer = new() { Interval = FlipInterval };
@@ -244,12 +265,14 @@ public class GiftMenuOverlay : Window
         _pageTimer.Tick += (s, e) => NextPage();
         _flipTimer.Tick += (s, e) => FlipAll();
         _shineTimer.Tick += (s, e) => ShineNext();
+        _spinTimer.Tick += (s, e) => SpinNext();
 
         Closed += (s, e) =>
         {
             _pageTimer.Stop();
             _flipTimer.Stop();
             _shineTimer.Stop();
+            _spinTimer.Stop();
             _refreshTimer.Stop();
             ImageReady -= OnImageReady;
             _rules.CollectionChanged -= OnRulesChanged;
@@ -264,6 +287,7 @@ public class GiftMenuOverlay : Window
             _pageTimer.Start();
             _flipTimer.Start();
             _shineTimer.Start();
+            _spinTimer.Start();
         };
     }
 
@@ -536,9 +560,9 @@ public class GiftMenuOverlay : Window
 
         // Bingkai statis (judul, efek, garis): di-cache sebagai bitmap supaya tidak digambar ulang tiap frame
         var inner = new Grid();
-        inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(84) });
+        inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(72) });
         inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(84) });
+        inner.RowDefinitions.Add(new RowDefinition { Height = new GridLength(72) });
 
         st.Title = Label("", 36, TextWhite);
         st.Effect = Label("", 36, TextLilac);
@@ -546,8 +570,29 @@ public class GiftMenuOverlay : Window
         Grid.SetRow(st.Effect, 2);
         inner.Children.Add(st.Title);
         inner.Children.Add(st.Effect);
-        inner.Children.Add(Divider(VerticalAlignment.Top, 84));
-        inner.Children.Add(Divider(VerticalAlignment.Bottom, 84));
+        inner.Children.Add(Divider(VerticalAlignment.Top, 72));
+        inner.Children.Add(Divider(VerticalAlignment.Bottom, 72));
+
+        // Lapisan hiasan statis: kilap di bagian atas dan garis tipis di dalam bingkai
+        var decor = new Grid { IsHitTestVisible = false };
+        decor.Children.Add(new Border
+        {
+            Height = 120,
+            VerticalAlignment = VerticalAlignment.Top,
+            CornerRadius = new CornerRadius(CardRadius - 4, CardRadius - 4, 60, 60),
+            Background = GlossBrush
+        });
+        decor.Children.Add(new Border
+        {
+            Margin = new Thickness(5),
+            CornerRadius = new CornerRadius(CardRadius - 8),
+            BorderBrush = InnerLineBrush,
+            BorderThickness = new Thickness(2)
+        });
+
+        var frameContent = new Grid();
+        frameContent.Children.Add(decor);
+        frameContent.Children.Add(inner);
 
         var frame = new Border
         {
@@ -556,11 +601,11 @@ public class GiftMenuOverlay : Window
             BorderThickness = new Thickness(5),
             Background = FrameBrushes[index % FrameBrushes.Length],
             CacheMode = Cache,
-            Child = inner
+            Child = frameContent
         };
 
         // Ikon (lapisan sendiri, di-cache; hanya digeser naik-turun)
-        st.IconHost = new Grid { Margin = new Thickness(0, 84, 0, 84), IsHitTestVisible = false };
+        st.IconHost = new Grid { Margin = new Thickness(0, 72, 0, 72), IsHitTestVisible = false };
 
         // Kilau (hanya aktif sebentar), kilatan putih, dan cincin emas saat terpicu
         st.Shine = new Rectangle
@@ -614,6 +659,7 @@ public class GiftMenuOverlay : Window
         var group = new TransformGroup();
         group.Children.Add(st.Flip);
         group.Children.Add(st.Pop);
+        group.Children.Add(st.Tilt);
         root.RenderTransform = group;
 
         root.Children.Add(frame);
@@ -642,23 +688,24 @@ public class GiftMenuOverlay : Window
         st.Effect.FontSize = FontFor(effect);
 
         st.IconHost.Children.Clear();
-        st.IconHost.Children.Add(BuildFaceIcons(f, st.Index));
+        st.Spins.Clear();
+        st.IconHost.Children.Add(BuildFaceIcons(f, st.Index, st.Spins));
     }
 
     // Satu ikon per sumber yang berbeda (maksimal 3), berdampingan kalau lebih dari satu
-    private FrameworkElement BuildFaceIcons(Face face, int index)
+    private FrameworkElement BuildFaceIcons(Face face, int index, List<ScaleTransform> spins)
     {
         var sources = face.Rules.GroupBy(GroupKey).Select(g => g.First()).Take(3).ToList();
         if (sources.Count == 1)
-            return BuildIcon(sources[0], index);
+            return BuildIcon(sources[0], index, spins);
 
         var grid = new UniformGrid { Rows = 1, Columns = sources.Count };
         foreach (var rule in sources)
-            grid.Children.Add(new Viewbox { Stretch = Stretch.Uniform, Margin = new Thickness(2), Child = BuildIcon(rule, index) });
+            grid.Children.Add(new Viewbox { Stretch = Stretch.Uniform, Margin = new Thickness(2), Child = BuildIcon(rule, index, spins) });
         return grid;
     }
 
-    private static double FontFor(string text) => text.Length <= 12 ? 36 : text.Length <= 18 ? 30 : text.Length <= 26 ? 25 : 20;
+    private static double FontFor(string text) => text.Length <= 12 ? 34 : text.Length <= 18 ? 28 : text.Length <= 26 ? 24 : 19;
 
     private static Border Divider(VerticalAlignment va, double offset) => new()
     {
@@ -686,7 +733,7 @@ public class GiftMenuOverlay : Window
 
     // ---------- Ikon ----------
 
-    private FrameworkElement BuildIcon(GiftRule rule, int index)
+    private FrameworkElement BuildIcon(GiftRule rule, int index, List<ScaleTransform> spins)
     {
         FrameworkElement icon;
         string? glyph = null;
@@ -702,9 +749,15 @@ public class GiftMenuOverlay : Window
                 var img = GetImage(known?.ImageUrl);
                 if (img != null)
                 {
-                    icon = new Image { Source = img, Stretch = Stretch.Uniform, Margin = new Thickness(26, 10, 26, 10) };
+                    icon = new Image
+                    {
+                        Source = img,
+                        Stretch = Stretch.Uniform,
+                        Margin = new Thickness(18, 4, 18, 14),
+                        Effect = IconShadow
+                    };
                     RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.HighQuality);
-                    return WrapIcon(icon, index);
+                    return WrapIcon(icon, index, spins);
                 }
                 glyph = "\U0001F381";
                 break;
@@ -714,35 +767,104 @@ public class GiftMenuOverlay : Window
         {
             Text = glyph,
             FontFamily = new FontFamily("Segoe UI Emoji"),
-            FontSize = 150,
+            FontSize = 128,
             Foreground = color,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
-        return WrapIcon(icon, index);
+        return WrapIcon(icon, index, spins);
     }
 
-    // Ikon + cahaya di belakangnya jadi satu lapisan cache yang hanya digeser (murah)
-    private FrameworkElement WrapIcon(FrameworkElement icon, int index)
+    // Ikon + cahaya di belakangnya jadi satu lapisan cache yang hanya digeser/diputar (murah).
+    // Bayangan di lantai dan kerlip bintang berada di luar lapisan itu.
+    private FrameworkElement WrapIcon(FrameworkElement icon, int index, List<ScaleTransform> spins)
     {
-        var holder = new Grid { CacheMode = Cache, RenderTransform = _floats[index % _floats.Length] };
+        int k = index % _floats.Length;
+
+        var spin = new ScaleTransform(1, 1);
+        spins.Add(spin);
+
+        var motion = new TransformGroup();
+        motion.Children.Add(spin);           // putaran depan/belakang
+        motion.Children.Add(_tilts[k]);      // miring pelan
+        motion.Children.Add(_floats[k]);     // melayang naik-turun
+
+        var holder = new Grid
+        {
+            CacheMode = Cache,
+            RenderTransformOrigin = new Point(0.5, 0.5),
+            RenderTransform = motion
+        };
         holder.Children.Add(new Ellipse { Width = 230, Height = 230, Fill = IconGlowBrush });
         holder.Children.Add(icon);
-        return holder;
+
+        var area = new Grid { IsHitTestVisible = false };
+        area.Children.Add(new Ellipse
+        {
+            Width = 150,
+            Height = 24,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Margin = new Thickness(0, 0, 0, 2),
+            Fill = ShadowBrush,
+            RenderTransformOrigin = new Point(0.5, 0.5),
+            RenderTransform = _shadowScales[k]
+        });
+        area.Children.Add(holder);
+        area.Children.Add(Sparkle(26, HorizontalAlignment.Left, VerticalAlignment.Top, new Thickness(36, 10, 0, 0), _twinkles[k]));
+        area.Children.Add(Sparkle(20, HorizontalAlignment.Right, VerticalAlignment.Bottom, new Thickness(0, 0, 40, 18), _twinkles[(k + 1) % _twinkles.Length]));
+        return area;
     }
 
-    // Tiga transform bersama menggerakkan semua ikon (fase berbeda), jadi hanya 3 animasi yang berjalan
+    private static System.Windows.Shapes.Path Sparkle(double size, HorizontalAlignment ha, VerticalAlignment va, Thickness margin, ScaleTransform twinkle) => new()
+    {
+        Data = StarGeometry,
+        Width = size,
+        Height = size,
+        Stretch = Stretch.Uniform,
+        Fill = SparkleBrush,
+        HorizontalAlignment = ha,
+        VerticalAlignment = va,
+        Margin = margin,
+        RenderTransformOrigin = new Point(0.5, 0.5),
+        RenderTransform = twinkle
+    };
+
+    // Transform bersama menggerakkan semua ikon (3 fase berbeda), jadi hanya segelintir animasi yang berjalan
     private void StartFloating()
     {
         for (int i = 0; i < _floats.Length; i++)
         {
+            var begin = TimeSpan.FromMilliseconds(i * 650);
+            var sine = new SineEase { EasingMode = EasingMode.EaseInOut };
+
+            // Melayang naik-turun
             _floats[i].BeginAnimation(TranslateTransform.YProperty, Fps(new DoubleAnimation(-9, 9, TimeSpan.FromSeconds(2))
             {
-                AutoReverse = true,
-                RepeatBehavior = RepeatBehavior.Forever,
-                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
-                BeginTime = TimeSpan.FromMilliseconds(i * 650)
+                AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = sine, BeginTime = begin
             }, 30));
+
+            // Miring pelan
+            _tilts[i].BeginAnimation(RotateTransform.AngleProperty, Fps(new DoubleAnimation(-4, 4, TimeSpan.FromSeconds(2.4))
+            {
+                AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = sine, BeginTime = begin
+            }, 30));
+
+            // Bayangan di lantai mengecil saat ikon naik, membesar saat turun
+            var shadow = Fps(new DoubleAnimation(0.72, 1.1, TimeSpan.FromSeconds(2))
+            {
+                AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = sine, BeginTime = begin
+            }, 30);
+            _shadowScales[i].BeginAnimation(ScaleTransform.ScaleXProperty, shadow);
+            _shadowScales[i].BeginAnimation(ScaleTransform.ScaleYProperty, shadow);
+
+            // Bintang berkerlip
+            var twinkle = Fps(new DoubleAnimation(0.15, 1, TimeSpan.FromSeconds(1.1))
+            {
+                AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = sine,
+                BeginTime = TimeSpan.FromMilliseconds(i * 370)
+            }, 30);
+            _twinkles[i].BeginAnimation(ScaleTransform.ScaleXProperty, twinkle);
+            _twinkles[i].BeginAnimation(ScaleTransform.ScaleYProperty, twinkle);
         }
     }
 
@@ -763,8 +885,35 @@ public class GiftMenuOverlay : Window
         st.Pop.BeginAnimation(ScaleTransform.ScaleXProperty, pop);
         st.Pop.BeginAnimation(ScaleTransform.ScaleYProperty, pop);
 
+        st.Tilt.Angle = -8;
+        st.Tilt.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(-8, 0, TimeSpan.FromMilliseconds(520))
+        {
+            BeginTime = begin,
+            EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 }
+        });
+
         st.Root.Opacity = 0;
         st.Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) { BeginTime = begin });
+    }
+
+    // Ikon gift berputar depan-belakang, bergantian satu kartu pada satu waktu
+    private void SpinNext()
+    {
+        if (_cards.Count == 0 || _transitioning) return;
+
+        var st = _cards[_spinIndex++ % _cards.Count];
+        if (st.Flipping || st.Spins.Count == 0) return;
+
+        // Depan -> berputar tipis -> belakang (sebentar) -> kembali ke depan
+        var spin = Fps(new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(1300) }, 60);
+        spin.KeyFrames.Add(new EasingDoubleKeyFrame(-1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(460)),
+            new SineEase { EasingMode = EasingMode.EaseInOut }));
+        spin.KeyFrames.Add(new LinearDoubleKeyFrame(-1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(760))));
+        spin.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1300)),
+            new SineEase { EasingMode = EasingMode.EaseInOut }));
+
+        foreach (var t in st.Spins)
+            t.BeginAnimation(ScaleTransform.ScaleXProperty, spin);
     }
 
     // Kartu yang punya lebih dari satu efek berputar (depan/belakang) bergantian
