@@ -142,6 +142,10 @@ public class GiftMenuOverlay : Window
     {
         public string Effect = "";
         public List<GiftRule> Rules = new();
+
+        // Sumber yang berbeda (gift / Tap-tap / Follow / Share). Kalau ada dua atau lebih,
+        // ikonnya berputar bergantian di tempat yang sama.
+        public List<GiftRule> Sources => Rules.GroupBy(GroupKey).Select(g => g.First()).ToList();
     }
 
     private sealed class CardState
@@ -156,7 +160,8 @@ public class GiftMenuOverlay : Window
         public ScaleTransform Flip = new(1, 1);
         public ScaleTransform Pop = new(1, 1);
         public RotateTransform Tilt = new(0);
-        public List<ScaleTransform> Spins = new();   // putaran depan/belakang tiap ikon
+        public int Source;                          // sumber yang sedang tampil di depan (untuk muka dengan 2+ sumber)
+        public ScaleTransform IconFlip = new(1, 1); // putaran depan/belakang ikon
         public Border Ring = null!;
         public Border Flash = null!;
         public Rectangle Shine = null!;
@@ -181,8 +186,7 @@ public class GiftMenuOverlay : Window
     private readonly RotateTransform[] _tilts = { new(), new(), new() };
     private readonly ScaleTransform[] _shadowScales = { new(1, 1), new(1, 1), new(1, 1) };
     private readonly ScaleTransform[] _twinkles = { new(0.2, 0.2), new(0.2, 0.2), new(0.2, 0.2) };
-    private readonly DispatcherTimer _spinTimer = new() { Interval = TimeSpan.FromMilliseconds(1300) };
-    private int _spinIndex;
+    private readonly DispatcherTimer _spinTimer = new() { Interval = TimeSpan.FromMilliseconds(3200) };
 
     private readonly DispatcherTimer _pageTimer = new() { Interval = PageInterval };
     private readonly DispatcherTimer _flipTimer = new() { Interval = FlipInterval };
@@ -265,7 +269,7 @@ public class GiftMenuOverlay : Window
         _pageTimer.Tick += (s, e) => NextPage();
         _flipTimer.Tick += (s, e) => FlipAll();
         _shineTimer.Tick += (s, e) => ShineNext();
-        _spinTimer.Tick += (s, e) => SpinNext();
+        _spinTimer.Tick += (s, e) => SpinAll();
 
         Closed += (s, e) =>
         {
@@ -605,7 +609,13 @@ public class GiftMenuOverlay : Window
         };
 
         // Ikon (lapisan sendiri, di-cache; hanya digeser naik-turun)
-        st.IconHost = new Grid { Margin = new Thickness(0, 72, 0, 72), IsHitTestVisible = false };
+        st.IconHost = new Grid
+        {
+            Margin = new Thickness(0, 72, 0, 72),
+            IsHitTestVisible = false,
+            RenderTransformOrigin = new Point(0.5, 0.5),
+            RenderTransform = st.IconFlip
+        };
 
         // Kilau (hanya aktif sebentar), kilatan putih, dan cincin emas saat terpicu
         st.Shine = new Rectangle
@@ -657,7 +667,6 @@ public class GiftMenuOverlay : Window
             RenderTransformOrigin = new Point(0.5, 0.5)
         };
         var group = new TransformGroup();
-        group.Children.Add(st.Flip);
         group.Children.Add(st.Pop);
         group.Children.Add(st.Tilt);
         root.RenderTransform = group;
@@ -673,13 +682,23 @@ public class GiftMenuOverlay : Window
         return st;
     }
 
-    // Menampilkan satu muka kartu: judul (semua sumbernya), ikon-ikon sumber, dan nama efek
-    private void SetFace(CardState st, int face)
+    // Menampilkan satu muka kartu (satu efek) dengan sumber yang sedang di depan
+    private void SetFace(CardState st, int face, int source = 0)
     {
         st.Face = face % st.Faces.Count;
-        var f = st.Faces[st.Face];
+        st.Source = source;
+        ShowSource(st);
+    }
 
-        string title = string.Join(" + ", f.Rules.Select(r => r.OverlayTitle.ToUpperInvariant()).Distinct());
+    // Judul dan ikon mengikuti sumber yang di depan; nama efek tetap sama
+    private void ShowSource(CardState st)
+    {
+        var f = st.Faces[st.Face];
+        var sources = f.Sources;
+        st.Source = sources.Count == 0 ? 0 : st.Source % sources.Count;
+        var src = sources[st.Source];
+
+        string title = src.OverlayTitle.ToUpperInvariant();
         string effect = f.Effect.ToUpperInvariant();
 
         st.Title.Text = title;
@@ -688,21 +707,7 @@ public class GiftMenuOverlay : Window
         st.Effect.FontSize = FontFor(effect);
 
         st.IconHost.Children.Clear();
-        st.Spins.Clear();
-        st.IconHost.Children.Add(BuildFaceIcons(f, st.Index, st.Spins));
-    }
-
-    // Satu ikon per sumber yang berbeda (maksimal 3), berdampingan kalau lebih dari satu
-    private FrameworkElement BuildFaceIcons(Face face, int index, List<ScaleTransform> spins)
-    {
-        var sources = face.Rules.GroupBy(GroupKey).Select(g => g.First()).Take(3).ToList();
-        if (sources.Count == 1)
-            return BuildIcon(sources[0], index, spins);
-
-        var grid = new UniformGrid { Rows = 1, Columns = sources.Count };
-        foreach (var rule in sources)
-            grid.Children.Add(new Viewbox { Stretch = Stretch.Uniform, Margin = new Thickness(2), Child = BuildIcon(rule, index, spins) });
-        return grid;
+        st.IconHost.Children.Add(BuildIcon(src, st.Index));
     }
 
     private static double FontFor(string text) => text.Length <= 12 ? 34 : text.Length <= 18 ? 28 : text.Length <= 26 ? 24 : 19;
@@ -733,7 +738,7 @@ public class GiftMenuOverlay : Window
 
     // ---------- Ikon ----------
 
-    private FrameworkElement BuildIcon(GiftRule rule, int index, List<ScaleTransform> spins)
+    private FrameworkElement BuildIcon(GiftRule rule, int index)
     {
         FrameworkElement icon;
         string? glyph = null;
@@ -757,7 +762,7 @@ public class GiftMenuOverlay : Window
                         Effect = IconShadow
                     };
                     RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.HighQuality);
-                    return WrapIcon(icon, index, spins);
+                    return WrapIcon(icon, index);
                 }
                 glyph = "\U0001F381";
                 break;
@@ -772,20 +777,16 @@ public class GiftMenuOverlay : Window
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
-        return WrapIcon(icon, index, spins);
+        return WrapIcon(icon, index);
     }
 
     // Ikon + cahaya di belakangnya jadi satu lapisan cache yang hanya digeser/diputar (murah).
     // Bayangan di lantai dan kerlip bintang berada di luar lapisan itu.
-    private FrameworkElement WrapIcon(FrameworkElement icon, int index, List<ScaleTransform> spins)
+    private FrameworkElement WrapIcon(FrameworkElement icon, int index)
     {
         int k = index % _floats.Length;
 
-        var spin = new ScaleTransform(1, 1);
-        spins.Add(spin);
-
         var motion = new TransformGroup();
-        motion.Children.Add(spin);           // putaran depan/belakang
         motion.Children.Add(_tilts[k]);      // miring pelan
         motion.Children.Add(_floats[k]);     // melayang naik-turun
 
@@ -896,27 +897,7 @@ public class GiftMenuOverlay : Window
         st.Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) { BeginTime = begin });
     }
 
-    // Ikon gift berputar depan-belakang, bergantian satu kartu pada satu waktu
-    private void SpinNext()
-    {
-        if (_cards.Count == 0 || _transitioning) return;
-
-        var st = _cards[_spinIndex++ % _cards.Count];
-        if (st.Flipping || st.Spins.Count == 0) return;
-
-        // Depan -> berputar tipis -> belakang (sebentar) -> kembali ke depan
-        var spin = Fps(new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(1300) }, 60);
-        spin.KeyFrames.Add(new EasingDoubleKeyFrame(-1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(460)),
-            new SineEase { EasingMode = EasingMode.EaseInOut }));
-        spin.KeyFrames.Add(new LinearDoubleKeyFrame(-1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(760))));
-        spin.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1300)),
-            new SineEase { EasingMode = EasingMode.EaseInOut }));
-
-        foreach (var t in st.Spins)
-            t.BeginAnimation(ScaleTransform.ScaleXProperty, spin);
-    }
-
-    // Kartu yang punya lebih dari satu efek berputar (depan/belakang) bergantian
+    // Kartu yang punya lebih dari satu efek (gift yang sama, efek berbeda) berganti efek dengan memudar
     private void FlipAll()
     {
         if (_transitioning) return;
@@ -930,28 +911,66 @@ public class GiftMenuOverlay : Window
             Dispatcher.InvokeAsync(async () =>
             {
                 await Task.Delay(delay);
-                if (_cards.Contains(card)) FlipTo(card, card.Face + 1);
+                if (_cards.Contains(card)) FadeToFace(card, card.Face + 1);
             });
         }
     }
 
-    // Memutar kartu: menyempit sampai tipis, ganti muka, lalu melebar lagi
-    private void FlipTo(CardState st, int face)
+    private void FadeToFace(CardState st, int face)
     {
         if (st.Flipping) return;
         st.Flipping = true;
 
-        var close = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(170))
-            { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } };
-        close.Completed += (s, e) =>
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(180));
+        fadeOut.Completed += (s, e) =>
         {
             SetFace(st, face);
-            var open = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(190))
-                { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
-            open.Completed += (s2, e2) => st.Flipping = false;
-            st.Flip.BeginAnimation(ScaleTransform.ScaleXProperty, open);
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(240));
+            fadeIn.Completed += (s2, e2) => st.Flipping = false;
+            st.Root.BeginAnimation(OpacityProperty, fadeIn);
         };
-        st.Flip.BeginAnimation(ScaleTransform.ScaleXProperty, close);
+        st.Root.BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    // Kartu dengan 2 gift (atau lebih) di satu muka: A di depan lalu berputar ke belakang,
+    // berganti B di depan, dan seterusnya. Kartu dengan satu gift tidak berputar.
+    private void SpinAll()
+    {
+        if (_transitioning) return;
+
+        int k = 0;
+        foreach (var st in _cards)
+        {
+            if (st.Faces[st.Face].Sources.Count < 2) continue;
+            var card = st;
+            int delay = k++ * 250;
+            Dispatcher.InvokeAsync(async () =>
+            {
+                await Task.Delay(delay);
+                if (_cards.Contains(card)) SpinToNextSource(card);
+            });
+        }
+    }
+
+    // Ikon menyempit sampai tipis (sisi A menghilang ke belakang), lalu sisi B melebar ke depan
+    private void SpinToNextSource(CardState st)
+    {
+        if (st.Flipping) return;
+        st.Flipping = true;
+
+        var close = Fps(new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(260))
+            { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn } }, 60);
+        close.Completed += (s, e) =>
+        {
+            st.Source++;
+            ShowSource(st);
+
+            var open = Fps(new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300))
+                { EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.35 } }, 60);
+            open.Completed += (s2, e2) => st.Flipping = false;
+            st.IconFlip.BeginAnimation(ScaleTransform.ScaleXProperty, open);
+        };
+        st.IconFlip.BeginAnimation(ScaleTransform.ScaleXProperty, close);
     }
 
     // Kilau menyapu satu kartu pada satu waktu, bergiliran
@@ -988,8 +1007,12 @@ public class GiftMenuOverlay : Window
             if (!_byRule.TryGetValue(rule, out var st)) return;
 
             int face = st.Faces.FindIndex(f => f.Rules.Contains(rule));
-            if (face >= 0 && face != st.Face)
-                SetFace(st, face);
+            if (face >= 0)
+            {
+                int src = st.Faces[face].Sources.FindIndex(x => GroupKey(x) == GroupKey(rule));
+                if (face != st.Face || (src >= 0 && src != st.Source))
+                    SetFace(st, face, Math.Max(0, src));
+            }
 
             PulseCard(st);
         });
