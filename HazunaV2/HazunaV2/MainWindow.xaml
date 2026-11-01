@@ -181,6 +181,20 @@
                             <Button Content="Kirim Gift Simulasi" Click="SendTestGift_Click"
                                     Style="{StaticResource PrimaryButton}" Margin="0,20,0,8" Padding="16,6"/>
                         </WrapPanel>
+                        <TextBlock Text="Tap-tap, Follow, dan Share memakai nama penonton di atas."
+                                   Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,4,0,8" TextWrapping="Wrap"/>
+                        <WrapPanel>
+                            <StackPanel Margin="0,0,12,8">
+                                <TextBlock Text="Jumlah tap" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBox x:Name="SimTapBox" Text="50" Width="90"/>
+                            </StackPanel>
+                            <Button Content="Kirim Tap-tap" Click="SendTestTap_Click"
+                                    Style="{StaticResource PrimaryButton}" Margin="0,20,8,8" Padding="16,6"/>
+                            <Button Content="Kirim Follow" Click="SendTestFollow_Click"
+                                    Style="{StaticResource PrimaryButton}" Margin="0,20,8,8" Padding="16,6"/>
+                            <Button Content="Kirim Share" Click="SendTestShare_Click"
+                                    Style="{StaticResource PrimaryButton}" Margin="0,20,0,8" Padding="16,6"/>
+                        </WrapPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                             <CheckBox x:Name="KeyEnableCheck"
                                       Content="Aktifkan aksi keyboard (tombol dikirim ke jendela yang sedang aktif)"

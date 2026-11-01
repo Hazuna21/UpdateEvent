@@ -67,7 +67,7 @@ public class GiftEngine
     }
 
     // Tap-tap / Follow / Share. count = jumlah tap pada event ini (Follow & Share selalu 1).
-    public void ProcessSocial(RuleTrigger kind, string user, int count)
+    public void ProcessSocial(RuleTrigger kind, string user, int count, double keyDelaySeconds = 0)
     {
         count = Math.Max(1, count);
         var rules = _rules.Where(r => r.Enabled && r.Trigger == kind).ToList();
@@ -87,11 +87,15 @@ public class GiftEngine
                 int need = Math.Max(1, rule.LikeCount);
                 times = (int)Math.Min(acc / need, 1000);
                 rule.LikeAccumulator = acc % need;
-                if (times == 0) continue;
+                if (times == 0)
+                {
+                    OnLog?.Invoke($"   Tap terkumpul {rule.LikeAccumulator:N0}/{need:N0} (aturan \"{rule.EffectName}\" belum terpicu)");
+                    continue;
+                }
                 OnLog?.Invoke($"   Tap-tap mencapai {need:N0} → aturan terpicu {times}x");
             }
 
-            Enqueue(rule, user, rule.TriggerLabel, rule.RepeatByCount ? times : 1, 0);
+            Enqueue(rule, user, rule.TriggerLabel, rule.RepeatByCount ? times : 1, keyDelaySeconds);
         }
     }
 

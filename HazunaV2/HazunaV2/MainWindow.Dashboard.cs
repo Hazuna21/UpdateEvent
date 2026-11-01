@@ -208,6 +208,43 @@ public partial class MainWindow
         RefreshDashboard();
     }
 
+    // ---------- Simulasi Tap-tap / Follow / Share ----------
+
+    private bool TryReadSimUser(out string user)
+    {
+        user = UserBox.Text.Trim();
+        if (user.Length == 0)
+        {
+            MessageBox.Show("Isi nama penonton dulu.");
+            return false;
+        }
+        return true;
+    }
+
+    private void SendTestTap_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryReadSimUser(out var user)) return;
+        if (!int.TryParse(SimTapBox.Text.Trim(), out var taps) || taps < 1)
+        {
+            MessageBox.Show("Jumlah tap harus berupa angka 1 atau lebih.");
+            return;
+        }
+
+        _engine.ProcessSocial(RuleTrigger.Like, user, taps, _settings.SimDelaySeconds);
+    }
+
+    private void SendTestFollow_Click(object sender, RoutedEventArgs e)
+    {
+        if (TryReadSimUser(out var user))
+            _engine.ProcessSocial(RuleTrigger.Follow, user, 1, _settings.SimDelaySeconds);
+    }
+
+    private void SendTestShare_Click(object sender, RoutedEventArgs e)
+    {
+        if (TryReadSimUser(out var user))
+            _engine.ProcessSocial(RuleTrigger.Share, user, 1, _settings.SimDelaySeconds);
+    }
+
         private void CopyLog_Click(object sender, RoutedEventArgs e)
     {
         try
