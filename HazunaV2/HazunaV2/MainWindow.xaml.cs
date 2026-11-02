@@ -27,7 +27,6 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<GiftRule> _rules;
     private readonly ObservableCollection<MediaItem> _library = AppData.Library;
     private readonly Leaderboard _board = new();
-    private readonly MediaPlayer _player = new();
     private OverlayWindow? _overlay;
     private string _currentPage = "";
 
@@ -43,8 +42,8 @@ public partial class MainWindow : Window
 
         BoardGrid.ItemsSource = _board.Top;
 
-        _player.MediaFailed += (s, e) =>
-            AddLog("   ! Gagal memutar suara: " + e.ErrorException?.Message);
+        SoundService.Error += msg =>
+            Dispatcher.BeginInvoke(() => AddLog("   ! Gagal memutar suara: " + msg));
 
         InitSettings();
         InitSidebar();
@@ -126,7 +125,7 @@ public partial class MainWindow : Window
 
     // ---------- Suara ----------
 
-    private void PlaySound(string path)
+    private void PlaySound(string path, int volumePercent = 100)
     {
         if (string.IsNullOrEmpty(path))
         {
@@ -139,20 +138,53 @@ public partial class MainWindow : Window
             return;
         }
 
-        _player.Stop();
-        _player.Open(new Uri(path));
-        _player.Volume = _settings.SoundVolume / 100.0;
-        _player.Play();
+        SoundService.Play(path, volumePercent);
     }
 
-    private void StopSound_Click(object sender, RoutedEventArgs e) => _player.Stop();
+    private void StopSound_Click(object sender, RoutedEventArgs e) => SoundService.Stop();
 
     // ---------- Gift Rules ----------
 
     private void AddRule_Click(object sender, RoutedEventArgs e)
     {
-                _rules.Add(new GiftRule { GiftName = "", Key = "" });
+        var fresh = new GiftRule { GiftName = "", Key = "" };
+        var dlg = new RuleEditorWindow(fresh, true) { Owner = this };
+        if (dlg.ShowDialog() != true) return;
+
+        _rules.Add(dlg.Result);
         RuleStore.Save(_rules);
+        RulesGrid.SelectedItem = dlg.Result;
+        RulesGrid.ScrollIntoView(dlg.Result);
+    }
+
+    private void EditRule(GiftRule rule)
+    {
+        var dlg = new RuleEditorWindow(rule, false) { Owner = this };
+        if (dlg.ShowDialog() != true) return;
+
+        rule.CopyFrom(dlg.Result);
+        RuleStore.Save(_rules);
+    }
+
+    private void EditRule_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is GiftRule rule) EditRule(rule);
+    }
+
+    private void RulesGrid_DoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        // Hanya saat yang diklik adalah baris (bukan kotak centang, nama efek, atau pegangan geser)
+        if (e.OriginalSource is not DependencyObject d) return;
+        for (var cur = d; cur != null; cur = System.Windows.Media.VisualTreeHelper.GetParent(cur))
+        {
+            if (cur is System.Windows.Controls.Primitives.ButtonBase || cur is System.Windows.Controls.TextBox) return;
+            if (cur is System.Windows.Controls.DataGridRow row && row.Item is GiftRule rule)
+            {
+                EditRule(rule);
+                e.Handled = true;
+                return;
+            }
+        }
     }
 
     private void TriggerChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -281,7 +313,7 @@ public partial class MainWindow : Window
         _tts?.Dispose();
         _overlay?.Close();
         _menuOverlay?.Close();
-        _player.Close();
+        SoundService.Stop();
         base.OnClosing(e);
     }
 }

@@ -14,11 +14,9 @@ public partial class MainWindow
     {
         ApiKeyBox.Password = _settings.TikToolsApiKey;
         UsernameBox.Text = _settings.TikTokUsername;
-        VolumeSlider.Value = _settings.SoundVolume;
-        VolumeLabel.Text = _settings.SoundVolume + "%";
         SimDelayBox.Text = _settings.SimDelaySeconds.ToString();
         ChromaCheck.IsChecked = _settings.OverlayChromaKey;
-        MediaPopup.Volume = _settings.SoundVolume / 100.0;
+        MigrateVolume();
 
         InitUpdate();
 
@@ -32,14 +30,19 @@ public partial class MainWindow
         _settingsReady = true;
     }
 
-    private void Volume_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    // Volume dulu satu untuk semua; kini per aturan. Terapkan nilai lama sekali saja.
+    private void MigrateVolume()
     {
-        if (!_settingsReady) return;
+        if (_settings.VolumeMigrated) return;
 
-        int v = (int)VolumeSlider.Value;
-        _settings.SoundVolume = v;
-        VolumeLabel.Text = v + "%";
-        MediaPopup.Volume = v / 100.0;
+        int old = Math.Clamp(_settings.SoundVolume, 1, 100);
+        if (old != 100)
+        {
+            foreach (var r in _rules) r.SoundVolume = old;
+            RuleStore.Save(_rules);
+        }
+        _settings.VolumeMigrated = true;
+        SettingsStore.Save(_settings);
     }
 
     private void SaveSettings_Click(object sender, RoutedEventArgs e)
@@ -58,7 +61,6 @@ public partial class MainWindow
 
         _settings.TikTokUsername = user;
         _settings.TikToolsApiKey = ApiKeyBox.Password.Trim();
-        _settings.SoundVolume = (int)VolumeSlider.Value;
         _settings.SimDelaySeconds = delay;
         SettingsStore.Save(_settings);
 

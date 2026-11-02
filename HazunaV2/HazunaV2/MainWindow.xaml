@@ -253,12 +253,13 @@
                             Style="{StaticResource GhostButton}" Padding="16,8" Margin="0,0,8,0"/>
                     <Button Content="Impor Daftar Gift" Click="LoadCatalog_Click"
                             Style="{StaticResource GhostButton}" Padding="16,8"/>
-                    <TextBlock Text="Geser ☰ untuk mengubah urutan. Aturan dengan nama efek yang sama digabung di overlay."
+                    <TextBlock Text="Geser ☰ untuk mengubah urutan. Klik dua kali baris atau tombol Pengaturan untuk mengubah isinya. Nama efek yang sama digabung di overlay."
                                Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
                                Margin="14,0,0,0" TextWrapping="Wrap" MaxWidth="420"/>
                 </StackPanel>
 
                 <DataGrid x:Name="RulesGrid" Grid.Row="1" CanUserSortColumns="False" AllowDrop="True"
+                          MouseDoubleClick="RulesGrid_DoubleClick"
                           DragOver="RulesGrid_DragOver" Drop="RulesGrid_Drop" DragLeave="RulesGrid_DragLeave"
                           AutoGenerateColumns="False" CanUserAddRows="False"
                           Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextBrush}"
@@ -287,109 +288,32 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Pemicu" Width="110">
+                        <DataGridTemplateColumn Header="Pemicu / Gift" Width="*" MinWidth="220" IsReadOnly="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox SelectedIndex="{Binding TriggerIndex, UpdateSourceTrigger=PropertyChanged}"
-                                              Margin="4,3" SelectionChanged="TriggerChanged">
-                                        <ComboBoxItem Content="Gift"/>
-                                        <ComboBoxItem Content="Tap-tap"/>
-                                        <ComboBoxItem Content="Follow"/>
-                                        <ComboBoxItem Content="Share"/>
-                                    </ComboBox>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTemplateColumn Header="Gift / Jumlah tap" Width="*" MinWidth="240">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                  <Grid>
-                                    <StackPanel Orientation="Horizontal" Margin="6,3"
-                                                Visibility="{Binding IsSocial, Converter={StaticResource BoolToVis}}">
-                                        <StackPanel Orientation="Horizontal"
-                                                    Visibility="{Binding IsLike, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="Tiap" Foreground="#C9D2F5" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                            <TextBox Text="{Binding LikeCountText, UpdateSourceTrigger=LostFocus}"
-                                                     Width="70" Padding="4,2" VerticalContentAlignment="Center"/>
-                                            <TextBlock Text="tap" Foreground="#C9D2F5" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                                        </StackPanel>
-                                        <TextBlock Text="{Binding SocialInfoText}" Foreground="#8C97C2" VerticalAlignment="Center"
-                                                   Visibility="{Binding IsFollowOrShare, Converter={StaticResource BoolToVis}}"/>
+                                    <StackPanel Margin="8,5" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding SourceText}" Foreground="White" FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding DetailText}" Foreground="#8C97C2" FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
-                                    <Button Click="PickGift_Click"
-                                            Visibility="{Binding IsGift, Converter={StaticResource BoolToVis}}" Margin="4,3" Padding="10,4"
-                                            HorizontalContentAlignment="Stretch" Background="#1A2242">
-                                        <DockPanel>
-                                            <TextBlock DockPanel.Dock="Right" Text="▾" Foreground="#22D3EE"
-                                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding GiftDisplay}" Foreground="White"
-                                                           TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Text="{Binding GiftInfoText}" Foreground="#8C97C2"
-                                                           FontSize="11" TextTrimming="CharacterEllipsis"/>
-                                            </StackPanel>
-                                        </DockPanel>
-                                    </Button>
-                                  </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Tombol" Width="170">
+                        <DataGridTemplateColumn Header="Nama efek" Width="220" IsReadOnly="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <DockPanel Margin="4,2">
-                                        <Button DockPanel.Dock="Right" Content="Atur..." Click="PickKey_Click"
-                                                Padding="10,3" Margin="4,0,0,0"/>
-                                        <TextBlock Text="{Binding KeyDisplay}" Foreground="#C9D2F5"
-                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                    </DockPanel>
+                                    <TextBlock Text="{Binding EffectDisplay}" Foreground="#E9D5FF" FontWeight="SemiBold"
+                                               VerticalAlignment="Center" Margin="8,0" TextTrimming="CharacterEllipsis"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Durasi (dtk)" Binding="{Binding DurationText}" Width="95"/>
-
-                        <DataGridTextColumn Header="Efek (overlay)" Binding="{Binding EffectName}" Width="150"/>
-
-                        <DataGridTemplateColumn Header="Per gift / tap" Width="75">
+                        <DataGridTemplateColumn Header="" Width="110" IsReadOnly="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <CheckBox IsChecked="{Binding RepeatByCount, UpdateSourceTrigger=PropertyChanged}"
-                                              Style="{StaticResource GridCheck}"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTemplateColumn Header="Suara" Width="210">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <DockPanel Margin="4,2">
-                                        <Button DockPanel.Dock="Right" Content="Tes" Click="TestSound_Click"
-                                                Padding="10,3" Margin="4,0,0,0"/>
-                                        <Button DockPanel.Dock="Right" Content="Pilih..." Click="PickSound_Click"
-                                                Padding="10,3"/>
-                                        <TextBlock Text="{Binding SoundName}" Foreground="#C9D2F5"
-                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                                   Margin="0,0,8,0"/>
-                                    </DockPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTemplateColumn Header="Media (GIF/Video)" Width="210">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <DockPanel Margin="4,2">
-                                        <Button DockPanel.Dock="Right" Content="Tes" Click="TestMedia_Click"
-                                                Padding="10,3" Margin="4,0,0,0"/>
-                                        <Button DockPanel.Dock="Right" Content="Pilih..." Click="PickMedia_Click"
-                                                Padding="10,3"/>
-                                        <TextBlock Text="{Binding MediaName}" Foreground="#C9D2F5"
-                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                                   Margin="0,0,8,0"/>
-                                    </DockPanel>
+                                    <Button Content="Pengaturan..." Click="EditRule_Click" Padding="12,4" Margin="4,3"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -871,21 +795,6 @@
                                    Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                         <PasswordBox x:Name="ApiKeyBox" Margin="0,8,0,22" Padding="8,6"
                                      Background="#0E1424" Foreground="#EEF2FF" BorderBrush="#2B3760"/>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
-                            <TextBlock Text="Volume suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <TextBlock Text="Berlaku untuk suara, GIF, dan video. Perubahan langsung terasa, tapi tersimpan permanen setelah klik Simpan."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
-                        <DockPanel Margin="0,10,0,22">
-                            <TextBlock x:Name="VolumeLabel" DockPanel.Dock="Right" Width="52"
-                                       TextAlignment="Right" Foreground="{StaticResource CyanBrush}"
-                                       FontWeight="SemiBold" Text="100%"/>
-                            <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100"
-                                    TickFrequency="5" IsSnapToTickEnabled="True"
-                                    ValueChanged="Volume_Changed"/>
-                        </DockPanel>
 
                         <StackPanel Orientation="Horizontal">
                             <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource GreenBrush}" Margin="0,0,10,0"/>

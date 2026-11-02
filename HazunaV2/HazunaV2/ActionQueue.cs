@@ -6,7 +6,9 @@ public record QueuedAction(
     string UserName, string GiftName, int Index, int Total,
     string Key, int TapHoldMs, bool HoldKey,
     string SoundPath, string MediaPath,
-    double DurationSeconds, double StartDelaySeconds);
+    double DurationSeconds, double StartDelaySeconds,
+    int SoundVolume = 100, string EffectName = "",
+    string WebhookUrl = "", string WebhookMethod = "POST", string WebhookBody = "");
 
 public class ActionQueue
 {

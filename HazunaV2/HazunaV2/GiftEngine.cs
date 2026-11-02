@@ -125,7 +125,9 @@ public class GiftEngine
                 rule.Key, rule.HoldMs, false,
                 sound, media,
                 duration,
-                i == 1 ? firstDelay : 0));
+                i == 1 ? firstDelay : 0,
+                rule.SoundVolume, rule.EffectName,
+                rule.WebhookEnabled ? rule.WebhookUrl : "", rule.WebhookMethod, rule.WebhookBody));
         }
         _queue.EnqueueRange(batch);
         OnRuleFired?.Invoke(rule);

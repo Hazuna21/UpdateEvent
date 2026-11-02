@@ -7,7 +7,8 @@ public class AppSettings
 {
     public bool SidebarCollapsed { get; set; }
     public string TikTokUsername { get; set; } = "";
-    public int SoundVolume { get; set; } = 100;
+    public int SoundVolume { get; set; } = 100;           // lama: volume global, kini dipindah ke tiap aturan
+    public bool VolumeMigrated { get; set; }
     public double SimDelaySeconds { get; set; } = 3;
     public bool OverlayChromaKey { get; set; }
     public string TikToolsApiKey { get; set; } = "";

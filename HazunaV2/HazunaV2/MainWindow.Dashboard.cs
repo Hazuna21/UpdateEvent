@@ -60,7 +60,7 @@ public partial class MainWindow
             if (!string.IsNullOrEmpty(a.SoundPath))
             {
                 if (File.Exists(a.SoundPath))
-                    PlaySound(a.SoundPath);
+                    PlaySound(a.SoundPath, a.SoundVolume);
                 else
                     AddLog("   ! File suara tidak ditemukan: " + a.SoundPath);
             }
@@ -68,10 +68,13 @@ public partial class MainWindow
             if (!string.IsNullOrEmpty(a.MediaPath))
             {
                 if (File.Exists(a.MediaPath))
-                    closeMedia = MediaPopup.Show(a.MediaPath, duration);
+                    closeMedia = MediaPopup.Show(a.MediaPath, duration, Math.Min(1.0, a.SoundVolume / 100.0));
                 else
                     AddLog("   ! File media tidak ditemukan: " + a.MediaPath);
             }
+
+            if (!string.IsNullOrWhiteSpace(a.WebhookUrl))
+                _ = SendWebhookAsync(a);
 
             if (!string.IsNullOrWhiteSpace(a.Key))
             {
@@ -90,8 +93,27 @@ public partial class MainWindow
         finally
         {
             // Akhir giliran (selesai atau dibatalkan): bersihkan semuanya
-            _player.Stop();
+            SoundService.Stop();
             closeMedia?.Invoke();
+        }
+    }
+
+    private async Task SendWebhookAsync(QueuedAction a)
+    {
+        try
+        {
+            var vars = new Dictionary<string, string>
+            {
+                ["user"] = a.UserName, ["gift"] = a.GiftName,
+                ["count"] = a.Total.ToString(), ["index"] = a.Index.ToString(),
+                ["effect"] = a.EffectName
+            };
+            string status = await WebhookService.SendAsync(a.WebhookUrl, a.WebhookMethod, a.WebhookBody, vars);
+            Dispatcher.Invoke(() => AddLog("   Webhook terkirim (" + status + ")"));
+        }
+        catch (Exception ex)
+        {
+            Dispatcher.Invoke(() => AddLog("   ! Webhook gagal: " + ex.Message));
         }
     }
 
@@ -143,7 +165,7 @@ public partial class MainWindow
     private void StopAll_Click(object sender, RoutedEventArgs e)
     {
         int dropped = _queue.Clear();
-        _player.Stop();
+        SoundService.Stop();
         AddLog($"Dihentikan: {dropped} giliran dibatalkan, giliran yang berjalan dihentikan.");
     }
 

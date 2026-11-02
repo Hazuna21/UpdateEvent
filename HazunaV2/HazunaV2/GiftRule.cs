@@ -22,6 +22,83 @@ public class GiftRule : INotifyPropertyChanged
     private RuleTrigger _trigger = RuleTrigger.Gift;
     private int _likeCount = 100;
     private string _effectName = "";
+    private int _soundVolume = 100;
+    private bool _webhookEnabled;
+    private string _webhookUrl = "";
+    private string _webhookMethod = "POST";
+    private string _webhookBody = "";
+
+    // Volume suara aturan ini: 1 - 200 persen (di atas 100 = diperkeras, bisa pecah kalau terlalu tinggi)
+    public int SoundVolume
+    {
+        get => _soundVolume;
+        set { _soundVolume = Math.Clamp(value, 1, 200); OnChanged(); }
+    }
+
+    // Webhook: permintaan HTTP yang dikirim tiap kali aturan dijalankan
+    public bool WebhookEnabled { get => _webhookEnabled; set { _webhookEnabled = value; OnChanged(); } }
+    public string WebhookUrl { get => _webhookUrl; set { _webhookUrl = value ?? ""; OnChanged(); } }
+    public string WebhookMethod { get => _webhookMethod; set { _webhookMethod = string.Equals(value, "GET", StringComparison.OrdinalIgnoreCase) ? "GET" : "POST"; OnChanged(); } }
+    public string WebhookBody { get => _webhookBody; set { _webhookBody = value ?? ""; OnChanged(); } }
+
+    // ---------- Ringkasan untuk daftar ----------
+
+    [JsonIgnore]
+    public string SourceText => _trigger switch
+    {
+        RuleTrigger.Like => $"Tap-tap  ·  tiap {_likeCount:N0} tap",
+        RuleTrigger.Follow => "Follow",
+        RuleTrigger.Share => "Share",
+        _ => GiftDisplay
+    };
+
+    [JsonIgnore]
+    public string DetailText
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (_trigger == RuleTrigger.Gift) parts.Add(GiftInfoText);
+            parts.Add(string.IsNullOrWhiteSpace(_key) ? "tanpa tombol" : "tombol " + _key);
+            parts.Add(DurationText + " dtk");
+            if (!string.IsNullOrEmpty(_soundId)) parts.Add($"suara {_soundVolume}%");
+            if (!string.IsNullOrEmpty(_mediaId)) parts.Add("media");
+            if (_webhookEnabled && !string.IsNullOrWhiteSpace(_webhookUrl)) parts.Add("webhook");
+            return string.Join("  ·  ", parts);
+        }
+    }
+
+    [JsonIgnore]
+    public string EffectDisplay => string.IsNullOrWhiteSpace(_effectName) ? "(belum diberi nama efek)" : _effectName;
+
+    // Salinan lepas (dipakai jendela pengaturan supaya bisa dibatalkan)
+    public GiftRule Clone()
+    {
+        var c = new GiftRule();
+        c.CopyFrom(this);
+        return c;
+    }
+
+    public void CopyFrom(GiftRule o)
+    {
+        Enabled = o.Enabled;
+        Trigger = o.Trigger;
+        LikeCount = o.LikeCount;
+        GiftName = o.GiftName;
+        GiftId = o.GiftId;
+        EffectName = o.EffectName;
+        Key = o.Key;
+        HoldMs = o.HoldMs;
+        RepeatByCount = o.RepeatByCount;
+        DurationSeconds = o.DurationSeconds;
+        SoundId = o.SoundId;
+        MediaId = o.MediaId;
+        SoundVolume = o.SoundVolume;
+        WebhookEnabled = o.WebhookEnabled;
+        WebhookUrl = o.WebhookUrl;
+        WebhookMethod = o.WebhookMethod;
+        WebhookBody = o.WebhookBody;
+    }
 
     // Nama efek yang ditampilkan di overlay menu gift (kosong = tidak ditampilkan)
     public string EffectName
@@ -281,5 +358,16 @@ public class GiftRule : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnChanged([CallerMemberName] string? n = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
+
+        // Ringkasan di daftar ikut diperbarui setiap ada perubahan
+        if (n != null && n != nameof(SourceText) && n != nameof(DetailText) && n != nameof(EffectDisplay))
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SourceText)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DetailText)));
+            if (n == nameof(EffectName))
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EffectDisplay)));
+        }
+    }
 }

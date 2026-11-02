@@ -15,7 +15,7 @@ public static class MediaPopup
     public static event Action<string>? Failed;
 
     // Mengembalikan fungsi penutup jendela (aman dipanggil berkali-kali)
-    public static Action Show(string path, TimeSpan? duration = null)
+    public static Action Show(string path, TimeSpan? duration = null, double? volume = null)
     {
         bool isGif = Path.GetExtension(path).Equals(".gif", StringComparison.OrdinalIgnoreCase);
 
@@ -24,7 +24,7 @@ public static class MediaPopup
             LoadedBehavior = MediaState.Manual,
             UnloadedBehavior = MediaState.Manual,
             Stretch = Stretch.Uniform,
-            Volume = MediaPopup.Volume,
+            Volume = Math.Clamp(volume ?? MediaPopup.Volume, 0, 1),
             Opacity = 0,
             Source = new Uri(path)
         };
