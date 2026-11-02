@@ -493,7 +493,7 @@
                             Style="{StaticResource DangerButton}" Padding="16,8"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+                <WrapPanel Grid.Row="1" Margin="0,0,0,12">
                     <TextBlock Text="Urutkan berdasarkan:" Foreground="{StaticResource MutedBrush}"
                                VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <ComboBox Width="150" SelectedIndex="0" SelectionChanged="SortCombo_Changed">
@@ -502,7 +502,14 @@
                     </ComboBox>
                     <CheckBox x:Name="ChromaCheck" Content="Latar hijau (untuk chroma key)"
                               VerticalAlignment="Center" Margin="24,0,0,0" Click="ChromaCheck_Click"/>
-                </StackPanel>
+                    <TextBlock Text="Ukuran overlay menu gift:" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Center" Margin="24,0,8,0"/>
+                    <ComboBox x:Name="MenuScaleCombo" Width="250" SelectionChanged="MenuScale_Changed">
+                        <ComboBoxItem Content="Kecil 864×480 (9×5 inci)"/>
+                        <ComboBoxItem Content="Sedang 1296×720"/>
+                        <ComboBoxItem Content="HD 1920×1067 (untuk TikTok Studio)"/>
+                    </ComboBox>
+                </WrapPanel>
 
                 <DataGrid x:Name="BoardGrid" Grid.Row="2"
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"

@@ -214,7 +214,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _menuOverlay = new GiftMenuOverlay(_rules);
+        _menuOverlay = new GiftMenuOverlay(_rules, _settings.MenuOverlayScale);
         _menuOverlay.SetChromaKey(ChromaCheck.IsChecked == true);
         _menuOverlay.Closed += (s, args) =>
         {
@@ -223,6 +223,18 @@ public partial class MainWindow : Window
         };
         _menuOverlay.Show();
         MenuOverlayBtn.Content = "Tutup Overlay Menu Gift";
+    }
+
+    private static readonly double[] MenuScales = { 1.0, 1.5, GiftMenuOverlay.HdScale };
+
+    private void MenuScale_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_settingsReady || MenuScaleCombo.SelectedIndex < 0) return;
+
+        double scale = MenuScales[MenuScaleCombo.SelectedIndex];
+        _settings.MenuOverlayScale = scale;
+        SettingsStore.Save(_settings);
+        _menuOverlay?.SetScale(scale);
     }
 
     private void AddTestGift_Click(object sender, RoutedEventArgs e)

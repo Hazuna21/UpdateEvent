@@ -11,6 +11,7 @@ public class AppSettings
     public double SimDelaySeconds { get; set; } = 3;
     public bool OverlayChromaKey { get; set; }
     public string TikToolsApiKey { get; set; } = "";
+    public double MenuOverlayScale { get; set; } = GiftMenuOverlay.HdScale;   // ukuran jendela overlay menu gift
     public string UpdateRepo { get; set; } = "";
     public string UpdateToken { get; set; } = "";
 

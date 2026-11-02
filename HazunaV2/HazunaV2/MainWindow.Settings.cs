@@ -22,6 +22,13 @@ public partial class MainWindow
 
         InitUpdate();
 
+        // Pilihan ukuran overlay menu gift (yang terdekat dengan nilai tersimpan)
+        int best = 0;
+        double[] scales = { 1.0, 1.5, GiftMenuOverlay.HdScale };
+        for (int i = 1; i < scales.Length; i++)
+            if (Math.Abs(scales[i] - _settings.MenuOverlayScale) < Math.Abs(scales[best] - _settings.MenuOverlayScale)) best = i;
+        MenuScaleCombo.SelectedIndex = best;
+
         _settingsReady = true;
     }
 

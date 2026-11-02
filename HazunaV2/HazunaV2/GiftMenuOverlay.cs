@@ -24,7 +24,7 @@ public class GiftMenuOverlay : Window
 {
     // ----- Ukuran -----
     private const double WidthInches = 9, HeightInches = 5;
-    private const double ScreenScale = 1.0;             // 1 = 9x5 inci (96 dpi). Ubah ke ~2.22 untuk jendela 1920 px asli.
+    public const double HdScale = 1920.0 / (9 * 96);    // jendela 1920 x 1067 piksel (HD asli, untuk TikTok Studio / OBS)
     private const double DesignW = 1920, DesignH = 1067;// kanvas HD (9:5)
 
     // ----- Tata letak -----
@@ -48,7 +48,7 @@ public class GiftMenuOverlay : Window
 
     private static readonly DropShadowEffect IconShadow = FrozenEffect(new DropShadowEffect
     {
-        Color = Color.FromRgb(0x2A, 0x0A, 0x5E), BlurRadius = 14, ShadowDepth = 5, Direction = 270, Opacity = 0.75
+        Color = Color.FromRgb(0x2A, 0x0A, 0x5E), BlurRadius = 8, ShadowDepth = 3, Direction = 270, Opacity = 0.7
     });
 
     private static readonly DropShadowEffect TextShadow = FrozenEffect(new DropShadowEffect
@@ -202,7 +202,7 @@ public class GiftMenuOverlay : Window
     private bool _forceRefresh;
     private string _signature = "";
 
-    public GiftMenuOverlay(ObservableCollection<GiftRule> rules)
+    public GiftMenuOverlay(ObservableCollection<GiftRule> rules, double scale = HdScale)
     {
         _rules = rules;
 
@@ -216,8 +216,7 @@ public class GiftMenuOverlay : Window
         ShowActivated = false;
         Left = 40;
         Top = 40;
-        Width = WidthInches * 96 * ScreenScale;
-        Height = HeightInches * 96 * ScreenScale;
+        SetScale(scale);
 
         UseLayoutRounding = false;
         SnapsToDevicePixels = false;
@@ -293,6 +292,14 @@ public class GiftMenuOverlay : Window
             _shineTimer.Start();
             _spinTimer.Start();
         };
+    }
+
+    // Ukuran jendela: 1 = 864 x 480 (9 x 5 inci), HdScale = 1920 x 1067 piksel. Isinya vektor, jadi tetap tajam.
+    public void SetScale(double scale)
+    {
+        scale = Math.Clamp(scale, 0.5, 4);
+        Width = WidthInches * 96 * scale;
+        Height = HeightInches * 96 * scale;
     }
 
     public void SetChromaKey(bool on)
@@ -758,7 +765,7 @@ public class GiftMenuOverlay : Window
                     {
                         Source = img,
                         Stretch = Stretch.Uniform,
-                        Margin = new Thickness(18, 4, 18, 14),
+                        Margin = new Thickness(16, 10, 16, 12),
                         Effect = IconShadow
                     };
                     RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.HighQuality);
@@ -796,7 +803,7 @@ public class GiftMenuOverlay : Window
             RenderTransformOrigin = new Point(0.5, 0.5),
             RenderTransform = motion
         };
-        holder.Children.Add(new Ellipse { Width = 230, Height = 230, Fill = IconGlowBrush });
+        holder.Children.Add(new Ellipse { Width = 146, Height = 146, Fill = IconGlowBrush });
         holder.Children.Add(icon);
 
         var area = new Grid { IsHitTestVisible = false };
