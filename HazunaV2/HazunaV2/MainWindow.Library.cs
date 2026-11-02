@@ -206,6 +206,7 @@ public partial class MainWindow
     private void TestSound_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.DataContext is not GiftRule rule) return;
+        AddLog($"Tes suara \"{rule.SoundName}\" pada volume {rule.SoundVolume}%");
         PlaySound(rule.ResolvedSoundPath, rule.SoundVolume);
     }
 
