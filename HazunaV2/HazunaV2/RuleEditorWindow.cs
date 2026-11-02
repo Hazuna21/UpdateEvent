@@ -95,7 +95,9 @@ public class RuleEditorWindow : Window
 
         // gift
         var giftContent = new DockPanel();
-        giftContent.Children.Add(new TextBlock { DockPanel.Dock = Dock.Right, Text = "▾", Foreground = Cyan, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) });
+        var arrow = new TextBlock { Text = "▾", Foreground = Cyan, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
+        DockPanel.SetDock(arrow, Dock.Right);
+        giftContent.Children.Add(arrow);
         var giftStack = new StackPanel();
         giftStack.Children.Add(_giftText);
         giftStack.Children.Add(_giftInfo);
