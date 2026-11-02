@@ -201,10 +201,12 @@ public partial class MainWindow
         }
     }
 
+    private void VolumeSlider_Done(object sender, RoutedEventArgs e) => RuleStore.Save(_rules);
+
     private void TestSound_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.DataContext is not GiftRule rule) return;
-        PlaySound(rule.ResolvedSoundPath);
+        PlaySound(rule.ResolvedSoundPath, rule.SoundVolume);
     }
 
     private void TestMedia_Click(object sender, RoutedEventArgs e)

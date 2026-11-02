@@ -148,34 +148,6 @@ public class RuleEditorWindow : Window
         _hold.Margin = new Thickness(0, 8, 0, 0);
         root.Children.Add(holdRow);
 
-        // --- Suara ---
-        root.Children.Add(Header("Suara", Cyan));
-        var soundRow = new DockPanel();
-        var sTest = Btn("Tes", TestSound);
-        var sPick = Btn("Pilih...", PickSound);
-        var sClear = Btn("Kosongkan", (s, e) => { _r.SoundId = ""; RefreshMedia(); });
-        DockPanel.SetDock(sTest, Dock.Right); DockPanel.SetDock(sClear, Dock.Right); DockPanel.SetDock(sPick, Dock.Right);
-        soundRow.Children.Add(sTest); soundRow.Children.Add(sClear); soundRow.Children.Add(sPick);
-        soundRow.Children.Add(_soundName);
-        root.Children.Add(soundRow);
-
-        root.Children.Add(Label("Volume suara ini (1 – 200%)"));
-        var volRow = new StackPanel { Orientation = Orientation.Horizontal };
-        volRow.Children.Add(_vol);
-        volRow.Children.Add(_volLabel);
-        var reset = Btn("100%", (s, e) => _vol.Value = 100);
-        volRow.Children.Add(reset);
-        root.Children.Add(volRow);
-        _volWarn.Margin = new Thickness(0, 4, 0, 0);
-        root.Children.Add(_volWarn);
-        _vol.ValueChanged += (s, e) =>
-        {
-            int v = (int)_vol.Value;
-            _r.SoundVolume = v;
-            _volLabel.Text = v + "%";
-            _volWarn.Text = v > 100 ? "Di atas 100% suara diperkeras. File yang sudah keras bisa terdengar pecah; turunkan kalau begitu." : "";
-        };
-
         // --- Media ---
         root.Children.Add(Header("Media (GIF / video)", Cyan));
         var mediaRow = new DockPanel();
