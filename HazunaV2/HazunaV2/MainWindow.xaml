@@ -196,7 +196,7 @@
                                     Style="{StaticResource PrimaryButton}" Margin="0,20,0,8" Padding="16,6"/>
                         </WrapPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <CheckBox x:Name="KeyEnableCheck"
+                            <CheckBox x:Name="KeyEnableCheck" IsChecked="True"
                                       Content="Aktifkan aksi keyboard (tombol dikirim ke jendela yang sedang aktif)"
                                       VerticalAlignment="Center"/>
                         </StackPanel>
