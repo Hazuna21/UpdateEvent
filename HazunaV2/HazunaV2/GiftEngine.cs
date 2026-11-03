@@ -99,6 +99,13 @@ public class GiftEngine
         }
     }
 
+    // Uji satu aturan saja, satu kali (tanpa peduli aktif/tidaknya dan tanpa mencocokkan aturan lain)
+    public void TestRule(GiftRule rule, string user, double keyDelaySeconds)
+    {
+        OnLog?.Invoke($"Tes aturan \"{rule.EffectDisplay}\"");
+        Enqueue(rule, user, rule.TriggerLabel, 1, keyDelaySeconds);
+    }
+
     private void Enqueue(GiftRule rule, string user, string label, int units, double firstDelay)
     {
         string sound = rule.ResolvedSoundPath;

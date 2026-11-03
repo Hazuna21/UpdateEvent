@@ -167,6 +167,16 @@ public partial class MainWindow : Window
         RuleStore.Save(_rules);
     }
 
+    private void TestRule_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not GiftRule rule) return;
+
+        if (KeyEnableCheck.IsChecked == true && !string.IsNullOrWhiteSpace(rule.Key) && _settings.SimDelaySeconds > 0)
+            AddLog($"   Tombol dikirim {_settings.SimDelaySeconds:0.#} dtk lagi, pindah ke jendela tujuan.");
+
+        _engine.TestRule(rule, "Penguji", _settings.SimDelaySeconds);
+    }
+
     private void EditRule_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.DataContext is GiftRule rule) EditRule(rule);
