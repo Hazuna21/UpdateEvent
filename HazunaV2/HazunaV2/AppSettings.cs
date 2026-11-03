@@ -9,6 +9,12 @@ public class AppSettings
     public string TikTokUsername { get; set; } = "";
     public int SoundVolume { get; set; } = 100;           // lama: volume global, kini dipindah ke tiap aturan
     public bool VolumeMigrated { get; set; }
+
+    // Skor game (WIN = x / target)
+    public int ScoreValue { get; set; }
+    public int ScoreTarget { get; set; } = 50;
+    public int ScoreWin { get; set; } = 1;
+    public int ScoreDeath { get; set; } = 2;
     public double SimDelaySeconds { get; set; } = 3;
     public bool OverlayChromaKey { get; set; }
     public string TikToolsApiKey { get; set; } = "";

@@ -13,7 +13,7 @@ public partial class MainWindow : Window
         ["Dashboard"] = "Ringkasan aplikasi dan status koneksi.",
         ["Gift Rules"] = "Hubungkan gift dengan tombol, suara, dan media dari pustaka. Durasi = lama satu giliran. Per gift = tiap gift dalam kombo jadi satu giliran.",
         ["Media & Sounds"] = "Pustaka suara dan media. Atur urutan dengan ▲▼, pilih jenisnya, lalu pakai di Gift Rules.",
-        ["Top Gifters"] = "Overlay leaderboard penonton. Saat ini memakai data uji, belum terhubung ke TikTok.",
+        ["Top Gifters"] = "Overlay leaderboard penonton dan skor game (WIN = x / target). Skor bisa diatur manual atau otomatis dari script GTA.",
         ["Settings"] = "Pengaturan aplikasi. Klik Simpan Pengaturan agar perubahan tersimpan.",
         ["Text to Speech"] = "Membaca komentar TikTok LIVE dengan suara. Komentar dibersihkan dulu, lalu dibaca satu per satu.",
         ["Voice Changer"] = "Mengubah suara mikrofon Anda secara real-time (nada dan efek). Kirim ke VB-Cable agar terdengar di LIVE.",
@@ -46,6 +46,7 @@ public partial class MainWindow : Window
             Dispatcher.BeginInvoke(() => AddLog("   ! Gagal memutar suara: " + msg));
 
         InitSettings();
+        InitScore();
         InitSidebar();
         InitGifts();
         InitDashboard();
@@ -295,6 +296,7 @@ public partial class MainWindow : Window
         bool on = ChromaCheck.IsChecked == true;
         _overlay?.SetChromaKey(on);
         _menuOverlay?.SetChromaKey(on);
+        _scoreOverlay?.SetChromaKey(on);
         _settings.OverlayChromaKey = on;
         SettingsStore.Save(_settings);
     }
@@ -313,6 +315,7 @@ public partial class MainWindow : Window
         _tts?.Dispose();
         _overlay?.Close();
         _menuOverlay?.Close();
+        _scoreOverlay?.Close();
         SoundService.Stop();
         base.OnClosing(e);
     }
