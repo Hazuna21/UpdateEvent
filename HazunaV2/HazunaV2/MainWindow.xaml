@@ -843,7 +843,9 @@
                         </StackPanel>
                         <TextBlock Text="Nama pengguna tanpa @. Dipakai saat menghubungkan ke LIVE."
                                    Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
-                        <TextBox x:Name="UsernameBox" Margin="0,8,0,22"/>
+                        <TextBox x:Name="UsernameBox" Margin="0,8,0,8"/>
+                        <CheckBox x:Name="AutoConnectCheck" Click="AutoConnect_Click" Margin="0,0,0,22"
+                                  Content="Hubungkan otomatis saat LIVE dimulai (dicoba tiap 20 detik)"/>
 
                         <StackPanel Orientation="Horizontal">
                             <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>

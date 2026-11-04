@@ -14,6 +14,7 @@ public partial class MainWindow
     {
         ApiKeyBox.Password = _settings.TikToolsApiKey;
         UsernameBox.Text = _settings.TikTokUsername;
+        AutoConnectCheck.IsChecked = _settings.AutoConnect;
         SimDelayBox.Text = _settings.SimDelaySeconds.ToString();
         ChromaCheck.IsChecked = _settings.OverlayChromaKey;
         MigrateVolume();

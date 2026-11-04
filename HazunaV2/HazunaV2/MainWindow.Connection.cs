@@ -28,15 +28,59 @@ public partial class MainWindow
         _connector.CatalogLoaded += list => Dispatcher.InvokeAsync(() => OnCatalog(list));
 
         ApplyLiveStateUi(LiveState.Idle, "TikTok: belum terhubung");
+
+        // Sambung otomatis: cek berkala apakah LIVE sudah mulai
+        _autoConnectTimer.Tick += (s, e) => TryAutoConnect();
+        _autoConnectTimer.Start();
+        Dispatcher.InvokeAsync(TryAutoConnect, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+    }
+
+    private readonly System.Windows.Threading.DispatcherTimer _autoConnectTimer = new() { Interval = TimeSpan.FromSeconds(20) };
+    private bool _manualDisconnect;     // pengguna menekan Putuskan: jangan sambung sendiri sampai menekan Hubungkan lagi
+    private bool _autoAttempted;
+
+    private void TryAutoConnect()
+    {
+        if (!_settings.AutoConnect || _manualDisconnect || _connector.IsRunning) return;
+
+        var user = _settings.TikTokUsername;
+        if (string.IsNullOrWhiteSpace(user)) return;
+
+        // Pesan hanya di percobaan pertama supaya log tidak penuh saat menunggu LIVE
+        if (!_autoAttempted)
+        {
+            _autoAttempted = true;
+            AddLog($"[TikTok] Sambung otomatis aktif: menunggu @{user.Trim().TrimStart('@')} LIVE...");
+        }
+
+        _liveGiftCount = 0;
+        _joinSeen.Clear();
+        _connector.Connect(user);
+    }
+
+    private void AutoConnect_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.AutoConnect = AutoConnectCheck.IsChecked == true;
+        SettingsStore.Save(_settings);
+
+        if (_settings.AutoConnect)
+        {
+            _manualDisconnect = false;
+            _autoAttempted = false;
+            TryAutoConnect();
+        }
     }
 
     private void ToggleConnect_Click(object sender, RoutedEventArgs e)
     {
         if (_connector.IsRunning)
         {
+            _manualDisconnect = true;
             _connector.Disconnect();
             return;
         }
+
+        _manualDisconnect = false;
 
         var user = _settings.TikTokUsername;
         if (string.IsNullOrWhiteSpace(user))

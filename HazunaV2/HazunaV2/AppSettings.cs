@@ -7,6 +7,7 @@ public class AppSettings
 {
     public bool SidebarCollapsed { get; set; }
     public string TikTokUsername { get; set; } = "";
+    public bool AutoConnect { get; set; } = true;       // hubungkan otomatis saat LIVE dimulai
     public int SoundVolume { get; set; } = 100;           // lama: volume global, kini dipindah ke tiap aturan
     public bool VolumeMigrated { get; set; }
 
