@@ -89,7 +89,7 @@ public class RuleEditorWindow : Window
 
         // --- Pemicu ---
         root.Children.Add(Header("Pemicu", Cyan));
-        _trigger.Items.Add("Gift"); _trigger.Items.Add("Tap-tap"); _trigger.Items.Add("Follow"); _trigger.Items.Add("Share");
+        _trigger.Items.Add("Gift"); _trigger.Items.Add("Tap-tap"); _trigger.Items.Add("Follow"); _trigger.Items.Add("Share"); _trigger.Items.Add("Join (penonton baru)");
         _trigger.SelectionChanged += (s, e) => { if (_trigger.SelectedIndex >= 0) { _r.TriggerIndex = _trigger.SelectedIndex; RefreshTriggerUi(); } };
         root.Children.Add(_trigger);
 

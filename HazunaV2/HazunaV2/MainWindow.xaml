@@ -185,6 +185,8 @@
                             <Button Content="Kirim Follow" Click="SendTestFollow_Click"
                                     Style="{StaticResource PrimaryButton}" Margin="0,20,8,8" Padding="16,6"/>
                             <Button Content="Kirim Share" Click="SendTestShare_Click"
+                                    Style="{StaticResource PrimaryButton}" Margin="0,20,8,8" Padding="16,6"/>
+                            <Button Content="Kirim Join" Click="SendTestJoin_Click"
                                     Style="{StaticResource PrimaryButton}" Margin="0,20,0,8" Padding="16,6"/>
                         </WrapPanel>
                     </StackPanel>
@@ -684,7 +686,9 @@
                     </StackPanel>
                 </WrapPanel>
                 <CheckBox x:Name="AiOnlyQuestionsCheck" Content="Hanya jawab komentar yang berupa pertanyaan"
-                          Click="AiOption_Click" Margin="0,4,0,18"/>
+                          Click="AiOption_Click" Margin="0,4,0,8"/>
+                <CheckBox x:Name="AiWelcomeCheck" Content="Sambut penonton yang baru bergabung (tiap penonton satu kali)"
+                          Click="AiOption_Click" Margin="0,0,0,18"/>
 
                 <StackPanel Orientation="Horizontal">
                     <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource BlueBrush}" Margin="0,0,10,0"/>

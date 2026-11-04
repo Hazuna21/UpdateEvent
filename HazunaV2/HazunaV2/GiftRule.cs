@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace HazunaV2;
 
-public enum RuleTrigger { Gift = 0, Like = 1, Follow = 2, Share = 3 }
+public enum RuleTrigger { Gift = 0, Like = 1, Follow = 2, Share = 3, Join = 4 }
 
 public class GiftRule : INotifyPropertyChanged
 {
@@ -49,6 +49,7 @@ public class GiftRule : INotifyPropertyChanged
         RuleTrigger.Like => $"Tap-tap  ·  tiap {_likeCount:N0} tap",
         RuleTrigger.Follow => "Follow",
         RuleTrigger.Share => "Share",
+        RuleTrigger.Join => "Penonton baru (join)",
         _ => GiftDisplay
     };
 
@@ -114,6 +115,7 @@ public class GiftRule : INotifyPropertyChanged
         RuleTrigger.Like => $"Taptap {_likeCount}x",
         RuleTrigger.Follow => "Follow",
         RuleTrigger.Share => "Share",
+        RuleTrigger.Join => "Join",
         _ => string.IsNullOrWhiteSpace(_giftName) ? "Gift" : _giftName
     };
 
@@ -163,11 +165,11 @@ public class GiftRule : INotifyPropertyChanged
     }
 
     [JsonIgnore]
-    public int TriggerIndex { get => (int)_trigger; set => Trigger = (RuleTrigger)Math.Clamp(value, 0, 3); }
+    public int TriggerIndex { get => (int)_trigger; set => Trigger = (RuleTrigger)Math.Clamp(value, 0, 4); }
 
     [JsonIgnore] public bool IsGift => _trigger == RuleTrigger.Gift;
     [JsonIgnore] public bool IsLike => _trigger == RuleTrigger.Like;
-    [JsonIgnore] public bool IsFollowOrShare => _trigger == RuleTrigger.Follow || _trigger == RuleTrigger.Share;
+    [JsonIgnore] public bool IsFollowOrShare => _trigger == RuleTrigger.Follow || _trigger == RuleTrigger.Share || _trigger == RuleTrigger.Join;
     [JsonIgnore] public bool IsSocial => _trigger != RuleTrigger.Gift;
 
     [JsonIgnore]
@@ -176,6 +178,7 @@ public class GiftRule : INotifyPropertyChanged
         RuleTrigger.Like => $"Tap-tap: aktif tiap {_likeCount:N0} tap",
         RuleTrigger.Follow => "Follow: aktif tiap ada follower baru",
         RuleTrigger.Share => "Share: aktif tiap live dibagikan",
+        RuleTrigger.Join => "Join: aktif tiap ada penonton baru masuk (namanya dipakai untuk zombie)",
         _ => ""
     };
 
@@ -188,6 +191,7 @@ public class GiftRule : INotifyPropertyChanged
         RuleTrigger.Like => "Tap-tap",
         RuleTrigger.Follow => "Follow",
         RuleTrigger.Share => "Share",
+        RuleTrigger.Join => "Join",
         _ => "Gift"
     };
 

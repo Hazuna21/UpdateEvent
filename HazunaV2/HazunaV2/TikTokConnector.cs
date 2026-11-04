@@ -391,6 +391,7 @@ public class TikTokConnector
         if (Has(name, "Like")) return RuleTrigger.Like;
         if (Has(name, "Follow")) return RuleTrigger.Follow;
         if (Has(name, "Share")) return RuleTrigger.Share;
+        if (Has(name, "Join")) return RuleTrigger.Join;
         return null;
     }
 

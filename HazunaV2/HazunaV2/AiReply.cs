@@ -5,7 +5,7 @@ using System.Threading.Channels;
 
 namespace HazunaV2;
 
-public record AiJob(string UserName, string Comment);
+public record AiJob(string UserName, string Comment, bool Welcome = false);
 
 // Pemanggil API AI: Claude (Anthropic Messages API) atau Gemini (Google generateContent).
 // Penyedia dipilih dari nama model: diawali "gemini" = Gemini, selain itu = Claude.

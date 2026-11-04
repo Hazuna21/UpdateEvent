@@ -18,7 +18,11 @@ public partial class MainWindow
         _connector.Log += msg => Dispatcher.InvokeAsync(() => AddLog("[TikTok] " + msg));
         _connector.StateChanged += (state, msg) => Dispatcher.InvokeAsync(() => OnLiveState(state, msg));
         _connector.GiftReceived += gift => Dispatcher.InvokeAsync(() => OnLiveGift(gift));
-        _connector.SocialReceived += s => Dispatcher.InvokeAsync(() => _engine.ProcessSocial(s.Kind, s.UserName, s.Count));
+        _connector.SocialReceived += s => Dispatcher.InvokeAsync(() =>
+        {
+            if (s.Kind == RuleTrigger.Join) OnViewerJoin(s.UserName, 0);
+            else _engine.ProcessSocial(s.Kind, s.UserName, s.Count);
+        });
         _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => OnLiveChat(chat));
         _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => OnChatForAi(chat));
         _connector.CatalogLoaded += list => Dispatcher.InvokeAsync(() => OnCatalog(list));
@@ -42,6 +46,7 @@ public partial class MainWindow
         }
 
         _liveGiftCount = 0;
+        _joinSeen.Clear();
         _connector.Connect(user);
     }
 

@@ -427,6 +427,7 @@ public class GiftMenuOverlay : Window
         RuleTrigger.Gift => r.GiftId != 0 ? "G#" + r.GiftId : "G:" + r.GiftName.Trim().ToLowerInvariant(),
         RuleTrigger.Like => "L",
         RuleTrigger.Follow => "F",
+        RuleTrigger.Join => "J",
         _ => "S"
     };
 
@@ -756,6 +757,7 @@ public class GiftMenuOverlay : Window
             case RuleTrigger.Like: glyph = "❤"; color = Frozen(new SolidColorBrush(Color.FromRgb(0xE5, 0x20, 0x2A))); break;
             case RuleTrigger.Follow: glyph = "\U0001F464"; break;
             case RuleTrigger.Share: glyph = "\U0001F517"; break;
+            case RuleTrigger.Join: glyph = "\U0001F44B"; break;
             default:
                 var known = rule.GiftId != 0 ? GiftCatalog.FindById(rule.GiftId) : GiftCatalog.FindByName(rule.GiftName);
                 var img = GetImage(known?.ImageUrl);

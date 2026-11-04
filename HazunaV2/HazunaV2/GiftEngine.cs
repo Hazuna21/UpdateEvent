@@ -75,7 +75,7 @@ public class GiftEngine
         if (kind == RuleTrigger.Like)
             OnLog?.Invoke($"{user} tap-tap {count}x");
         else
-            OnLog?.Invoke($"{user} " + (kind == RuleTrigger.Follow ? "follow" : "share") + " live");
+            OnLog?.Invoke($"{user} " + (kind == RuleTrigger.Follow ? "follow" : kind == RuleTrigger.Join ? "bergabung ke" : "share") + " live");
 
         foreach (var rule in rules)
         {

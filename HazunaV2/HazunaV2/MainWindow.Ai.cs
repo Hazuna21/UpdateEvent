@@ -42,6 +42,7 @@ public partial class MainWindow
         AiTemplateBox.Text = _settings.AiSpeakTemplate;
         AiOnlyQuestionsCheck.IsChecked = _settings.AiOnlyQuestions;
         AiSpeakCheck.IsChecked = _settings.AiSpeakAnswer;
+        // AiWelcomeCheck sengaja tidak diisi dari pengaturan: selalu mati saat aplikasi dibuka
 
         _aiReady = true;
         UpdateAiStatus();
@@ -82,6 +83,7 @@ public partial class MainWindow
 
         _settings.AiOnlyQuestions = AiOnlyQuestionsCheck.IsChecked == true;
         _settings.AiSpeakAnswer = AiSpeakCheck.IsChecked == true;
+        _settings.AiWelcome = AiWelcomeCheck.IsChecked == true;
 
         _aiQueue.CooldownSeconds = _settings.AiCooldownSeconds;
 
@@ -144,11 +146,17 @@ public partial class MainWindow
     // Satu permintaan AI (dijalankan oleh antrean, di thread tampilan)
     private async Task ExecuteAiAsync(AiJob job, CancellationToken ct)
     {
+        string system = AiClient.BuildSystemPrompt(_settings.AiPersona);
+        if (job.Welcome)
+            system += "\n\nTugas khusus kali ini: penonton bernama di dalam <komentar_penonton> baru saja bergabung ke LIVE. " +
+                      "Sambut dia dengan hangat dalam SATU kalimat singkat yang menyebut namanya. " +
+                      "Jangan menjawab SKIP dan jangan menanyakan hal apa pun.";
+
         var (answer, error) = await AiClient.AskAsync(
-            _settings.AiApiKey, _settings.AiModel, AiClient.BuildSystemPrompt(_settings.AiPersona),
+            _settings.AiApiKey, _settings.AiModel, system,
             job.UserName, job.Comment, AiMaxTokens(), ct);
 
-        AddAiLine($"{job.UserName}: {job.Comment}");
+        AddAiLine(job.Welcome ? $"{job.UserName} bergabung" : $"{job.UserName}: {job.Comment}");
 
         if (answer == null)
         {
@@ -166,10 +174,10 @@ public partial class MainWindow
         AddAiLine("   AI: " + answer);
 
         if (_settings.AiSpeakAnswer)
-            SpeakAiAnswer(job.UserName, answer);
+            SpeakAiAnswer(job.UserName, answer, job.Welcome);
     }
 
-    private void SpeakAiAnswer(string user, string answer)
+    private void SpeakAiAnswer(string user, string answer, bool welcome = false)
     {
         if (_tts == null || !_ttsReady)
         {
@@ -177,7 +185,8 @@ public partial class MainWindow
             return;
         }
 
-        var options = new TtsOptions(_settings.AiSpeakTemplate, _settings.AiMaxChars, false, true);
+        // Sambutan sudah menyebut nama penonton, jadi tidak diberi awalan nama lagi
+        var options = new TtsOptions(welcome ? "{text}" : _settings.AiSpeakTemplate, _settings.AiMaxChars, false, true);
         var speech = TtsText.Prepare(user, answer, options, out var reason);
         if (speech == null)
         {
