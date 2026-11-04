@@ -242,9 +242,11 @@ public partial class MainWindow : Window
         {
             _overlay = null;
             OverlayToggleBtn.Content = "Buka Overlay";
+            UpdateAllOverlayBtn();
         };
         _overlay.Show();
         OverlayToggleBtn.Content = "Tutup Overlay";
+        UpdateAllOverlayBtn();
     }
 
     private GiftMenuOverlay? _menuOverlay;
@@ -263,9 +265,11 @@ public partial class MainWindow : Window
         {
             _menuOverlay = null;
             MenuOverlayBtn.Content = "Buka Overlay Menu Gift";
+            UpdateAllOverlayBtn();
         };
         _menuOverlay.Show();
         MenuOverlayBtn.Content = "Tutup Overlay Menu Gift";
+        UpdateAllOverlayBtn();
     }
 
     private static readonly double[] MenuScales = { 1.0, 1.5, GiftMenuOverlay.HdScale };

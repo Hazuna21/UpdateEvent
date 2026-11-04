@@ -98,8 +98,37 @@ public partial class MainWindow
         {
             _scoreOverlay = null;
             ScoreOverlayBtn.Content = "Buka Overlay Skor";
+            UpdateAllOverlayBtn();
         };
         _scoreOverlay.Show();
         ScoreOverlayBtn.Content = "Tutup Overlay Skor";
+        UpdateAllOverlayBtn();
+    }
+
+    // Satu tombol untuk semua overlay: kalau ada yang terbuka, tutup semua; kalau tidak, buka semua
+    private void ToggleAllOverlays_Click(object sender, RoutedEventArgs e)
+    {
+        bool anyOpen = _overlay != null || _menuOverlay != null || _scoreOverlay != null;
+
+        if (anyOpen)
+        {
+            _overlay?.Close();
+            _menuOverlay?.Close();
+            _scoreOverlay?.Close();
+        }
+        else
+        {
+            ToggleOverlay_Click(sender, e);
+            ToggleMenuOverlay_Click(sender, e);
+            ToggleScoreOverlay_Click(sender, e);
+        }
+
+        UpdateAllOverlayBtn();
+    }
+
+    private void UpdateAllOverlayBtn()
+    {
+        bool anyOpen = _overlay != null || _menuOverlay != null || _scoreOverlay != null;
+        AllOverlayBtn.Content = anyOpen ? "Tutup Semua Overlay" : "Buka Semua Overlay";
     }
 }

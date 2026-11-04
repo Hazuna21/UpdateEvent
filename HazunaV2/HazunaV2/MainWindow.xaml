@@ -432,9 +432,11 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-                    <Button x:Name="OverlayToggleBtn" Content="Buka Overlay" Click="ToggleOverlay_Click"
+                    <Button x:Name="AllOverlayBtn" Content="Buka Semua Overlay" Click="ToggleAllOverlays_Click"
                             Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
-                    <Button x:Name="MenuOverlayBtn" Content="Buka Overlay Menu Gift" Click="ToggleMenuOverlay_Click"
+                    <Button x:Name="OverlayToggleBtn" Visibility="Collapsed" Content="Buka Overlay" Click="ToggleOverlay_Click"
+                            Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
+                    <Button x:Name="MenuOverlayBtn" Visibility="Collapsed" Content="Buka Overlay Menu Gift" Click="ToggleMenuOverlay_Click"
                             Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
                     <Button Content="+ Data Uji" Click="AddTestGift_Click"
                             Style="{StaticResource GhostButton}" Padding="16,8" Margin="0,0,8,0"/>
@@ -465,7 +467,7 @@
                 <Border Grid.Row="2" Style="{StaticResource Card}" Padding="18,14" Margin="0,0,0,12">
                     <StackPanel>
                         <DockPanel>
-                            <Button x:Name="ScoreOverlayBtn" DockPanel.Dock="Right" Content="Buka Overlay Skor"
+                            <Button x:Name="ScoreOverlayBtn" Visibility="Collapsed" DockPanel.Dock="Right" Content="Buka Overlay Skor"
                                     Click="ToggleScoreOverlay_Click" Style="{StaticResource PrimaryButton}" Padding="16,8"/>
                             <TextBlock x:Name="ScoreValueText" Text="WIN = 0 / 50" Foreground="White"
                                        FontSize="26" FontWeight="Black" VerticalAlignment="Center"/>
