@@ -14,6 +14,7 @@ public partial class MainWindow : Window
         ["Gift Rules"] = "Hubungkan gift dengan tombol, suara, dan media dari pustaka. Durasi = lama satu giliran. Per gift = tiap gift dalam kombo jadi satu giliran.",
         ["Media & Sounds"] = "Pustaka suara dan media. Atur urutan dengan ▲▼, pilih jenisnya, lalu pakai di Gift Rules.",
         ["Top Gifters"] = "Overlay leaderboard penonton dan skor game (WIN = x / target). Skor bisa diatur manual atau otomatis dari script GTA.",
+        ["Lucky Wheel"] = "Roda keberuntungan: penonton mengirim gift tertentu untuk memutar roda. Isi roda dan peluangnya Anda atur sendiri.",
         ["Settings"] = "Pengaturan aplikasi. Klik Simpan Pengaturan agar perubahan tersimpan.",
         ["Text to Speech"] = "Membaca komentar TikTok LIVE dengan suara. Komentar dibersihkan dulu, lalu dibaca satu per satu.",
         ["Voice Changer"] = "Mengubah suara mikrofon Anda secara real-time (nada dan efek). Kirim ke VB-Cable agar terdengar di LIVE.",
@@ -47,6 +48,7 @@ public partial class MainWindow : Window
 
         InitSettings();
         InitScore();
+        InitWheel();
         InitSidebar();
         InitGifts();
         InitDashboard();
@@ -77,6 +79,7 @@ public partial class MainWindow : Window
         GiftRulesPage.Visibility = name == "Gift Rules" ? Visibility.Visible : Visibility.Collapsed;
         MediaPage.Visibility = name == "Media & Sounds" ? Visibility.Visible : Visibility.Collapsed;
         TopGiftersPage.Visibility = name == "Top Gifters" ? Visibility.Visible : Visibility.Collapsed;
+        WheelPage.Visibility = name == "Lucky Wheel" ? Visibility.Visible : Visibility.Collapsed;
         TtsPage.Visibility = name == "Text to Speech" ? Visibility.Visible : Visibility.Collapsed;
         AiPage.Visibility = name == "AI Reply" ? Visibility.Visible : Visibility.Collapsed;
         VcPage.Visibility = name == "Voice Changer" ? Visibility.Visible : Visibility.Collapsed;
@@ -311,6 +314,7 @@ public partial class MainWindow : Window
         _overlay?.SetChromaKey(on);
         _menuOverlay?.SetChromaKey(on);
         _scoreOverlay?.SetChromaKey(on);
+        _wheelOverlay?.SetChromaKey(on);
         _settings.OverlayChromaKey = on;
         SettingsStore.Save(_settings);
     }
@@ -330,6 +334,8 @@ public partial class MainWindow : Window
         _overlay?.Close();
         _menuOverlay?.Close();
         _scoreOverlay?.Close();
+        _wheelOverlay?.Close();
+        WheelStore.Save(_wheel);
         SoundService.Stop();
         base.OnClosing(e);
     }

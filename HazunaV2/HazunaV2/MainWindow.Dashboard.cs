@@ -29,7 +29,8 @@ public partial class MainWindow
         {
             OnLog = AddLog,
             OnRulesChanged = () => RuleStore.Save(_rules),
-            OnRuleFired = r => _menuOverlay?.Pulse(r)
+            OnRuleFired = r => _menuOverlay?.Pulse(r),
+            OnGift = OnWheelGift
         };
 
         UpdateQueueText();

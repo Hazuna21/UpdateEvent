@@ -12,6 +12,7 @@ public class GiftEngine
     public Action<string>? OnLog { get; set; }
     public Action? OnRulesChanged { get; set; }
     public Action<GiftRule>? OnRuleFired { get; set; }
+    public Action<GiftEvent>? OnGift { get; set; }          // dipanggil untuk setiap gift yang masuk (dipakai Lucky Wheel)
 
     public GiftEngine(IEnumerable<GiftRule> rules, Leaderboard board, ActionQueue queue)
     {
@@ -34,6 +35,8 @@ public class GiftEngine
 
     public void Process(GiftEvent g)
     {
+        OnGift?.Invoke(g);
+
         long total = g.DiamondsEach * g.Count;
 
         // Leaderboard langsung diperbarui, ada aturan atau tidak

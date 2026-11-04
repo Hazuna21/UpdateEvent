@@ -88,6 +88,9 @@
                     <RadioButton Content="Top Gifters" Tag="Top Gifters" GroupName="Nav" Background="#FBBF24"
                                  local:NavIcon.Data="{StaticResource IconCrown}"
                                  Style="{StaticResource NavItem}" Click="Nav_Click"/>
+                    <RadioButton Content="Lucky Wheel" Tag="Lucky Wheel" GroupName="Nav" Background="#F472B6"
+                                 local:NavIcon.Data="{StaticResource IconWheel}"
+                                 Style="{StaticResource NavItem}" Click="Nav_Click"/>
                     <RadioButton Content="Text to Speech" Tag="Text to Speech" GroupName="Nav" Background="#60A5FA"
                                  local:NavIcon.Data="{StaticResource IconSpeaker}"
                                  Style="{StaticResource NavItem}" Click="Nav_Click"/>
@@ -506,6 +509,93 @@
                         <DataGridTextColumn Header="Jumlah Gift" Binding="{Binding GiftCount}" Width="160"/>
                     </DataGrid.Columns>
                 </DataGrid>
+            </Grid>
+
+            <!-- ============ LUCKY WHEEL ============ -->
+            <Grid x:Name="WheelPage" Grid.Row="2" Margin="0,14,0,10" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                    <Border Style="{StaticResource Card}" Padding="20,16" Margin="0,0,16,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Gift pemutar" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock Text="Gift yang memutar roda saat dikirim penonton."
+                                       Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,8"/>
+                            <Button x:Name="WheelGiftBtn" Click="WheelPickGift_Click" Padding="10,7"
+                                    HorizontalContentAlignment="Stretch" Background="#1A2242">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="▾" Foreground="#22D3EE" Margin="8,0,0,0"/>
+                                    <TextBlock x:Name="WheelGiftText" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
+                            </Button>
+                            <CheckBox x:Name="WheelPerGiftCheck" Click="WheelOption_Click" Margin="0,10,0,18"
+                                      Content="Putar sekali untuk tiap gift (kirim 3 = 3 putaran, maks 10)"/>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Waktu" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock Text="Lama roda berputar (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
+                            <TextBox x:Name="WheelSecondsBox" Width="90" HorizontalAlignment="Left" LostFocus="WheelField_LostFocus"/>
+                            <TextBlock Text="Lama tombol hasil dijalankan (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
+                            <TextBox x:Name="WheelActionBox" Width="90" HorizontalAlignment="Left" Margin="0,0,0,18" LostFocus="WheelField_LostFocus"/>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Overlay" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button x:Name="WheelOverlayBtn" Content="Buka Overlay Roda" Click="ToggleWheelOverlay_Click"
+                                    Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,8,0,8" HorizontalAlignment="Left"/>
+                            <CheckBox x:Name="WheelAutoOpenCheck" Click="WheelOption_Click" Margin="0,0,0,18"
+                                      Content="Buka otomatis saat aplikasi dibuka"/>
+
+                            <Button Content="▶ Tes Putar" Click="WheelTest_Click" Style="{StaticResource GhostButton}"
+                                    Padding="16,8" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="+ Tambah Isi" Click="WheelAdd_Click" Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
+                        <Button Content="Hapus Terpilih" Click="WheelDelete_Click" Style="{StaticResource DangerButton}" Padding="16,8" Margin="0,0,8,0"/>
+                        <TextBlock Text="Bobot lebih besar = lebih sering terpilih. Tombol (opsional) ditekan saat isi itu menang."
+                                   Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
+                                   Margin="6,0,0,0" TextWrapping="Wrap" MaxWidth="360"/>
+                    </StackPanel>
+                    <DataGrid x:Name="WheelGrid" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False"
+                              CellEditEnding="WheelGrid_CellEditEnding"
+                              Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextBrush}"
+                              RowBackground="{StaticResource SurfaceBrush}"
+                              AlternatingRowBackground="{StaticResource Surface2Brush}"
+                              HeadersVisibility="Column" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Isi roda (teks)" Binding="{Binding Text, UpdateSourceTrigger=LostFocus}" Width="*"/>
+                            <DataGridTextColumn Header="Bobot" Binding="{Binding Weight, UpdateSourceTrigger=LostFocus}" Width="90"/>
+                            <DataGridTemplateColumn Header="Tombol (opsional)" Width="200" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="4,2">
+                                            <Button DockPanel.Dock="Right" Content="Atur..." Click="WheelPickKey_Click" Padding="10,3" Margin="4,0,0,0"/>
+                                            <TextBlock Text="{Binding KeyDisplay}" Foreground="#C9D2F5" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </Grid>
 
             <!-- ============ TEXT TO SPEECH ============ -->

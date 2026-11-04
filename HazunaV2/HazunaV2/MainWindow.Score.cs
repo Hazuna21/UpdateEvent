@@ -108,19 +108,21 @@ public partial class MainWindow
     // Satu tombol untuk semua overlay: kalau ada yang terbuka, tutup semua; kalau tidak, buka semua
     private void ToggleAllOverlays_Click(object sender, RoutedEventArgs e)
     {
-        bool anyOpen = _overlay != null || _menuOverlay != null || _scoreOverlay != null;
+        bool anyOpen = _overlay != null || _menuOverlay != null || _scoreOverlay != null || _wheelOverlay != null;
 
         if (anyOpen)
         {
             _overlay?.Close();
             _menuOverlay?.Close();
             _scoreOverlay?.Close();
+            _wheelOverlay?.Close();
         }
         else
         {
             ToggleOverlay_Click(sender, e);
             ToggleMenuOverlay_Click(sender, e);
             ToggleScoreOverlay_Click(sender, e);
+            ToggleWheelOverlay_Click(sender, e);
         }
 
         UpdateAllOverlayBtn();
@@ -128,7 +130,7 @@ public partial class MainWindow
 
     private void UpdateAllOverlayBtn()
     {
-        bool anyOpen = _overlay != null || _menuOverlay != null || _scoreOverlay != null;
+        bool anyOpen = _overlay != null || _menuOverlay != null || _scoreOverlay != null || _wheelOverlay != null;
         AllOverlayBtn.Content = anyOpen ? "Tutup Semua Overlay" : "Buka Semua Overlay";
     }
 }
