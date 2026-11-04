@@ -37,6 +37,20 @@ public partial class MainWindow
         ShowScoreInUi();
     }
 
+    private void ToggleSim_Click(object sender, RoutedEventArgs e)
+    {
+        bool show = SimCard.Visibility != Visibility.Visible;
+        SimCard.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        SimToggleBtn.Content = show ? "Simulasi / uji ▴" : "Simulasi / uji ▾";
+    }
+
+    private void ToggleBoardOptions_Click(object sender, RoutedEventArgs e)
+    {
+        bool show = BoardOptions.Visibility != Visibility.Visible;
+        BoardOptions.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        BoardOptionsBtn.Content = show ? "Opsi ▴" : "Opsi ▾";
+    }
+
     private void ShowScoreInUi()
     {
         ScoreValueText.Text = $"WIN = {_score.Value} / {_score.Target}";

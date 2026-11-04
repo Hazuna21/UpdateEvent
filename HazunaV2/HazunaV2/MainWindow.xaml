@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:HazunaV2"
-        Title="Hazuna LIVE Control" Height="720" Width="1360"
-        MinHeight="500" MinWidth="800"
+        Title="Hazuna LIVE Control" Height="680" Width="1120"
+        MinHeight="480" MinWidth="760"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgBrush}">
 
@@ -23,22 +23,6 @@
                 <RadialGradientBrush Center="0.2,0.0" GradientOrigin="0.2,0.0" RadiusX="0.65" RadiusY="0.6">
                     <GradientStop Color="#468B5CF6" Offset="0"/>
                     <GradientStop Color="#008B5CF6" Offset="1"/>
-                </RadialGradientBrush>
-            </Rectangle.Fill>
-        </Rectangle>
-        <Rectangle Grid.ColumnSpan="2" IsHitTestVisible="False">
-            <Rectangle.Fill>
-                <RadialGradientBrush Center="1.0,1.0" GradientOrigin="1.0,1.0" RadiusX="0.6" RadiusY="0.7">
-                    <GradientStop Color="#3A22D3EE" Offset="0"/>
-                    <GradientStop Color="#0022D3EE" Offset="1"/>
-                </RadialGradientBrush>
-            </Rectangle.Fill>
-        </Rectangle>
-        <Rectangle Grid.ColumnSpan="2" IsHitTestVisible="False">
-            <Rectangle.Fill>
-                <RadialGradientBrush Center="1.0,0.1" GradientOrigin="1.0,0.1" RadiusX="0.35" RadiusY="0.4">
-                    <GradientStop Color="#30F472B6" Offset="0"/>
-                    <GradientStop Color="#00F472B6" Offset="1"/>
                 </RadialGradientBrush>
             </Rectangle.Fill>
         </Rectangle>
@@ -121,7 +105,7 @@
         </Border>
 
         <!-- ================= KONTEN ================= -->
-        <Grid Grid.Column="1" Margin="32,28">
+        <Grid Grid.Column="1" Margin="24,18">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -129,7 +113,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock x:Name="PageTitle" Grid.Row="0" FontSize="32" FontWeight="Bold" HorizontalAlignment="Left">
+            <TextBlock x:Name="PageTitle" Grid.Row="0" FontSize="24" FontWeight="Bold" HorizontalAlignment="Left">
                 <TextBlock.Foreground>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                         <GradientStop Color="#FFFFFF" Offset="0"/>
@@ -138,22 +122,30 @@
                 </TextBlock.Foreground>
             </TextBlock>
             <TextBlock x:Name="PageDesc" Grid.Row="1" Foreground="{StaticResource MutedBrush}"
-                       FontSize="14" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                       FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
 
             <!-- ============ DASHBOARD ============ -->
-            <Grid x:Name="DashboardPage" Grid.Row="2" Margin="0,22,0,16">
+            <Grid x:Name="DashboardPage" Grid.Row="2" Margin="0,14,0,10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,16">
+                <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,10">
                     <TextBlock x:Name="SummaryText" Foreground="{StaticResource TextBrush}"
                                FontSize="13" TextWrapping="Wrap"/>
                 </Border>
 
-                <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,16">
+                <StackPanel Grid.Row="1">
+                <DockPanel Margin="0,0,0,10">
+                    <Button x:Name="SimToggleBtn" DockPanel.Dock="Right" Content="Simulasi / uji ▾"
+                            Click="ToggleSim_Click" Style="{StaticResource GhostButton}" Padding="12,5"/>
+                    <CheckBox x:Name="KeyEnableCheck" IsChecked="True"
+                              Content="Aktifkan aksi keyboard (tombol dikirim ke jendela aktif)"
+                              VerticalAlignment="Center"/>
+                </DockPanel>
+                <Border x:Name="SimCard" Visibility="Collapsed" Style="{StaticResource Card}" Margin="0,0,0,10">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
@@ -195,13 +187,9 @@
                             <Button Content="Kirim Share" Click="SendTestShare_Click"
                                     Style="{StaticResource PrimaryButton}" Margin="0,20,0,8" Padding="16,6"/>
                         </WrapPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <CheckBox x:Name="KeyEnableCheck" IsChecked="True"
-                                      Content="Aktifkan aksi keyboard (tombol dikirim ke jendela yang sedang aktif)"
-                                      VerticalAlignment="Center"/>
-                        </StackPanel>
                     </StackPanel>
                 </Border>
+                </StackPanel>
 
                 <Grid Grid.Row="2">
                     <Grid.RowDefinitions>
@@ -211,7 +199,7 @@
                     <DockPanel Margin="0,0,0,10">
                         <Button DockPanel.Dock="Right" Content="Bersihkan Log" Click="ClearLog_Click"
                                 Style="{StaticResource GhostButton}" Padding="12,5"/>
-                        <Button DockPanel.Dock="Right" Content="Hentikan &amp; Kosongkan Antrean"
+                        <Button DockPanel.Dock="Right" Content="Hentikan Antrean"
                                 Click="StopAll_Click" Style="{StaticResource DangerButton}"
                                 Padding="14,5" Margin="0,0,8,0"/>
                         <Button DockPanel.Dock="Right" Content="Salin Log" Click="CopyLog_Click"
@@ -238,13 +226,13 @@
             </Grid>
 
             <!-- ============ GIFT RULES ============ -->
-            <Grid x:Name="GiftRulesPage" Grid.Row="2" Margin="0,22,0,16" Visibility="Collapsed">
+            <Grid x:Name="GiftRulesPage" Grid.Row="2" Margin="0,14,0,10" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <Button Content="+ Tambah Aturan" Click="AddRule_Click"
                             Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
                     <Button Content="Hapus Terpilih" Click="DeleteRule_Click"
@@ -253,9 +241,9 @@
                             Style="{StaticResource GhostButton}" Padding="16,8" Margin="0,0,8,0"/>
                     <Button Content="Impor Daftar Gift" Click="LoadCatalog_Click"
                             Style="{StaticResource GhostButton}" Padding="16,8"/>
-                    <TextBlock Text="Geser ☰ untuk mengubah urutan. Klik dua kali baris atau tombol Pengaturan untuk mengubah isinya. Nama efek yang sama digabung di overlay."
+                    <TextBlock Text="Geser ☰ untuk urutan · klik dua kali baris untuk mengubah"
                                Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
-                               Margin="14,0,0,0" TextWrapping="Wrap" MaxWidth="420"/>
+                               Margin="14,0,0,0" TextWrapping="Wrap" MaxWidth="320"/>
                 </StackPanel>
 
                 <DataGrid x:Name="RulesGrid" Grid.Row="1" CanUserSortColumns="False" AllowDrop="True"
@@ -356,7 +344,7 @@
             </Grid>
 
             <!-- ============ MEDIA & SOUNDS ============ -->
-            <Grid x:Name="MediaPage" Grid.Row="2" Margin="0,22,0,16" Visibility="Collapsed">
+            <Grid x:Name="MediaPage" Grid.Row="2" Margin="0,14,0,10" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -433,7 +421,7 @@
             </Grid>
 
             <!-- ============ TOP GIFTERS ============ -->
-            <Grid x:Name="TopGiftersPage" Grid.Row="2" Margin="0,22,0,16" Visibility="Collapsed">
+            <Grid x:Name="TopGiftersPage" Grid.Row="2" Margin="0,14,0,10" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -449,10 +437,12 @@
                     <Button Content="+ Data Uji" Click="AddTestGift_Click"
                             Style="{StaticResource GhostButton}" Padding="16,8" Margin="0,0,8,0"/>
                     <Button Content="Reset Leaderboard" Click="ResetBoard_Click"
-                            Style="{StaticResource DangerButton}" Padding="16,8"/>
+                            Style="{StaticResource DangerButton}" Padding="16,8" Margin="0,0,8,0"/>
+                    <Button x:Name="BoardOptionsBtn" Content="Opsi ▾" Click="ToggleBoardOptions_Click"
+                            Style="{StaticResource GhostButton}" Padding="16,8"/>
                 </StackPanel>
 
-                <WrapPanel Grid.Row="1" Margin="0,0,0,12">
+                <WrapPanel x:Name="BoardOptions" Grid.Row="1" Margin="0,0,0,12" Visibility="Collapsed">
                     <TextBlock Text="Urutkan berdasarkan:" Foreground="{StaticResource MutedBrush}"
                                VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <ComboBox Width="150" SelectedIndex="0" SelectionChanged="SortCombo_Changed">
@@ -515,7 +505,7 @@
             </Grid>
 
             <!-- ============ TEXT TO SPEECH ============ -->
-<Grid x:Name="TtsPage" Grid.Row="2" Margin="0,22,0,16" Visibility="Collapsed">
+<Grid x:Name="TtsPage" Grid.Row="2" Margin="0,14,0,10" Visibility="Collapsed">
     <Grid.ColumnDefinitions>
         <ColumnDefinition Width="420"/>
         <ColumnDefinition Width="*"/>
@@ -635,7 +625,7 @@
 </Grid>
 
 <!-- ============ AI REPLY ============ -->
-<Grid x:Name="AiPage" Grid.Row="2" Margin="0,22,0,16" Visibility="Collapsed">
+<Grid x:Name="AiPage" Grid.Row="2" Margin="0,14,0,10" Visibility="Collapsed">
     <Grid.ColumnDefinitions>
         <ColumnDefinition Width="420"/>
         <ColumnDefinition Width="*"/>
@@ -754,7 +744,7 @@
 </Grid>
 
             <!-- ============ VOICE CHANGER ============ -->
-            <ScrollViewer x:Name="VcPage" Grid.Row="2" Margin="0,22,0,16"
+            <ScrollViewer x:Name="VcPage" Grid.Row="2" Margin="0,14,0,10"
                           Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                 <Border Style="{StaticResource Card}" MaxWidth="620" HorizontalAlignment="Left" Padding="24,20">
                     <StackPanel>
@@ -838,7 +828,7 @@
             </ScrollViewer>
 
             <!-- ============ SETTINGS ============ -->
-            <ScrollViewer x:Name="SettingsPage" Grid.Row="2" Margin="0,22,0,16"
+            <ScrollViewer x:Name="SettingsPage" Grid.Row="2" Margin="0,14,0,10"
                           Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                 <Border Style="{StaticResource Card}" MaxWidth="620" HorizontalAlignment="Left" Padding="24,20">
                     <StackPanel>
