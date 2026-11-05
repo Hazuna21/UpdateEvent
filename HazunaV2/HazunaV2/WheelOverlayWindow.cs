@@ -21,7 +21,7 @@ public class WheelOverlayWindow : Window
         Color.FromRgb(0xE1, 0x1D, 0x48), Color.FromRgb(0x25, 0x63, 0xEB)
     };
 
-    private readonly WheelConfig _cfg;
+    private WheelConfig _cfg;
     private readonly Canvas _wheel = new() { Width = Size, Height = Size };
     private readonly RotateTransform _rot = new(0, C, C);
     private readonly TextBlock _title = new();
@@ -35,7 +35,7 @@ public class WheelOverlayWindow : Window
 
     public bool IsRevealed { get; private set; }
 
-    public WheelOverlayWindow(WheelConfig cfg, bool startHidden = false)
+    public WheelOverlayWindow(WheelConfig cfg, double? x, double? y, bool startHidden = false)
     {
         _cfg = cfg;
 
@@ -48,8 +48,8 @@ public class WheelOverlayWindow : Window
         Topmost = true;
         ShowInTaskbar = false;
         ShowActivated = false;
-        Left = cfg.PosX ?? 40;
-        Top = cfg.PosY ?? 120;
+        Left = x ?? 40;
+        Top = y ?? 120;
         Opacity = 0;
 
         _title.Text = cfg.Name.ToUpperInvariant();
@@ -119,7 +119,6 @@ public class WheelOverlayWindow : Window
 
         // Muncul perlahan; posisi terakhir disimpan saat ditutup
         if (!startHidden) Loaded += (s, e) => Reveal();
-        Closed += (s, e) => { _cfg.PosX = Left; _cfg.PosY = Top; };
 
         Rebuild();
     }
@@ -150,6 +149,14 @@ public class WheelOverlayWindow : Window
     public void SetChromaKey(bool on)
     {
         Background = on ? new SolidColorBrush(Color.FromRgb(0, 255, 0)) : Brushes.Transparent;
+    }
+
+    // Satu jendela dipakai semua roda: ganti roda yang ditampilkan
+    public void SetWheel(WheelConfig cfg)
+    {
+        _cfg = cfg;
+        ClearResult();
+        Rebuild();
     }
 
     // Gambar ulang roda dari isi terbaru (dipanggil saat isi diubah)

@@ -10,10 +10,6 @@ public partial class MainWindow
     private sealed class WheelRuntime
     {
         public readonly Queue<string> Queue = new();
-        public bool Busy;
-        public bool Preview;                                // dibuka tombol "Tampilkan / atur posisi"
-        public WheelOverlayWindow? Overlay;
-        public (string User, WheelEntry Entry)? Pending;    // hasil yang belum diterapkan (putaran sedang berjalan)
     }
 
     private WheelSet _wheelSet = new();
@@ -35,11 +31,11 @@ public partial class MainWindow
         _wheelReady = true;
         WheelList.SelectedIndex = 0;
 
-        // Wheel yang diatur "selalu tampil" dibuka setelah jendela utama siap
+        // Satu jendela overlay untuk semua roda: dibuat sekarang (siaga, tak terlihat) supaya bisa dipilih di TikTok Studio
         Dispatcher.InvokeAsync(() =>
         {
-            foreach (var w in _wheelSet.Wheels.Where(x => x.AlwaysShow || x.Standby))
-                ShowWheelOverlay(w, startHidden: !w.AlwaysShow);
+            EnsureWheelWindow();
+            SettleWheel();
         }, DispatcherPriority.ApplicationIdle);
     }
 
@@ -91,7 +87,6 @@ public partial class MainWindow
         WheelSecondsBox.Text = w.SpinSeconds.ToString("0.#");
         WheelActionBox.Text = w.ActionSeconds.ToString("0.#");
         WheelAlwaysCheck.IsChecked = w.AlwaysShow;
-        WheelStandbyCheck.IsChecked = w.Standby;
         UpdateWheelOverlayBtn();
     }
 
@@ -101,7 +96,6 @@ public partial class MainWindow
         _wheelSet.Wheels.Add(w);
         WheelList.SelectedItem = w;
         SaveWheel();
-        if (w.Standby) ShowWheelOverlay(w, startHidden: true);
     }
 
     private void WheelDuplicate_Click(object sender, RoutedEventArgs e)
@@ -125,7 +119,6 @@ public partial class MainWindow
         _wheelSet.Wheels.Add(copy);
         WheelList.SelectedItem = copy;
         SaveWheel();
-        if (copy.Standby) ShowWheelOverlay(copy, startHidden: true);
     }
 
     private void WheelRemove_Click(object sender, RoutedEventArgs e)
@@ -146,11 +139,20 @@ public partial class MainWindow
         if (_wheelRt.TryGetValue(gone, out var rt))
         {
             rt.Queue.Clear();
-            rt.Overlay?.Close();
             _wheelRt.Remove(gone);
         }
 
         _wheelSet.Wheels.Remove(gone);
+        if (_wheelOnScreen == gone)
+        {
+            _wheelOnScreen = null;
+            var next = _wheelSet.Wheels.FirstOrDefault();
+            if (next != null && _wheelWin != null && !_wheelBusy)
+            {
+                _wheelWin.SetWheel(next);
+                _wheelOnScreen = next;
+            }
+        }
         WheelList.SelectedIndex = Math.Min(idx, _wheelSet.Wheels.Count - 1);
         SaveWheel();
     }
@@ -199,28 +201,10 @@ public partial class MainWindow
         bool changedAlways = always != w.AlwaysShow;
         w.AlwaysShow = always;
 
-        bool standby = WheelStandbyCheck.IsChecked == true;
-        bool changedStandby = standby != w.Standby;
-        w.Standby = standby;
-
         SaveWheel();
         RebuildWheelOverlay(w);
 
-        if (changedAlways || changedStandby)
-        {
-            var rt = Rt(w);
-            if (always)
-            {
-                ShowWheelOverlay(w);
-                Rt(w).Overlay?.Reveal();
-            }
-            else if (!rt.Preview && !rt.Busy && rt.Queue.Count == 0)
-            {
-                if (rt.Overlay != null) HideWheel(w, rt.Overlay);
-                else if (standby) ShowWheelOverlay(w, startHidden: true);
-            }
-            if (_curWheel == w) UpdateWheelOverlayBtn();
-        }
+        if (changedAlways) SettleWheel();
     }
 
     // ---------- Isi roda ----------
@@ -282,94 +266,120 @@ public partial class MainWindow
         }, DispatcherPriority.Background);
     }
 
-    // ---------- Overlay ----------
+    // ---------- Overlay (satu jendela untuk semua roda) ----------
+
+    private WheelOverlayWindow? _wheelWin;
+    private WheelConfig? _wheelOnScreen;                    // roda yang sedang dipasang di jendela
+    private bool _wheelBusy;                                // ada putaran yang sedang berjalan
+    private bool _wheelPreview;                             // dibuka tombol "Tampilkan / atur posisi"
+    private (WheelConfig W, string User, WheelEntry Entry)? _wheelPending;   // hasil yang belum diterapkan
 
     private void RebuildWheelOverlay(WheelConfig w)
     {
-        if (_wheelRt.TryGetValue(w, out var rt) && rt.Overlay != null && !rt.Overlay.IsSpinning)
-            rt.Overlay.Rebuild();
+        if (_wheelWin != null && _wheelOnScreen == w && !_wheelWin.IsSpinning)
+            _wheelWin.Rebuild();
     }
 
-    // Siaga: roda hanya dibuat tak terlihat (jendela tetap ada). Kalau tidak siaga: jendela ditutup.
-    private void HideWheel(WheelConfig w, WheelOverlayWindow overlay)
+    private WheelOverlayWindow EnsureWheelWindow()
     {
-        if (w.Standby) overlay.Conceal();
-        else overlay.FadeOutAndClose();
-        if (_curWheel == w) UpdateWheelOverlayBtn();
-    }
+        if (_wheelWin != null) return _wheelWin;
 
-    private void ShowWheelOverlay(WheelConfig w, bool startHidden = false)
-    {
-        var rt = Rt(w);
-        if (rt.Overlay != null) return;
+        var first = _wheelOnScreen ?? _curWheel ?? _wheelSet.Wheels.First();
+        var win = new WheelOverlayWindow(first, _wheelSet.PosX, _wheelSet.PosY, startHidden: true);
+        win.SetChromaKey(ChromaCheck.IsChecked == true);
+        _wheelWin = win;
+        _wheelOnScreen = first;
 
-        var overlay = new WheelOverlayWindow(w, startHidden);
-        overlay.SetChromaKey(ChromaCheck.IsChecked == true);
-        rt.Overlay = overlay;
-
-        overlay.Closed += (s, args) =>
+        win.Closed += (s, args) =>
         {
-            rt.Overlay = null;
-            rt.Preview = false;
+            _wheelSet.PosX = win.Left;
+            _wheelSet.PosY = win.Top;
+            WheelStore.Save(_wheelSet);
+
+            _wheelWin = null;
+            _wheelPreview = false;
 
             // Ditutup di tengah putaran: hasilnya tetap diterapkan, lalu lanjut ke antrean berikutnya
-            if (rt.Busy)
+            if (_wheelBusy)
             {
-                rt.Busy = false;
-                if (rt.Pending is { } p)
+                _wheelBusy = false;
+                if (_wheelPending is { } p)
                 {
-                    rt.Pending = null;
-                    ApplyWheelResult(w, p.User, p.Entry);
+                    _wheelPending = null;
+                    ApplyWheelResult(p.W, p.User, p.Entry);
                 }
-                PumpWheel(w);
+                PumpWheel();
             }
-
-            if (_curWheel == w) UpdateWheelOverlayBtn();
+            UpdateWheelOverlayBtn();
         };
 
-        overlay.Show();
-        if (_curWheel == w) UpdateWheelOverlayBtn();
+        win.Show();
+        return win;
+    }
+
+    private void ShowWheelOnScreen(WheelConfig w)
+    {
+        var win = EnsureWheelWindow();
+        if (_wheelOnScreen != w)
+        {
+            win.SetWheel(w);
+            _wheelOnScreen = w;
+        }
+    }
+
+    // Keadaan diam: tidak ada putaran dan tidak ada antrean. Roda "selalu tampil" tetap terlihat, selain itu disembunyikan.
+    private void SettleWheel()
+    {
+        if (_wheelBusy || _wheelPreview) return;
+        if (_wheelRt.Values.Any(r => r.Queue.Count > 0)) return;
+
+        var win = EnsureWheelWindow();
+        var always = _wheelSet.Wheels.FirstOrDefault(x => x.AlwaysShow);
+        if (always != null)
+        {
+            ShowWheelOnScreen(always);
+            win.Reveal();
+        }
+        else
+        {
+            win.Conceal();
+        }
+        UpdateWheelOverlayBtn();
     }
 
     private void ToggleWheelOverlay_Click(object sender, RoutedEventArgs e)
     {
         if (_curWheel == null) return;
-        var rt = Rt(_curWheel);
 
-        if (rt.Overlay != null && rt.Overlay.IsRevealed)
+        if (_wheelPreview && _wheelOnScreen == _curWheel)
         {
-            rt.Preview = false;
-            if (rt.Busy || rt.Queue.Count > 0) { UpdateWheelOverlayBtn(); return; }
-            HideWheel(_curWheel, rt.Overlay);
-            return;
+            _wheelPreview = false;
+            SettleWheel();
         }
-
-        rt.Preview = true;
-        ShowWheelOverlay(_curWheel);
-        rt.Overlay?.Reveal();
+        else
+        {
+            if (_wheelBusy) return;
+            _wheelPreview = true;
+            ShowWheelOnScreen(_curWheel);
+            _wheelWin!.Reveal();
+        }
         UpdateWheelOverlayBtn();
     }
 
     private void UpdateWheelOverlayBtn()
     {
         if (_curWheel == null) return;
-        WheelOverlayBtn.Content = Rt(_curWheel).Overlay is { IsRevealed: true } ? "Sembunyikan overlay" : "Tampilkan / atur posisi";
+        WheelOverlayBtn.Content = _wheelPreview && _wheelOnScreen == _curWheel ? "Sembunyikan overlay" : "Tampilkan / atur posisi";
     }
 
-    private void SetWheelChroma(bool on)
-    {
-        foreach (var rt in _wheelRt.Values)
-            rt.Overlay?.SetChromaKey(on);
-    }
+    private void SetWheelChroma(bool on) => _wheelWin?.SetChromaKey(on);
 
     private void CloseAllWheelOverlays()
     {
-        foreach (var rt in _wheelRt.Values.ToList())
-        {
+        foreach (var rt in _wheelRt.Values)
             rt.Queue.Clear();
-            rt.Busy = false;
-            rt.Overlay?.Close();
-        }
+        _wheelBusy = false;
+        _wheelWin?.Close();
     }
 
     // ---------- Pemicu dan putaran ----------
@@ -412,7 +422,7 @@ public partial class MainWindow
         if (rt.Queue.Count >= 30) return;
 
         rt.Queue.Enqueue(user);
-        PumpWheel(w);
+        PumpWheel();
     }
 
     private static int PickWheelIndex(WheelConfig w)
@@ -427,44 +437,44 @@ public partial class MainWindow
         return w.Entries.Count - 1;
     }
 
-    private void PumpWheel(WheelConfig w)
+    // Memutar satu per satu. Roda yang sedang terpasang dilanjutkan dulu, lalu roda lain yang antre.
+    private void PumpWheel()
     {
+        if (_wheelBusy) return;
+
+        var w = _wheelSet.Wheels.FirstOrDefault(x => x == _wheelOnScreen && Rt(x).Queue.Count > 0)
+                ?? _wheelSet.Wheels.FirstOrDefault(x => Rt(x).Queue.Count > 0);
+        if (w == null) return;
+
         var rt = Rt(w);
-        if (rt.Busy || rt.Queue.Count == 0) return;
-        if (w.Entries.Count == 0) { rt.Queue.Clear(); return; }
+        if (w.Entries.Count == 0) { rt.Queue.Clear(); PumpWheel(); return; }
 
         string user = rt.Queue.Dequeue();
         int index = PickWheelIndex(w);
         var entry = w.Entries[index];
 
-        // Roda muncul dulu kalau sedang disembunyikan
-        ShowWheelOverlay(w);
-        var overlay = rt.Overlay;
-        if (overlay == null)
-        {
-            ApplyWheelResult(w, user, entry);
-            PumpWheel(w);
-            return;
-        }
+        // Pasang roda yang dimaksud dan munculkan dulu kalau sedang disembunyikan
+        ShowWheelOnScreen(w);
+        var overlay = _wheelWin!;
         overlay.Reveal();
-        if (_curWheel == w) UpdateWheelOverlayBtn();
+        UpdateWheelOverlayBtn();
 
-        rt.Busy = true;
-        rt.Pending = (user, entry);
+        _wheelBusy = true;
+        _wheelPending = (w, user, entry);
 
         // Jeda singkat supaya roda sempat muncul sebelum berputar
         var start = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(450) };
         start.Tick += (s, e) =>
         {
             start.Stop();
-            if (rt.Overlay != overlay || !rt.Busy) return;     // ditutup selagi menunggu
+            if (_wheelWin != overlay || !_wheelBusy) return;     // ditutup selagi menunggu
 
             if (w.ShuffleEachSpin)
                 overlay.Shuffle();
 
             overlay.Spin(index, w.SpinSeconds, user, () =>
             {
-                rt.Pending = null;
+                _wheelPending = null;
                 overlay.ShowResult(user, entry.Text, entry.ScoreDelta);
                 ApplyWheelResult(w, user, entry);
 
@@ -473,18 +483,17 @@ public partial class MainWindow
                 hold.Tick += (s2, e2) =>
                 {
                     hold.Stop();
-                    if (rt.Overlay != overlay) return;          // sudah ditutup
+                    if (_wheelWin != overlay) return;          // sudah ditutup
 
-                    rt.Busy = false;
-                    if (rt.Queue.Count > 0)
+                    _wheelBusy = false;
+                    if (_wheelRt.Values.Any(r => r.Queue.Count > 0))
                     {
-                        PumpWheel(w);
+                        PumpWheel();
                     }
                     else
                     {
                         overlay.ClearResult();
-                        if (!w.AlwaysShow && !rt.Preview)
-                            HideWheel(w, overlay);
+                        SettleWheel();
                     }
                 };
                 hold.Start();

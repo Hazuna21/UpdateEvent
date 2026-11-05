@@ -67,6 +67,8 @@ public class WheelConfig : System.ComponentModel.INotifyPropertyChanged
 public class WheelSet
 {
     public ObservableCollection<WheelConfig> Wheels { get; set; } = new();
+    public double? PosX { get; set; }                  // posisi satu jendela overlay untuk semua roda
+    public double? PosY { get; set; }
 }
 
 public static class WheelStore
