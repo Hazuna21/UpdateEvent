@@ -314,7 +314,7 @@ public partial class MainWindow : Window
         _overlay?.SetChromaKey(on);
         _menuOverlay?.SetChromaKey(on);
         _scoreOverlay?.SetChromaKey(on);
-        _wheelOverlay?.SetChromaKey(on);
+        SetWheelChroma(on);
         _settings.OverlayChromaKey = on;
         SettingsStore.Save(_settings);
     }
@@ -334,8 +334,8 @@ public partial class MainWindow : Window
         _overlay?.Close();
         _menuOverlay?.Close();
         _scoreOverlay?.Close();
-        _wheelOverlay?.Close();
-        WheelStore.Save(_wheel);
+        CloseAllWheelOverlays();
+        WheelStore.Save(_wheelSet);
         SoundService.Stop();
         base.OnClosing(e);
     }

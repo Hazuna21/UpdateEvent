@@ -45,10 +45,11 @@ public class WheelOverlayWindow : Window
         Topmost = true;
         ShowInTaskbar = false;
         ShowActivated = false;
-        Left = 40;
-        Top = 120;
+        Left = cfg.PosX ?? 40;
+        Top = cfg.PosY ?? 120;
+        Opacity = 0;
 
-        _title.Text = "LUCKY WHEEL";
+        _title.Text = cfg.Name.ToUpperInvariant();
         _title.Foreground = Brushes.White;
         _title.FontSize = 26;
         _title.FontWeight = FontWeights.Black;
@@ -113,7 +114,19 @@ public class WheelOverlayWindow : Window
 
         MouseLeftButtonDown += (s, e) => DragMove();
 
+        // Muncul perlahan; posisi terakhir disimpan saat ditutup
+        Loaded += (s, e) => BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300)));
+        Closed += (s, e) => { _cfg.PosX = Left; _cfg.PosY = Top; };
+
         Rebuild();
+    }
+
+    // Menghilang perlahan lalu menutup jendela
+    public void FadeOutAndClose()
+    {
+        var fade = new DoubleAnimation(Opacity, 0, TimeSpan.FromMilliseconds(350));
+        fade.Completed += (s, e) => Close();
+        BeginAnimation(OpacityProperty, fade);
     }
 
     public void SetChromaKey(bool on)
@@ -125,6 +138,7 @@ public class WheelOverlayWindow : Window
     public void Rebuild()
     {
         _wheel.Children.Clear();
+        _title.Text = _cfg.Name.ToUpperInvariant();
         _sub.Text = string.IsNullOrWhiteSpace(_cfg.GiftName) ? "" : "Kirim " + _cfg.GiftName + " untuk memutar";
 
         int n = _cfg.Entries.Count;

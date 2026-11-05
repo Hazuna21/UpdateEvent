@@ -6,43 +6,137 @@ namespace HazunaV2;
 
 public partial class MainWindow
 {
-    private WheelConfig _wheel = new();
-    private WheelOverlayWindow? _wheelOverlay;
-    private readonly Queue<string> _wheelQueue = new();
-    private bool _wheelBusy;
+    // Keadaan jalan tiap wheel (tidak disimpan ke file)
+    private sealed class WheelRuntime
+    {
+        public readonly Queue<string> Queue = new();
+        public bool Busy;
+        public bool Preview;                                // dibuka tombol "Tampilkan / atur posisi"
+        public WheelOverlayWindow? Overlay;
+        public (string User, WheelEntry Entry)? Pending;    // hasil yang belum diterapkan (putaran sedang berjalan)
+    }
+
+    private WheelSet _wheelSet = new();
+    private WheelConfig? _curWheel;
+    private readonly Dictionary<WheelConfig, WheelRuntime> _wheelRt = new();
     private bool _wheelReady;
+
+    private WheelRuntime Rt(WheelConfig w)
+    {
+        if (!_wheelRt.TryGetValue(w, out var rt))
+            _wheelRt[w] = rt = new WheelRuntime();
+        return rt;
+    }
 
     private void InitWheel()
     {
-        _wheel = WheelStore.Load();
-        WheelGrid.ItemsSource = _wheel.Entries;
-
-        WheelGiftText.Text = _wheel.GiftDisplay;
-        WheelPerGiftCheck.IsChecked = _wheel.SpinPerGift;
-        WheelSecondsBox.Text = _wheel.SpinSeconds.ToString("0.#");
-        WheelActionBox.Text = _wheel.ActionSeconds.ToString("0.#");
-        WheelAutoOpenCheck.IsChecked = _wheel.AutoOpenOverlay;
+        _wheelSet = WheelStore.Load();
+        WheelList.ItemsSource = _wheelSet.Wheels;
         _wheelReady = true;
+        WheelList.SelectedIndex = 0;
 
-        if (_wheel.AutoOpenOverlay)
-            Dispatcher.InvokeAsync(() => { if (_wheelOverlay == null) ToggleWheelOverlay_Click(this, new RoutedEventArgs()); },
-                DispatcherPriority.ApplicationIdle);
+        // Wheel yang diatur "selalu tampil" dibuka setelah jendela utama siap
+        Dispatcher.InvokeAsync(() =>
+        {
+            foreach (var w in _wheelSet.Wheels.Where(x => x.AlwaysShow))
+                ShowWheelOverlay(w);
+        }, DispatcherPriority.ApplicationIdle);
     }
 
-    private void SaveWheel() => WheelStore.Save(_wheel);
+    private void SaveWheel() => WheelStore.Save(_wheelSet);
 
-    // ---------- Pengaturan ----------
+    // ---------- Daftar wheel ----------
+
+    private void WheelList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_wheelReady) return;
+
+        _curWheel = WheelList.SelectedItem as WheelConfig;
+        bool has = _curWheel != null;
+        WheelGrid.ItemsSource = _curWheel?.Entries;
+
+        if (!has) return;
+        var w = _curWheel!;
+        WheelNameBox.Text = w.Name;
+        WheelGiftText.Text = w.GiftDisplay;
+        WheelPerGiftCheck.IsChecked = w.SpinPerGift;
+        WheelSecondsBox.Text = w.SpinSeconds.ToString("0.#");
+        WheelActionBox.Text = w.ActionSeconds.ToString("0.#");
+        WheelAlwaysCheck.IsChecked = w.AlwaysShow;
+        UpdateWheelOverlayBtn();
+    }
+
+    private void WheelNew_Click(object sender, RoutedEventArgs e)
+    {
+        var w = WheelConfig.CreateDefault("Wheel " + (_wheelSet.Wheels.Count + 1));
+        _wheelSet.Wheels.Add(w);
+        WheelList.SelectedItem = w;
+        SaveWheel();
+    }
+
+    private void WheelDuplicate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_curWheel == null) return;
+
+        var src = _curWheel;
+        var copy = new WheelConfig
+        {
+            Name = src.Name + " (salinan)",
+            GiftId = src.GiftId,
+            GiftName = src.GiftName,
+            SpinPerGift = src.SpinPerGift,
+            SpinSeconds = src.SpinSeconds,
+            ActionSeconds = src.ActionSeconds
+        };
+        foreach (var en in src.Entries)
+            copy.Entries.Add(new WheelEntry { Text = en.Text, Weight = en.Weight, Key = en.Key });
+
+        _wheelSet.Wheels.Add(copy);
+        WheelList.SelectedItem = copy;
+        SaveWheel();
+    }
+
+    private void WheelRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (_curWheel == null) return;
+        if (_wheelSet.Wheels.Count <= 1)
+        {
+            MessageBox.Show("Minimal harus ada satu wheel.");
+            return;
+        }
+        if (MessageBox.Show($"Hapus wheel \"{_curWheel.Name}\" beserta isinya?", "Hapus wheel",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        var gone = _curWheel;
+        int idx = _wheelSet.Wheels.IndexOf(gone);
+
+        if (_wheelRt.TryGetValue(gone, out var rt))
+        {
+            rt.Queue.Clear();
+            rt.Overlay?.Close();
+            _wheelRt.Remove(gone);
+        }
+
+        _wheelSet.Wheels.Remove(gone);
+        WheelList.SelectedIndex = Math.Min(idx, _wheelSet.Wheels.Count - 1);
+        SaveWheel();
+    }
+
+    // ---------- Pengaturan wheel terpilih ----------
 
     private void WheelPickGift_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new GiftPickerWindow(_wheel.GiftId, _wheel.GiftName) { Owner = this };
+        if (_curWheel == null) return;
+
+        var dlg = new GiftPickerWindow(_curWheel.GiftId, _curWheel.GiftName) { Owner = this };
         if (dlg.ShowDialog() == true && dlg.Selected != null)
         {
-            _wheel.GiftId = dlg.Selected.Id;
-            _wheel.GiftName = dlg.Selected.Name;
-            WheelGiftText.Text = _wheel.GiftDisplay;
+            _curWheel.GiftId = dlg.Selected.Id;
+            _curWheel.GiftName = dlg.Selected.Name;
+            WheelGiftText.Text = _curWheel.GiftDisplay;
             SaveWheel();
-            _wheelOverlay?.Rebuild();
+            RebuildWheelOverlay(_curWheel);
         }
     }
 
@@ -51,42 +145,57 @@ public partial class MainWindow
 
     private void CommitWheelSettings()
     {
-        if (!_wheelReady) return;
+        if (!_wheelReady || _curWheel == null) return;
+        var w = _curWheel;
 
-        _wheel.SpinPerGift = WheelPerGiftCheck.IsChecked == true;
-        _wheel.AutoOpenOverlay = WheelAutoOpenCheck.IsChecked == true;
+        w.Name = WheelNameBox.Text;
+        WheelNameBox.Text = w.Name;
+        w.SpinPerGift = WheelPerGiftCheck.IsChecked == true;
 
         if (double.TryParse(WheelSecondsBox.Text.Replace(',', '.'), System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var spin))
-            _wheel.SpinSeconds = Math.Clamp(spin, 2, 30);
-        WheelSecondsBox.Text = _wheel.SpinSeconds.ToString("0.#");
+            w.SpinSeconds = Math.Clamp(spin, 2, 30);
+        WheelSecondsBox.Text = w.SpinSeconds.ToString("0.#");
 
         if (double.TryParse(WheelActionBox.Text.Replace(',', '.'), System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var act))
-            _wheel.ActionSeconds = Math.Clamp(act, 0.2, 60);
-        WheelActionBox.Text = _wheel.ActionSeconds.ToString("0.#");
+            w.ActionSeconds = Math.Clamp(act, 0.2, 60);
+        WheelActionBox.Text = w.ActionSeconds.ToString("0.#");
+
+        bool always = WheelAlwaysCheck.IsChecked == true;
+        bool changedAlways = always != w.AlwaysShow;
+        w.AlwaysShow = always;
 
         SaveWheel();
+        RebuildWheelOverlay(w);
+
+        if (changedAlways)
+        {
+            var rt = Rt(w);
+            if (always) ShowWheelOverlay(w);
+            else if (!rt.Preview && !rt.Busy && rt.Queue.Count == 0) rt.Overlay?.FadeOutAndClose();
+        }
     }
 
     // ---------- Isi roda ----------
 
     private void WheelAdd_Click(object sender, RoutedEventArgs e)
     {
-        var entry = new WheelEntry { Text = "Isi " + (_wheel.Entries.Count + 1) };
-        _wheel.Entries.Add(entry);
+        if (_curWheel == null) return;
+        var entry = new WheelEntry { Text = "Isi " + (_curWheel.Entries.Count + 1) };
+        _curWheel.Entries.Add(entry);
         WheelGrid.SelectedItem = entry;
         WheelGrid.ScrollIntoView(entry);
         SaveWheel();
-        _wheelOverlay?.Rebuild();
+        RebuildWheelOverlay(_curWheel);
     }
 
     private void WheelDelete_Click(object sender, RoutedEventArgs e)
     {
-        if (WheelGrid.SelectedItem is not WheelEntry entry) return;
-        _wheel.Entries.Remove(entry);
+        if (_curWheel == null || WheelGrid.SelectedItem is not WheelEntry entry) return;
+        _curWheel.Entries.Remove(entry);
         SaveWheel();
-        _wheelOverlay?.Rebuild();
+        RebuildWheelOverlay(_curWheel);
     }
 
     private void WheelPickKey_Click(object sender, RoutedEventArgs e)
@@ -108,129 +217,214 @@ public partial class MainWindow
         Dispatcher.InvokeAsync(() =>
         {
             SaveWheel();
-            _wheelOverlay?.Rebuild();
+            if (_curWheel != null) RebuildWheelOverlay(_curWheel);
         }, DispatcherPriority.Background);
     }
 
     // ---------- Overlay ----------
 
+    private void RebuildWheelOverlay(WheelConfig w)
+    {
+        if (_wheelRt.TryGetValue(w, out var rt) && rt.Overlay != null && !rt.Overlay.IsSpinning)
+            rt.Overlay.Rebuild();
+    }
+
+    private void ShowWheelOverlay(WheelConfig w)
+    {
+        var rt = Rt(w);
+        if (rt.Overlay != null) return;
+
+        var overlay = new WheelOverlayWindow(w);
+        overlay.SetChromaKey(ChromaCheck.IsChecked == true);
+        rt.Overlay = overlay;
+
+        overlay.Closed += (s, args) =>
+        {
+            rt.Overlay = null;
+            rt.Preview = false;
+
+            // Ditutup di tengah putaran: hasilnya tetap diterapkan, lalu lanjut ke antrean berikutnya
+            if (rt.Busy)
+            {
+                rt.Busy = false;
+                if (rt.Pending is { } p)
+                {
+                    rt.Pending = null;
+                    ApplyWheelResult(w, p.User, p.Entry);
+                }
+                PumpWheel(w);
+            }
+
+            if (_curWheel == w) UpdateWheelOverlayBtn();
+        };
+
+        overlay.Show();
+        if (_curWheel == w) UpdateWheelOverlayBtn();
+    }
+
     private void ToggleWheelOverlay_Click(object sender, RoutedEventArgs e)
     {
-        if (_wheelOverlay != null)
+        if (_curWheel == null) return;
+        var rt = Rt(_curWheel);
+
+        if (rt.Overlay != null)
         {
-            _wheelOverlay.Close();
+            rt.Preview = false;
+            rt.Overlay.Close();
             return;
         }
 
-        _wheelOverlay = new WheelOverlayWindow(_wheel);
-        _wheelOverlay.SetChromaKey(ChromaCheck.IsChecked == true);
-        _wheelOverlay.Closed += (s, args) =>
+        rt.Preview = true;
+        ShowWheelOverlay(_curWheel);
+        UpdateWheelOverlayBtn();
+    }
+
+    private void UpdateWheelOverlayBtn()
+    {
+        if (_curWheel == null) return;
+        WheelOverlayBtn.Content = Rt(_curWheel).Overlay != null ? "Sembunyikan overlay" : "Tampilkan / atur posisi";
+    }
+
+    private void SetWheelChroma(bool on)
+    {
+        foreach (var rt in _wheelRt.Values)
+            rt.Overlay?.SetChromaKey(on);
+    }
+
+    private void CloseAllWheelOverlays()
+    {
+        foreach (var rt in _wheelRt.Values.ToList())
         {
-            _wheelOverlay = null;
-            WheelOverlayBtn.Content = "Buka Overlay Roda";
-            UpdateAllOverlayBtn();
-        };
-        _wheelOverlay.Show();
-        WheelOverlayBtn.Content = "Tutup Overlay Roda";
-        UpdateAllOverlayBtn();
+            rt.Queue.Clear();
+            rt.Busy = false;
+            rt.Overlay?.Close();
+        }
     }
 
     // ---------- Pemicu dan putaran ----------
 
     private void OnWheelGift(GiftEvent g)
     {
-        if (_wheel.GiftId == 0 && string.IsNullOrWhiteSpace(_wheel.GiftName)) return;
+        foreach (var w in _wheelSet.Wheels.ToList())
+        {
+            if (w.GiftId == 0 && string.IsNullOrWhiteSpace(w.GiftName)) continue;
 
-        bool match = (_wheel.GiftId != 0 && g.GiftId != 0)
-            ? _wheel.GiftId == g.GiftId
-            : string.Equals(_wheel.GiftName.Trim(), g.GiftName.Trim(), StringComparison.OrdinalIgnoreCase);
-        if (!match) return;
+            bool match = (w.GiftId != 0 && g.GiftId != 0)
+                ? w.GiftId == g.GiftId
+                : string.Equals(w.GiftName.Trim(), g.GiftName.Trim(), StringComparison.OrdinalIgnoreCase);
+            if (!match) continue;
 
-        int spins = _wheel.SpinPerGift ? Math.Clamp(g.Count, 1, 10) : 1;
-        for (int i = 0; i < spins; i++)
-            EnqueueWheelSpin(g.UserName);
+            int spins = w.SpinPerGift ? Math.Clamp(g.Count, 1, 10) : 1;
+            for (int i = 0; i < spins; i++)
+                EnqueueWheelSpin(w, g.UserName);
+        }
     }
 
     private void WheelTest_Click(object sender, RoutedEventArgs e)
     {
-        if (_wheel.Entries.Count == 0)
+        if (_curWheel == null) return;
+        if (_curWheel.Entries.Count == 0)
         {
             MessageBox.Show("Isi roda masih kosong. Tambah isi dulu.");
             return;
         }
-        if (_wheelOverlay == null)
-            ToggleWheelOverlay_Click(sender, e);
-        EnqueueWheelSpin("Penguji");
+        EnqueueWheelSpin(_curWheel, "Penguji");
     }
 
-    private void EnqueueWheelSpin(string user)
+    private void EnqueueWheelSpin(WheelConfig w, string user)
     {
-        if (_wheel.Entries.Count == 0) return;
-        if (_wheelQueue.Count >= 30) return;
+        if (w.Entries.Count == 0) return;
 
-        _wheelQueue.Enqueue(user);
-        PumpWheel();
+        var rt = Rt(w);
+        if (rt.Queue.Count >= 30) return;
+
+        rt.Queue.Enqueue(user);
+        PumpWheel(w);
     }
 
-    private int PickWheelIndex()
+    private static int PickWheelIndex(WheelConfig w)
     {
-        int total = _wheel.Entries.Sum(x => Math.Max(1, x.Weight));
+        int total = w.Entries.Sum(x => Math.Max(1, x.Weight));
         int roll = Random.Shared.Next(total);
-        for (int i = 0; i < _wheel.Entries.Count; i++)
+        for (int i = 0; i < w.Entries.Count; i++)
         {
-            roll -= Math.Max(1, _wheel.Entries[i].Weight);
+            roll -= Math.Max(1, w.Entries[i].Weight);
             if (roll < 0) return i;
         }
-        return _wheel.Entries.Count - 1;
+        return w.Entries.Count - 1;
     }
 
-    private void PumpWheel()
+    private void PumpWheel(WheelConfig w)
     {
-        if (_wheelBusy || _wheelQueue.Count == 0) return;
-        if (_wheel.Entries.Count == 0) { _wheelQueue.Clear(); return; }
+        var rt = Rt(w);
+        if (rt.Busy || rt.Queue.Count == 0) return;
+        if (w.Entries.Count == 0) { rt.Queue.Clear(); return; }
 
-        string user = _wheelQueue.Dequeue();
-        int index = PickWheelIndex();
-        var entry = _wheel.Entries[index];
+        string user = rt.Queue.Dequeue();
+        int index = PickWheelIndex(w);
+        var entry = w.Entries[index];
 
-        // Overlay tertutup: hasil langsung diterapkan tanpa animasi
-        if (_wheelOverlay == null)
+        // Roda muncul dulu kalau sedang disembunyikan
+        ShowWheelOverlay(w);
+        var overlay = rt.Overlay;
+        if (overlay == null)
         {
-            ApplyWheelResult(user, entry);
-            PumpWheel();
+            ApplyWheelResult(w, user, entry);
+            PumpWheel(w);
             return;
         }
 
-        _wheelBusy = true;
-        var overlay = _wheelOverlay;
-        overlay.Spin(index, _wheel.SpinSeconds, user, () =>
-        {
-            overlay.ShowResult(user, entry.Text, !string.IsNullOrWhiteSpace(entry.Key));
-            ApplyWheelResult(user, entry);
+        rt.Busy = true;
+        rt.Pending = (user, entry);
 
-            // Biarkan hasil terbaca sebentar sebelum putaran berikutnya
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3.5) };
-            timer.Tick += (s, e) =>
+        // Jeda singkat supaya roda sempat muncul sebelum berputar
+        var start = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(450) };
+        start.Tick += (s, e) =>
+        {
+            start.Stop();
+            if (rt.Overlay != overlay || !rt.Busy) return;     // ditutup selagi menunggu
+
+            overlay.Spin(index, w.SpinSeconds, user, () =>
             {
-                timer.Stop();
-                if (_wheelQueue.Count == 0) overlay.ClearResult();
-                _wheelBusy = false;
-                PumpWheel();
-            };
-            timer.Start();
-        });
+                rt.Pending = null;
+                overlay.ShowResult(user, entry.Text, !string.IsNullOrWhiteSpace(entry.Key));
+                ApplyWheelResult(w, user, entry);
+
+                // Biarkan hasil terbaca sebentar sebelum putaran berikutnya atau menyembunyikan roda
+                var hold = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3.5) };
+                hold.Tick += (s2, e2) =>
+                {
+                    hold.Stop();
+                    if (rt.Overlay != overlay) return;          // sudah ditutup
+
+                    rt.Busy = false;
+                    if (rt.Queue.Count > 0)
+                    {
+                        PumpWheel(w);
+                    }
+                    else
+                    {
+                        overlay.ClearResult();
+                        if (!w.AlwaysShow && !rt.Preview)
+                            overlay.FadeOutAndClose();
+                    }
+                };
+                hold.Start();
+            });
+        };
+        start.Start();
     }
 
-    private void ApplyWheelResult(string user, WheelEntry entry)
+    private void ApplyWheelResult(WheelConfig w, string user, WheelEntry entry)
     {
-        AddLog($"🎡 Lucky Wheel: {user} mendapat \"{entry.Text}\"");
+        AddLog($"🎡 {w.Name}: {user} mendapat \"{entry.Text}\"");
 
         if (string.IsNullOrWhiteSpace(entry.Key)) return;
 
         _queue.EnqueueRange(new[]
         {
-            new QueuedAction(user, "Lucky Wheel", 1, 1, entry.Key, 100, false, "", "",
-                             _wheel.ActionSeconds, 0, 100, entry.Text)
+            new QueuedAction(user, w.Name, 1, 1, entry.Key, 100, false, "", "",
+                             w.ActionSeconds, 0, 100, entry.Text)
         });
     }
 }

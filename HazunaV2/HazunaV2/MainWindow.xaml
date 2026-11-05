@@ -522,11 +522,26 @@
                     <Border Style="{StaticResource Card}" Padding="20,16" Margin="0,0,16,0">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
-                                <TextBlock Text="Gift pemutar" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AccentBrush}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Daftar wheel" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                             </StackPanel>
-                            <TextBlock Text="Gift yang memutar roda saat dikirim penonton."
-                                       Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,8"/>
+                            <ListBox x:Name="WheelList" DisplayMemberPath="Name" Height="110" Margin="0,8,0,8"
+                                     Background="{StaticResource InputBrush}" Foreground="White" BorderThickness="0"
+                                     SelectionChanged="WheelList_SelectionChanged"/>
+                            <WrapPanel Margin="0,0,0,16">
+                                <Button Content="+ Wheel Baru" Click="WheelNew_Click" Style="{StaticResource PrimaryButton}" Padding="12,6" Margin="0,0,8,0"/>
+                                <Button Content="Duplikat" Click="WheelDuplicate_Click" Style="{StaticResource GhostButton}" Padding="12,6" Margin="0,0,8,0"/>
+                                <Button Content="Hapus" Click="WheelRemove_Click" Style="{StaticResource DangerButton}" Padding="12,6"/>
+                            </WrapPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Wheel terpilih" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock Text="Nama (tampil di atas roda)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
+                            <TextBox x:Name="WheelNameBox" LostFocus="WheelField_LostFocus" Margin="0,0,0,10"/>
+
+                            <TextBlock Text="Gift pemutar" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
                             <Button x:Name="WheelGiftBtn" Click="WheelPickGift_Click" Padding="10,7"
                                     HorizontalContentAlignment="Stretch" Background="#1A2242">
                                 <DockPanel>
@@ -534,28 +549,26 @@
                                     <TextBlock x:Name="WheelGiftText" Foreground="White" TextTrimming="CharacterEllipsis"/>
                                 </DockPanel>
                             </Button>
-                            <CheckBox x:Name="WheelPerGiftCheck" Click="WheelOption_Click" Margin="0,10,0,18"
+                            <CheckBox x:Name="WheelPerGiftCheck" Click="WheelOption_Click" Margin="0,10,0,14"
                                       Content="Putar sekali untuk tiap gift (kirim 3 = 3 putaran, maks 10)"/>
 
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
-                                <TextBlock Text="Waktu" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                            </StackPanel>
-                            <TextBlock Text="Lama roda berputar (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
+                            <TextBlock Text="Lama roda berputar (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
                             <TextBox x:Name="WheelSecondsBox" Width="90" HorizontalAlignment="Left" LostFocus="WheelField_LostFocus"/>
                             <TextBlock Text="Lama tombol hasil dijalankan (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
-                            <TextBox x:Name="WheelActionBox" Width="90" HorizontalAlignment="Left" Margin="0,0,0,18" LostFocus="WheelField_LostFocus"/>
+                            <TextBox x:Name="WheelActionBox" Width="90" HorizontalAlignment="Left" Margin="0,0,0,16" LostFocus="WheelField_LostFocus"/>
 
                             <StackPanel Orientation="Horizontal">
                                 <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
                                 <TextBlock Text="Overlay" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                             </StackPanel>
-                            <Button x:Name="WheelOverlayBtn" Content="Buka Overlay Roda" Click="ToggleWheelOverlay_Click"
-                                    Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,8,0,8" HorizontalAlignment="Left"/>
-                            <CheckBox x:Name="WheelAutoOpenCheck" Click="WheelOption_Click" Margin="0,0,0,18"
-                                      Content="Buka otomatis saat aplikasi dibuka"/>
+                            <TextBlock Text="Roda disembunyikan dan baru muncul saat gift pemutarnya masuk, lalu hilang setelah selesai."
+                                       Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,8"/>
+                            <CheckBox x:Name="WheelAlwaysCheck" Click="WheelOption_Click" Margin="0,0,0,8"
+                                      Content="Selalu tampil (tidak disembunyikan)"/>
+                            <Button x:Name="WheelOverlayBtn" Content="Tampilkan / atur posisi" Click="ToggleWheelOverlay_Click"
+                                    Style="{StaticResource GhostButton}" Padding="14,7" Margin="0,0,0,12" HorizontalAlignment="Left"/>
 
-                            <Button Content="▶ Tes Putar" Click="WheelTest_Click" Style="{StaticResource GhostButton}"
+                            <Button Content="▶ Tes Putar" Click="WheelTest_Click" Style="{StaticResource PrimaryButton}"
                                     Padding="16,8" HorizontalAlignment="Left"/>
                         </StackPanel>
                     </Border>
