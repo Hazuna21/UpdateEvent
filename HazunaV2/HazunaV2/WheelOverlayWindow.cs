@@ -272,8 +272,7 @@ public class WheelOverlayWindow : Window
 
     public void ShowResult(string user, string text, int scoreDelta)
     {
-        string bonus = scoreDelta == 0 ? "" : $"  ({scoreDelta:+0;-0} WIN)";
-        _result.Text = user + " mendapat:\n" + text + bonus;
+        _result.Text = text;      // hanya isi roda yang menang
 
         var scale = new ScaleTransform(1, 1);
         _result.RenderTransformOrigin = new Point(0.5, 0.5);
