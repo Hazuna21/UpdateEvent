@@ -262,7 +262,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _menuOverlay = new GiftMenuOverlay(_rules, _settings.MenuOverlayScale);
+        _menuOverlay = new GiftMenuOverlay(_rules, _settings.MenuOverlayScale) { ExtraRules = WheelMenuRules };
         _menuOverlay.SetChromaKey(ChromaCheck.IsChecked == true);
         _menuOverlay.Closed += (s, args) =>
         {

@@ -358,8 +358,22 @@ public class GiftMenuOverlay : Window
     // ---------- Data ----------
 
     // Aturan yang tampil: aktif dan punya nama efek
-    private List<GiftRule> Visible() =>
-        _rules.Where(r => r.Enabled && !string.IsNullOrWhiteSpace(r.EffectName)).ToList();
+    private List<GiftRule> Visible()
+    {
+        var list = _rules.Where(r => r.Enabled && !string.IsNullOrWhiteSpace(r.EffectName)).ToList();
+        if (ExtraRules != null)
+            list.AddRange(ExtraRules().Where(r => r.Enabled && !string.IsNullOrWhiteSpace(r.EffectName)));
+        return list;
+    }
+
+    // Aturan tambahan (mis. Lucky Wheel) yang ikut tampil sebagai kartu
+    public Func<IEnumerable<GiftRule>>? ExtraRules { get; set; }
+
+    public void Refresh()
+    {
+        _forceRefresh = true;
+        ScheduleRefresh();
+    }
 
     // Susunan kartu:
     // 1) Aturan dengan nama efek yang sama digabung jadi satu muka (satu efek, banyak sumber).

@@ -43,7 +43,34 @@ public partial class MainWindow
         }, DispatcherPriority.ApplicationIdle);
     }
 
-    private void SaveWheel() => WheelStore.Save(_wheelSet);
+    private void SaveWheel()
+    {
+        WheelStore.Save(_wheelSet);
+        _menuOverlay?.Refresh();
+    }
+
+    // Kartu Lucky Wheel di overlay menu gift: satu aturan bayangan per roda (tidak disimpan)
+    private readonly Dictionary<WheelConfig, GiftRule> _wheelCards = new();
+
+    private IEnumerable<GiftRule> WheelMenuRules()
+    {
+        var result = new List<GiftRule>();
+        foreach (var w in _wheelSet.Wheels)
+        {
+            if (w.GiftId == 0 && string.IsNullOrWhiteSpace(w.GiftName)) continue;
+
+            if (!_wheelCards.TryGetValue(w, out var r))
+                _wheelCards[w] = r = new GiftRule();
+
+            r.Enabled = true;
+            r.Trigger = RuleTrigger.Gift;
+            r.GiftId = w.GiftId;
+            r.GiftName = w.GiftName;
+            r.EffectName = "🎡 " + (string.IsNullOrWhiteSpace(w.Name) ? "Lucky Wheel" : w.Name.Trim());
+            result.Add(r);
+        }
+        return result;
+    }
 
     // ---------- Daftar wheel ----------
 
@@ -331,6 +358,8 @@ public partial class MainWindow
                 ? w.GiftId == g.GiftId
                 : string.Equals(w.GiftName.Trim(), g.GiftName.Trim(), StringComparison.OrdinalIgnoreCase);
             if (!match) continue;
+
+            if (_wheelCards.TryGetValue(w, out var card)) _menuOverlay?.Pulse(card);
 
             int spins = w.SpinPerGift ? Math.Clamp(g.Count, 1, 10) : 1;
             for (int i = 0; i < spins; i++)
