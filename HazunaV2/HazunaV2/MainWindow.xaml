@@ -563,7 +563,7 @@
                                 <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
                                 <TextBlock Text="Overlay" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                             </StackPanel>
-                            <TextBlock Text="Semua roda memakai satu jendela "Lucky Wheel Overlay" yang selalu ada (tangkap sekali di TikTok Studio). Roda tak terlihat sampai gift pemutarnya masuk, lalu hilang setelah selesai."
+                            <TextBlock Text="Semua roda memakai satu jendela &quot;Lucky Wheel Overlay&quot; yang selalu ada (tangkap sekali di TikTok Studio). Roda tak terlihat sampai gift pemutarnya masuk, lalu hilang setelah selesai."
                                        Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,8"/>
                             <CheckBox x:Name="WheelAlwaysCheck" Click="WheelOption_Click" Margin="0,0,0,8"
                                       Content="Selalu tampil (tidak disembunyikan)"/>
