@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -13,7 +14,38 @@ public static class AiClient
 {
     private const string GeminiBase = "https://generativelanguage.googleapis.com/v1beta/models/";
     private const string Url = "https://api.anthropic.com/v1/messages";
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(30) };
+    // Satu koneksi yang dipakai ulang (HTTP/2, tetap hidup) supaya tiap permintaan tidak mengulang jabat tangan TLS
+    private static readonly HttpClient Http = new(new SocketsHttpHandler
+    {
+        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(10),
+        PooledConnectionLifetime = TimeSpan.FromMinutes(30),
+        KeepAlivePingPolicy = HttpKeepAlivePingPolicy.Always,
+        KeepAlivePingDelay = TimeSpan.FromSeconds(30),
+        KeepAlivePingTimeout = TimeSpan.FromSeconds(10),
+        EnableMultipleHttp2Connections = true,
+        AutomaticDecompression = DecompressionMethods.All
+    })
+    {
+        Timeout = TimeSpan.FromSeconds(30),
+        DefaultRequestVersion = HttpVersion.Version20,
+        DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
+    };
+
+    // Membuka koneksi lebih dulu (dipanggil saat AI dinyalakan) agar jawaban pertama tidak menunggu jabat tangan
+    public static async Task WarmUpAsync(string model)
+    {
+        try
+        {
+            string url = IsGemini(model) ? "https://generativelanguage.googleapis.com/" : "https://api.anthropic.com/";
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+            using var req = new HttpRequestMessage(HttpMethod.Head, url);
+            using var _ = await Http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+        }
+        catch
+        {
+            // hanya pemanasan: kegagalan tidak penting
+        }
+    }
 
     public const string DefaultModel = "claude-haiku-5-5";
 

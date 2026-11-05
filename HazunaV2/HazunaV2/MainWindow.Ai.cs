@@ -115,6 +115,11 @@ public partial class MainWindow
         if (text.StartsWith('!') || text.StartsWith('/')) return;
         if (text.Length > 300) text = text[..300];
 
+        // Komentar tanpa isi (hanya emoji/simbol atau huruf yang diulang) tidak perlu dikirim ke AI:
+        // menghemat waktu antrean dan biaya
+        if (text.Count(char.IsLetterOrDigit) < 2) return;
+        if (text.Length >= 6 && text.Distinct().Count() <= 2) return;
+
         // Komentar dari akun streamer sendiri tidak dijawab
         if (string.Equals(c.UserName, _settings.TikTokUsername, StringComparison.OrdinalIgnoreCase))
             return;
@@ -152,9 +157,11 @@ public partial class MainWindow
                       "Sambut dia dengan hangat dalam SATU kalimat singkat yang menyebut namanya. " +
                       "Jangan menjawab SKIP dan jangan menanyakan hal apa pun.";
 
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         var (answer, error) = await AiClient.AskAsync(
             _settings.AiApiKey, _settings.AiModel, system,
             job.UserName, job.Comment, AiMaxTokens(), ct);
+        clock.Stop();
 
         AddAiLine(job.Welcome ? $"{job.UserName} bergabung" : $"{job.UserName}: {job.Comment}");
 
@@ -171,7 +178,7 @@ public partial class MainWindow
             return;
         }
 
-        AddAiLine("   AI: " + answer);
+        AddAiLine($"   AI ({clock.Elapsed.TotalSeconds:0.0} dtk): " + answer);
 
         if (_settings.AiSpeakAnswer)
             SpeakAiAnswer(job.UserName, answer, job.Welcome);
@@ -232,6 +239,7 @@ public partial class MainWindow
             }
             _aiWarnedNoKey = false;
             AddLog("[AI] Jawaban otomatis AKTIF. Setiap komentar akan dikirim ke API.");
+            _ = AiClient.WarmUpAsync(_settings.AiModel);
         }
         else
         {

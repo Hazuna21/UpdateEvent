@@ -48,7 +48,7 @@ public class AppSettings
     public string AiApiKey { get; set; } = "";
     public string AiModel { get; set; } = AiClient.DefaultModel;
     public string AiPersona { get; set; } = AiClient.DefaultPersona;
-    public int AiCooldownSeconds { get; set; } = 5;
+    public int AiCooldownSeconds { get; set; } = 2;
     public int AiMaxPending { get; set; } = 3;
     public int AiMaxChars { get; set; } = 200;
     public bool AiOnlyQuestions { get; set; }
