@@ -233,46 +233,16 @@ public partial class MainWindow : Window
 
     private void ToggleOverlay_Click(object sender, RoutedEventArgs e)
     {
-        if (_overlay != null)
-        {
-            _overlay.Close();
-            return;
-        }
-
-        _overlay = new OverlayWindow(_board);
-        _overlay.SetChromaKey(ChromaCheck.IsChecked == true);
-        _overlay.Closed += (s, args) =>
-        {
-            _overlay = null;
-            OverlayToggleBtn.Content = "Buka Overlay";
-            UpdateAllOverlayBtn();
-        };
-        _overlay.Show();
-        OverlayToggleBtn.Content = "Tutup Overlay";
-        UpdateAllOverlayBtn();
+        var o = EnsureOverlay();
+        SetOverlayVisible(o, !_overlayShown.Contains(o));
     }
 
     private GiftMenuOverlay? _menuOverlay;
 
     private void ToggleMenuOverlay_Click(object sender, RoutedEventArgs e)
     {
-        if (_menuOverlay != null)
-        {
-            _menuOverlay.Close();
-            return;
-        }
-
-        _menuOverlay = new GiftMenuOverlay(_rules, _settings.MenuOverlayScale) { ExtraRules = WheelMenuRules };
-        _menuOverlay.SetChromaKey(ChromaCheck.IsChecked == true);
-        _menuOverlay.Closed += (s, args) =>
-        {
-            _menuOverlay = null;
-            MenuOverlayBtn.Content = "Buka Overlay Menu Gift";
-            UpdateAllOverlayBtn();
-        };
-        _menuOverlay.Show();
-        MenuOverlayBtn.Content = "Tutup Overlay Menu Gift";
-        UpdateAllOverlayBtn();
+        var o = EnsureMenuOverlay();
+        SetOverlayVisible(o, !_overlayShown.Contains(o));
     }
 
     private static readonly double[] MenuScales = { 1.0, 1.5, GiftMenuOverlay.HdScale };

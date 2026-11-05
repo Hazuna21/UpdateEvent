@@ -36,6 +36,7 @@ public partial class MainWindow
         {
             EnsureWheelWindow();
             SettleWheel();
+            EnsureAllOverlays();
         }, DispatcherPriority.ApplicationIdle);
     }
 

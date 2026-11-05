@@ -92,49 +92,7 @@ public partial class MainWindow
 
     private void ToggleScoreOverlay_Click(object sender, RoutedEventArgs e)
     {
-        if (_scoreOverlay != null)
-        {
-            _scoreOverlay.Close();
-            return;
-        }
-
-        _scoreOverlay = new ScoreOverlayWindow(_score);
-        _scoreOverlay.SetChromaKey(ChromaCheck.IsChecked == true);
-        _scoreOverlay.Closed += (s, args) =>
-        {
-            _scoreOverlay = null;
-            ScoreOverlayBtn.Content = "Buka Overlay Skor";
-            UpdateAllOverlayBtn();
-        };
-        _scoreOverlay.Show();
-        ScoreOverlayBtn.Content = "Tutup Overlay Skor";
-        UpdateAllOverlayBtn();
-    }
-
-    // Satu tombol untuk semua overlay: kalau ada yang terbuka, tutup semua; kalau tidak, buka semua
-    private void ToggleAllOverlays_Click(object sender, RoutedEventArgs e)
-    {
-        bool anyOpen = _overlay != null || _menuOverlay != null || _scoreOverlay != null;
-
-        if (anyOpen)
-        {
-            _overlay?.Close();
-            _menuOverlay?.Close();
-            _scoreOverlay?.Close();
-        }
-        else
-        {
-            ToggleOverlay_Click(sender, e);
-            ToggleMenuOverlay_Click(sender, e);
-            ToggleScoreOverlay_Click(sender, e);
-        }
-
-        UpdateAllOverlayBtn();
-    }
-
-    private void UpdateAllOverlayBtn()
-    {
-        bool anyOpen = _overlay != null || _menuOverlay != null || _scoreOverlay != null;
-        AllOverlayBtn.Content = anyOpen ? "Tutup Semua Overlay" : "Buka Semua Overlay";
+        var o = EnsureScoreOverlay();
+        SetOverlayVisible(o, !_overlayShown.Contains(o));
     }
 }

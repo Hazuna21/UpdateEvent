@@ -59,12 +59,17 @@ public class WheelOverlayWindow : Window
         _title.HorizontalAlignment = HorizontalAlignment.Center;
         _title.Effect = new DropShadowEffect { BlurRadius = 6, ShadowDepth = 1, Opacity = 0.9 };
 
-        _sub.Foreground = new SolidColorBrush(Color.FromRgb(0xC4, 0xB5, 0xFD));
-        _sub.FontSize = 14;
-        _sub.FontWeight = FontWeights.SemiBold;
+        // Nama pengirim gift (di bawah judul, lebih besar dari judul)
+        _sub.Foreground = Brushes.White;
+        _sub.FontSize = 38;
+        _sub.FontWeight = FontWeights.Black;
         _sub.HorizontalAlignment = HorizontalAlignment.Center;
-        _sub.Margin = new Thickness(0, 0, 0, 8);
-        _sub.Effect = new DropShadowEffect { BlurRadius = 4, ShadowDepth = 1, Opacity = 0.9 };
+        _sub.TextAlignment = TextAlignment.Center;
+        _sub.TextTrimming = TextTrimming.CharacterEllipsis;
+        _sub.MaxWidth = Size;
+        _sub.MinHeight = 50;
+        _sub.Margin = new Thickness(0, 0, 0, 6);
+        _sub.Effect = new DropShadowEffect { Color = Color.FromRgb(0x8B, 0x5C, 0xF6), BlurRadius = 10, ShadowDepth = 0, Opacity = 1 };
 
         _result.Foreground = Brushes.White;
         _result.FontSize = 22;
@@ -164,7 +169,6 @@ public class WheelOverlayWindow : Window
     {
         _wheel.Children.Clear();
         _title.Text = _cfg.Name.ToUpperInvariant();
-        _sub.Text = string.IsNullOrWhiteSpace(_cfg.GiftName) ? "" : "Kirim " + _cfg.GiftName + " untuk memutar";
 
         int n = _cfg.Entries.Count;
         if (n == 0)
@@ -268,7 +272,8 @@ public class WheelOverlayWindow : Window
         }
 
         _spinning = true;
-        _result.Text = user + " memutar roda...";
+        _sub.Text = user;
+        _result.Text = "";
 
         if (_order.Length != n)
             _order = Enumerable.Range(0, n).ToArray();
@@ -309,5 +314,9 @@ public class WheelOverlayWindow : Window
         scale.BeginAnimation(ScaleTransform.ScaleYProperty, grow);
     }
 
-    public void ClearResult() => _result.Text = "";
+    public void ClearResult()
+    {
+        _result.Text = "";
+        _sub.Text = "";
+    }
 }
