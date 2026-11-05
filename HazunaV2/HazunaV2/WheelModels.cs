@@ -45,6 +45,7 @@ public class WheelConfig : System.ComponentModel.INotifyPropertyChanged
     public double SpinSeconds { get; set; } = 6;       // lama roda berputar
     public double ActionSeconds { get; set; } = 2;     // lama tombol hasil dijalankan
     public bool ShuffleEachSpin { get; set; }          // acak posisi isi di roda sebelum tiap putaran
+    public bool Standby { get; set; } = true;           // jendela selalu ada (untuk TikTok Studio), isinya tak terlihat sampai ada gift
     public bool AlwaysShow { get; set; }               // false = roda disembunyikan, muncul hanya saat ada gift
     public bool AutoOpenOverlay { get; set; }          // lama (satu roda); dipakai hanya untuk memindahkan data lama
     public double? PosX { get; set; }                  // posisi terakhir overlay

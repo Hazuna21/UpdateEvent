@@ -33,7 +33,9 @@ public class WheelOverlayWindow : Window
 
     public bool IsSpinning => _spinning;
 
-    public WheelOverlayWindow(WheelConfig cfg)
+    public bool IsRevealed { get; private set; }
+
+    public WheelOverlayWindow(WheelConfig cfg, bool startHidden = false)
     {
         _cfg = cfg;
 
@@ -116,10 +118,25 @@ public class WheelOverlayWindow : Window
         MouseLeftButtonDown += (s, e) => DragMove();
 
         // Muncul perlahan; posisi terakhir disimpan saat ditutup
-        Loaded += (s, e) => BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300)));
+        if (!startHidden) Loaded += (s, e) => Reveal();
         Closed += (s, e) => { _cfg.PosX = Left; _cfg.PosY = Top; };
 
         Rebuild();
+    }
+
+    // Roda terlihat / tak terlihat tanpa menutup jendelanya (jendela tetap ada untuk ditangkap TikTok Studio)
+    public void Reveal()
+    {
+        if (IsRevealed) return;
+        IsRevealed = true;
+        BeginAnimation(OpacityProperty, new DoubleAnimation(Opacity, 1, TimeSpan.FromMilliseconds(300)));
+    }
+
+    public void Conceal()
+    {
+        if (!IsRevealed) return;
+        IsRevealed = false;
+        BeginAnimation(OpacityProperty, new DoubleAnimation(Opacity, 0, TimeSpan.FromMilliseconds(350)));
     }
 
     // Menghilang perlahan lalu menutup jendela
