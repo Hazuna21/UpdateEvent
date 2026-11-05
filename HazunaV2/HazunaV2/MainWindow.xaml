@@ -797,7 +797,14 @@
                 <CheckBox x:Name="AiOnlyQuestionsCheck" Content="Hanya jawab komentar yang berupa pertanyaan"
                           Click="AiOption_Click" Margin="0,4,0,8"/>
                 <CheckBox x:Name="AiWelcomeCheck" Content="Sambut penonton yang baru bergabung (tiap penonton satu kali)"
-                          Click="AiOption_Click" Margin="0,0,0,18"/>
+                          Click="AiOption_Click" Margin="0,0,0,8"/>
+                <CheckBox x:Name="AiReactCheck" Content="Beri reaksi otomatis pada kejadian di game (mati, sampai puncak, hasil roda, gift, zombie)"
+                          Click="AiOption_Click" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                    <TextBlock Text="Jeda minimal antar reaksi (detik):" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox x:Name="AiReactCooldownBox" Width="70" LostFocus="AiField_LostFocus"/>
+                </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
                     <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource BlueBrush}" Margin="0,0,10,0"/>

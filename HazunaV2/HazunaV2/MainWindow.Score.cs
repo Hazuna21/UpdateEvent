@@ -24,9 +24,15 @@ public partial class MainWindow
         };
 
         _score.Event += kind =>
+        {
             AddLog(kind == "win"
                 ? $"🏆 Game: sampai puncak, skor +{_score.WinDelta}"
                 : $"💀 Game: mati, skor -{_score.DeathDelta}");
+
+            NoteGameEvent(kind == "win"
+                ? "Streamer berhasil sampai puncak Gunung Chiliad dan kabur dengan helikopter (menang)"
+                : "Streamer mati di game", GameEventLevel.High);
+        };
 
         _scoreTimer.Tick += (s, e) => _score.Poll();
         _scoreTimer.Start();

@@ -30,7 +30,7 @@ public partial class MainWindow
             OnLog = AddLog,
             OnRulesChanged = () => RuleStore.Save(_rules),
             OnRuleFired = r => _menuOverlay?.Pulse(r),
-            OnGift = OnWheelGift
+            OnGift = g => { NoteGameEvent($"{g.UserName} mengirim {g.Count}x {g.GiftName}", GameEventLevel.Medium); OnWheelGift(g); }
         };
 
         UpdateQueueText();
@@ -57,6 +57,9 @@ public partial class MainWindow
             }
 
             AddLog($"▶ {a.UserName} · {a.GiftName} ({a.Index}/{a.Total}), {a.DurationSeconds:0.#} dtk");
+
+            if (a.Index == 1)
+                NoteGameEvent($"{a.UserName} memicu efek \"{(string.IsNullOrWhiteSpace(a.EffectName) ? a.GiftName : a.EffectName)}\" di game", GameEventLevel.Medium);
 
             if (!string.IsNullOrEmpty(a.SoundPath))
             {
