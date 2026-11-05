@@ -559,6 +559,25 @@
                             <TextBlock Text="Lama tombol hasil dijalankan (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
                             <TextBox x:Name="WheelActionBox" Width="90" HorizontalAlignment="Left" Margin="0,0,0,16" LostFocus="WheelField_LostFocus"/>
 
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
+                                <TextBlock Text="Suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock Text="Suara saat roda berputar" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBox x:Name="WheelSpinVolBox" DockPanel.Dock="Right" Width="52" Margin="6,0,0,0" ToolTip="Volume 1-200%" LostFocus="WheelField_LostFocus"/>
+                                <Button DockPanel.Dock="Right" Content="Hapus" Tag="spin" Click="WheelClearSound_Click" Style="{StaticResource GhostButton}" Padding="10,6" Margin="6,0,0,0"/>
+                                <Button DockPanel.Dock="Right" Content="Pilih..." Tag="spin" Click="WheelPickSound_Click" Style="{StaticResource GhostButton}" Padding="10,6" Margin="6,0,0,0"/>
+                                <TextBlock x:Name="WheelSpinSoundText" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            </DockPanel>
+                            <TextBlock Text="Suara saat hasil keluar" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
+                            <DockPanel Margin="0,0,0,16">
+                                <TextBox x:Name="WheelResultVolBox" DockPanel.Dock="Right" Width="52" Margin="6,0,0,0" ToolTip="Volume 1-200%" LostFocus="WheelField_LostFocus"/>
+                                <Button DockPanel.Dock="Right" Content="Hapus" Tag="result" Click="WheelClearSound_Click" Style="{StaticResource GhostButton}" Padding="10,6" Margin="6,0,0,0"/>
+                                <Button DockPanel.Dock="Right" Content="Pilih..." Tag="result" Click="WheelPickSound_Click" Style="{StaticResource GhostButton}" Padding="10,6" Margin="6,0,0,0"/>
+                                <TextBlock x:Name="WheelResultSoundText" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            </DockPanel>
+
                             <StackPanel Orientation="Horizontal">
                                 <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
                                 <TextBlock Text="Overlay" Foreground="White" FontSize="15" FontWeight="SemiBold"/>

@@ -67,7 +67,7 @@ public static class SoundService
     }
 
     // Biarkan sinyal normal lewat apa adanya, lalu lipat puncak yang melebihi 0,8 dengan lembut ke 1,0
-    private sealed class SoftLimiter : ISampleProvider
+    internal sealed class SoftLimiter : ISampleProvider
     {
         private readonly ISampleProvider _source;
         public SoftLimiter(ISampleProvider source) => _source = source;

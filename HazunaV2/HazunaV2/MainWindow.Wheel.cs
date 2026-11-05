@@ -88,6 +88,7 @@ public partial class MainWindow
         WheelSecondsBox.Text = w.SpinSeconds.ToString("0.#");
         WheelActionBox.Text = w.ActionSeconds.ToString("0.#");
         WheelAlwaysCheck.IsChecked = w.AlwaysShow;
+        ShowWheelSounds(w);
         UpdateWheelOverlayBtn();
     }
 
@@ -112,7 +113,11 @@ public partial class MainWindow
             SpinPerGift = src.SpinPerGift,
             SpinSeconds = src.SpinSeconds,
             ActionSeconds = src.ActionSeconds,
-            ShuffleEachSpin = src.ShuffleEachSpin
+            ShuffleEachSpin = src.ShuffleEachSpin,
+            SpinSound = src.SpinSound,
+            SpinSoundVolume = src.SpinSoundVolume,
+            ResultSound = src.ResultSound,
+            ResultSoundVolume = src.ResultSoundVolume
         };
         foreach (var en in src.Entries)
             copy.Entries.Add(new WheelEntry { Text = en.Text, Weight = en.Weight, Key = en.Key, ScoreDelta = en.ScoreDelta });
@@ -198,6 +203,10 @@ public partial class MainWindow
             w.ActionSeconds = Math.Clamp(act, 0.2, 60);
         WheelActionBox.Text = w.ActionSeconds.ToString("0.#");
 
+        if (int.TryParse(WheelSpinVolBox.Text, out var sv)) w.SpinSoundVolume = Math.Clamp(sv, 1, 200);
+        if (int.TryParse(WheelResultVolBox.Text, out var rv)) w.ResultSoundVolume = Math.Clamp(rv, 1, 200);
+        ShowWheelSounds(w);
+
         bool always = WheelAlwaysCheck.IsChecked == true;
         bool changedAlways = always != w.AlwaysShow;
         w.AlwaysShow = always;
@@ -206,6 +215,48 @@ public partial class MainWindow
         RebuildWheelOverlay(w);
 
         if (changedAlways) SettleWheel();
+    }
+
+    // ---------- Suara roda ----------
+
+    private readonly SoundChannel _wheelSpinSound = new();
+    private readonly SoundChannel _wheelResultSound = new();
+
+    private void ShowWheelSounds(WheelConfig w)
+    {
+        WheelSpinSoundText.Text = string.IsNullOrWhiteSpace(w.SpinSound) ? "(tanpa suara)" : System.IO.Path.GetFileName(w.SpinSound);
+        WheelResultSoundText.Text = string.IsNullOrWhiteSpace(w.ResultSound) ? "(tanpa suara)" : System.IO.Path.GetFileName(w.ResultSound);
+        WheelSpinVolBox.Text = w.SpinSoundVolume.ToString();
+        WheelResultVolBox.Text = w.ResultSoundVolume.ToString();
+    }
+
+    private void WheelPickSound_Click(object sender, RoutedEventArgs e)
+    {
+        if (_curWheel == null) return;
+
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Pilih suara",
+            Filter = "Audio|*.mp3;*.wav;*.ogg;*.m4a;*.wma;*.aac;*.flac|Semua file|*.*"
+        };
+        if (dlg.ShowDialog(this) != true) return;
+
+        if ((sender as FrameworkElement)?.Tag as string == "spin") _curWheel.SpinSound = dlg.FileName;
+        else _curWheel.ResultSound = dlg.FileName;
+
+        SaveWheel();
+        ShowWheelSounds(_curWheel);
+    }
+
+    private void WheelClearSound_Click(object sender, RoutedEventArgs e)
+    {
+        if (_curWheel == null) return;
+
+        if ((sender as FrameworkElement)?.Tag as string == "spin") _curWheel.SpinSound = "";
+        else _curWheel.ResultSound = "";
+
+        SaveWheel();
+        ShowWheelSounds(_curWheel);
     }
 
     // ---------- Isi roda ----------
@@ -380,6 +431,8 @@ public partial class MainWindow
         foreach (var rt in _wheelRt.Values)
             rt.Queue.Clear();
         _wheelBusy = false;
+        _wheelSpinSound.Stop();
+        _wheelResultSound.Stop();
         _wheelWin?.Close();
     }
 
@@ -473,9 +526,14 @@ public partial class MainWindow
             if (w.ShuffleEachSpin)
                 overlay.Shuffle();
 
+            _wheelResultSound.Stop();
+            _wheelSpinSound.Play(w.SpinSound, w.SpinSoundVolume);
+
             overlay.Spin(index, w.SpinSeconds, user, () =>
             {
                 _wheelPending = null;
+                _wheelSpinSound.Stop();
+                _wheelResultSound.Play(w.ResultSound, w.ResultSoundVolume);
                 overlay.ShowResult(user, entry.Text, entry.ScoreDelta);
                 ApplyWheelResult(w, user, entry);
 
