@@ -57,11 +57,8 @@ public partial class MainWindow
         _ttsReady = true;
         ApplyTtsEngine();
 
-        if (voices.Count == 0)
-            TtsNote.Text = "Tidak ada suara yang terpasang di Windows ini, jadi komentar tidak bisa dibaca.";
-        else if (!voices.Any(v => v.Label.Contains("(id", StringComparison.OrdinalIgnoreCase)))
-            TtsNote.Text = "Tidak ada suara bahasa Indonesia di daftar. Komentar berbahasa Indonesia " +
-                           "akan terdengar aneh dengan suara bahasa lain.";
+        if (_settings.TtsVoice == TtsService.OnlineVoiceName)
+            TtsNote.Text = "Suara online memerlukan internet dan tidak mengikuti pengaturan kecepatan.";
 
         UpdateTtsStatus();
     }
