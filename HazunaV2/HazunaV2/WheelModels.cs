@@ -16,6 +16,10 @@ public class WheelEntry
 
     public string Key { get; set; } = "";
 
+    // Tambah (+) atau kurangi (-) skor WIN saat isi ini menang; 0 = tidak mengubah skor
+    private int _scoreDelta;
+    public int ScoreDelta { get => _scoreDelta; set => _scoreDelta = Math.Clamp(value, -1000, 1000); }
+
     [JsonIgnore] public string KeyDisplay => string.IsNullOrWhiteSpace(Key) ? "—" : Key;
 }
 

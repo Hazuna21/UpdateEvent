@@ -89,7 +89,7 @@ public partial class MainWindow
             ActionSeconds = src.ActionSeconds
         };
         foreach (var en in src.Entries)
-            copy.Entries.Add(new WheelEntry { Text = en.Text, Weight = en.Weight, Key = en.Key });
+            copy.Entries.Add(new WheelEntry { Text = en.Text, Weight = en.Weight, Key = en.Key, ScoreDelta = en.ScoreDelta });
 
         _wheelSet.Wheels.Add(copy);
         WheelList.SelectedItem = copy;
@@ -387,7 +387,7 @@ public partial class MainWindow
             overlay.Spin(index, w.SpinSeconds, user, () =>
             {
                 rt.Pending = null;
-                overlay.ShowResult(user, entry.Text, !string.IsNullOrWhiteSpace(entry.Key));
+                overlay.ShowResult(user, entry.Text, entry.ScoreDelta);
                 ApplyWheelResult(w, user, entry);
 
                 // Biarkan hasil terbaca sebentar sebelum putaran berikutnya atau menyembunyikan roda
@@ -417,7 +417,11 @@ public partial class MainWindow
 
     private void ApplyWheelResult(WheelConfig w, string user, WheelEntry entry)
     {
-        AddLog($"🎡 {w.Name}: {user} mendapat \"{entry.Text}\"");
+        AddLog($"🎡 {w.Name}: {user} mendapat \"{entry.Text}\"" + (entry.ScoreDelta != 0 ? $" (skor WIN {entry.ScoreDelta:+0;-0})" : ""));
+
+        // Hadiah skor: langsung masuk ke nilai WIN (skor tetap di antara 0 dan target)
+        if (entry.ScoreDelta != 0)
+            _score.Add(entry.ScoreDelta);
 
         if (string.IsNullOrWhiteSpace(entry.Key)) return;
 

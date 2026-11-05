@@ -247,9 +247,10 @@ public class WheelOverlayWindow : Window
         _rot.BeginAnimation(RotateTransform.AngleProperty, anim);
     }
 
-    public void ShowResult(string user, string text, bool hasKey)
+    public void ShowResult(string user, string text, int scoreDelta)
     {
-        _result.Text = user + " mendapat:\n" + text;
+        string bonus = scoreDelta == 0 ? "" : $"  ({scoreDelta:+0;-0} WIN)";
+        _result.Text = user + " mendapat:\n" + text + bonus;
 
         var scale = new ScaleTransform(1, 1);
         _result.RenderTransformOrigin = new Point(0.5, 0.5);

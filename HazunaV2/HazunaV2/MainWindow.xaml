@@ -582,7 +582,7 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Button Content="+ Tambah Isi" Click="WheelAdd_Click" Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
                         <Button Content="Hapus Terpilih" Click="WheelDelete_Click" Style="{StaticResource DangerButton}" Padding="16,8" Margin="0,0,8,0"/>
-                        <TextBlock Text="Bobot lebih besar = lebih sering terpilih. Tombol (opsional) ditekan saat isi itu menang."
+                        <TextBlock Text="Bobot lebih besar = lebih sering terpilih. Skor WIN: angka yang ditambahkan (atau dikurangi dengan minus) ke skor saat isi itu menang."
                                    Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
                                    Margin="6,0,0,0" TextWrapping="Wrap" MaxWidth="360"/>
                     </StackPanel>
@@ -595,6 +595,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Isi roda (teks)" Binding="{Binding Text, UpdateSourceTrigger=LostFocus}" Width="*"/>
                             <DataGridTextColumn Header="Bobot" Binding="{Binding Weight, UpdateSourceTrigger=LostFocus}" Width="90"/>
+                            <DataGridTextColumn Header="Skor WIN (+/−)" Binding="{Binding ScoreDelta, UpdateSourceTrigger=LostFocus}" Width="110"/>
                             <DataGridTemplateColumn Header="Tombol (opsional)" Width="200" IsReadOnly="True">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
