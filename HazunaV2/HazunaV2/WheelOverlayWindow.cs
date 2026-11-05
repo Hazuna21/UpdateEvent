@@ -27,6 +27,7 @@ public class WheelOverlayWindow : Window
     private readonly TextBlock _title = new();
     private readonly TextBlock _sub = new();
     private readonly TextBlock _result = new();
+    private int[] _order = Array.Empty<int>();      // urutan tampil: posisi sektor -> nomor isi
     private double _angle;
     private bool _spinning;
 
@@ -151,6 +152,9 @@ public class WheelOverlayWindow : Window
             return;
         }
 
+        if (_order.Length != n)
+            _order = Enumerable.Range(0, n).ToArray();
+
         double step = 360.0 / n;
         double fontSize = n > 16 ? 11 : n > 10 ? 13 : 16;
 
@@ -178,8 +182,23 @@ public class WheelOverlayWindow : Window
 
             // Teks sepanjang jari-jari, rata kanan di dekat tepi
             double mid = (i + 0.5) * step;
-            AddLabel(_cfg.Entries[i].Text, C + 36, C - 14, R - 48, 28, mid - 90, fontSize);
+            AddLabel(_cfg.Entries[_order[i]].Text, C + 36, C - 14, R - 48, 28, mid - 90, fontSize);
         }
+    }
+
+    // Acak posisi isi di roda (daftar isi di pengaturan tidak berubah)
+    public void Shuffle()
+    {
+        int n = _cfg.Entries.Count;
+        if (n < 2 || _spinning) return;
+
+        _order = Enumerable.Range(0, n).ToArray();
+        for (int i = n - 1; i > 0; i--)
+        {
+            int j = Random.Shared.Next(i + 1);
+            (_order[i], _order[j]) = (_order[j], _order[i]);
+        }
+        Rebuild();
     }
 
     private static Point OnCircle(double deg)
@@ -226,6 +245,10 @@ public class WheelOverlayWindow : Window
 
         _spinning = true;
         _result.Text = user + " memutar roda...";
+
+        if (_order.Length != n)
+            _order = Enumerable.Range(0, n).ToArray();
+        index = Array.IndexOf(_order, index);       // nomor isi -> posisi sektornya di roda
 
         double step = 360.0 / n;
         double jitter = (Random.Shared.NextDouble() - 0.5) * step * 0.6;      // berhenti tidak selalu di tengah sektor

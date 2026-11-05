@@ -549,8 +549,10 @@
                                     <TextBlock x:Name="WheelGiftText" Foreground="White" TextTrimming="CharacterEllipsis"/>
                                 </DockPanel>
                             </Button>
-                            <CheckBox x:Name="WheelPerGiftCheck" Click="WheelOption_Click" Margin="0,10,0,14"
+                            <CheckBox x:Name="WheelPerGiftCheck" Click="WheelOption_Click" Margin="0,10,0,8"
                                       Content="Putar sekali untuk tiap gift (kirim 3 = 3 putaran, maks 10)"/>
+                            <CheckBox x:Name="WheelShuffleCheck" Click="WheelOption_Click" Margin="0,0,0,14"
+                                      Content="Acak posisi isi di roda sebelum tiap putaran"/>
 
                             <TextBlock Text="Lama roda berputar (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
                             <TextBox x:Name="WheelSecondsBox" Width="90" HorizontalAlignment="Left" LostFocus="WheelField_LostFocus"/>
@@ -582,6 +584,7 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Button Content="+ Tambah Isi" Click="WheelAdd_Click" Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
                         <Button Content="Hapus Terpilih" Click="WheelDelete_Click" Style="{StaticResource DangerButton}" Padding="16,8" Margin="0,0,8,0"/>
+                        <Button Content="🔀 Acak Urutan" Click="WheelShuffle_Click" Style="{StaticResource GhostButton}" Padding="16,8" Margin="0,0,8,0"/>
                         <TextBlock Text="Bobot lebih besar = lebih sering terpilih. Skor WIN: angka yang ditambahkan (atau dikurangi dengan minus) ke skor saat isi itu menang."
                                    Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
                                    Margin="6,0,0,0" TextWrapping="Wrap" MaxWidth="360"/>

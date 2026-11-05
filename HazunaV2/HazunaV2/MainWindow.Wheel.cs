@@ -60,6 +60,7 @@ public partial class MainWindow
         WheelNameBox.Text = w.Name;
         WheelGiftText.Text = w.GiftDisplay;
         WheelPerGiftCheck.IsChecked = w.SpinPerGift;
+        WheelShuffleCheck.IsChecked = w.ShuffleEachSpin;
         WheelSecondsBox.Text = w.SpinSeconds.ToString("0.#");
         WheelActionBox.Text = w.ActionSeconds.ToString("0.#");
         WheelAlwaysCheck.IsChecked = w.AlwaysShow;
@@ -86,7 +87,8 @@ public partial class MainWindow
             GiftName = src.GiftName,
             SpinPerGift = src.SpinPerGift,
             SpinSeconds = src.SpinSeconds,
-            ActionSeconds = src.ActionSeconds
+            ActionSeconds = src.ActionSeconds,
+            ShuffleEachSpin = src.ShuffleEachSpin
         };
         foreach (var en in src.Entries)
             copy.Entries.Add(new WheelEntry { Text = en.Text, Weight = en.Weight, Key = en.Key, ScoreDelta = en.ScoreDelta });
@@ -151,6 +153,7 @@ public partial class MainWindow
         w.Name = WheelNameBox.Text;
         WheelNameBox.Text = w.Name;
         w.SpinPerGift = WheelPerGiftCheck.IsChecked == true;
+        w.ShuffleEachSpin = WheelShuffleCheck.IsChecked == true;
 
         if (double.TryParse(WheelSecondsBox.Text.Replace(',', '.'), System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var spin))
@@ -186,6 +189,21 @@ public partial class MainWindow
         _curWheel.Entries.Add(entry);
         WheelGrid.SelectedItem = entry;
         WheelGrid.ScrollIntoView(entry);
+        SaveWheel();
+        RebuildWheelOverlay(_curWheel);
+    }
+
+    // Mengacak urutan isi di daftar (dan di roda)
+    private void WheelShuffle_Click(object sender, RoutedEventArgs e)
+    {
+        if (_curWheel == null || _curWheel.Entries.Count < 2) return;
+
+        var list = _curWheel.Entries;
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = Random.Shared.Next(i + 1);
+            if (i != j) list.Move(i, j);
+        }
         SaveWheel();
         RebuildWheelOverlay(_curWheel);
     }
@@ -383,6 +401,9 @@ public partial class MainWindow
         {
             start.Stop();
             if (rt.Overlay != overlay || !rt.Busy) return;     // ditutup selagi menunggu
+
+            if (w.ShuffleEachSpin)
+                overlay.Shuffle();
 
             overlay.Spin(index, w.SpinSeconds, user, () =>
             {
