@@ -567,7 +567,7 @@ public partial class MainWindow
 
         NoteGameEvent($"Roda \"{w.Name}\": {user} mendapat \"{entry.Text}\"", GameEventLevel.High);
 
-        // Hadiah skor: langsung masuk ke nilai WIN (skor tetap di antara 0 dan target)
+        // Hadiah skor: langsung masuk ke nilai WIN (skor boleh minus, maksimal target)
         if (entry.ScoreDelta != 0)
             _score.Add(entry.ScoreDelta);
 

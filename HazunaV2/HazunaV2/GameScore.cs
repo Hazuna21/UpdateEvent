@@ -14,6 +14,8 @@ public class GameScore
 
     private long _offset;
 
+    public const int MinValue = -100000;                // skor boleh minus
+
     public int Value { get; private set; }
     public int Target { get; private set; } = 50;
     public int WinDelta { get; set; } = 1;
@@ -25,7 +27,7 @@ public class GameScore
     public GameScore(int value, int target, int winDelta, int deathDelta)
     {
         Target = Math.Clamp(target, 1, 100000);
-        Value = Math.Clamp(value, 0, Target);
+        Value = Math.Clamp(value, MinValue, Target);
         WinDelta = Math.Clamp(winDelta, 0, 1000);
         DeathDelta = Math.Clamp(deathDelta, 0, 1000);
 
@@ -37,7 +39,7 @@ public class GameScore
 
     public void Set(int value)
     {
-        int v = Math.Clamp(value, 0, Target);
+        int v = Math.Clamp(value, MinValue, Target);
         if (v == Value) { WriteScoreFile(); return; }
         Value = v;
         Raise();
@@ -50,7 +52,7 @@ public class GameScore
         Target = Math.Clamp(target, 1, 100000);
         WinDelta = Math.Clamp(winDelta, 0, 1000);
         DeathDelta = Math.Clamp(deathDelta, 0, 1000);
-        Value = Math.Clamp(Value, 0, Target);
+        Value = Math.Clamp(Value, MinValue, Target);
         Raise();
     }
 
