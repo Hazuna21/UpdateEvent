@@ -51,13 +51,15 @@ public partial class MainWindow
         TtsMaxQueueBox.Text = _settings.TtsMaxQueue.ToString();
         TtsRateSlider.Value = Math.Clamp(_settings.TtsRate, -10, 10);
         TtsVolumeSlider.Value = Math.Clamp(_settings.TtsVolume, 0, 100);
+        TtsPitchSlider.Value = Math.Clamp(_settings.TtsAnimePitch, 1.0, 2.0);
+        TtsPitchLabel.Text = TtsPitchSlider.Value.ToString("0.00") + "x";
         TtsRateLabel.Text = ((int)TtsRateSlider.Value).ToString("+0;-0;0");
         TtsVolumeLabel.Text = (int)TtsVolumeSlider.Value + "%";
 
         _ttsReady = true;
         ApplyTtsEngine();
 
-        if (_settings.TtsVoice == TtsService.OnlineVoiceName)
+        if (_settings.TtsVoice == TtsService.OnlineVoiceName || _settings.TtsVoice == TtsService.AnimeVoiceName)
             TtsNote.Text = "Suara online memerlukan internet dan tidak mengikuti pengaturan kecepatan.";
 
         UpdateTtsStatus();
@@ -70,6 +72,16 @@ public partial class MainWindow
             _tts.TrySelectVoice(name);
         _tts.Rate = (int)TtsRateSlider.Value;
         _tts.Volume = (int)TtsVolumeSlider.Value;
+        _tts.AnimePitch = TtsPitchSlider.Value;
+    }
+
+    private void TtsPitch_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (!_ttsReady) return;
+        TtsPitchLabel.Text = TtsPitchSlider.Value.ToString("0.00") + "x";
+        _settings.TtsAnimePitch = TtsPitchSlider.Value;
+        if (_tts != null) _tts.AnimePitch = TtsPitchSlider.Value;
+        CommitTtsSettings();
     }
 
     private TtsOptions ReadTtsOptions() =>
