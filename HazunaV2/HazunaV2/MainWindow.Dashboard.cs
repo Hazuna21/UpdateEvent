@@ -59,6 +59,9 @@ public partial class MainWindow
             AddLog($"▶ {a.UserName} · {a.GiftName} ({a.Index}/{a.Total}), {a.DurationSeconds:0.#} dtk");
 
             if (a.Index == 1)
+                _sum.AddEffect(a.UserName, string.IsNullOrWhiteSpace(a.EffectName) ? a.GiftName : a.EffectName);
+
+            if (a.Index == 1)
                 NoteGameEvent($"{a.UserName} memicu efek \"{(string.IsNullOrWhiteSpace(a.EffectName) ? a.GiftName : a.EffectName)}\" di game", GameEventLevel.Medium);
 
             if (!string.IsNullOrEmpty(a.SoundPath))

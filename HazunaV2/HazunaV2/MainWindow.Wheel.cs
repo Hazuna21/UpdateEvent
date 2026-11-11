@@ -565,6 +565,7 @@ public partial class MainWindow
     {
         AddLog($"🎡 {w.Name}: {user} mendapat \"{entry.Text}\"" + (entry.ScoreDelta != 0 ? $" (skor WIN {entry.ScoreDelta:+0;-0})" : ""));
 
+        _sum.AddWheel(w.Name, entry.Text);
         NoteGameEvent($"Roda \"{w.Name}\": {user} mendapat \"{entry.Text}\"", GameEventLevel.High);
 
         // Hadiah skor: langsung masuk ke nilai WIN (skor boleh minus, maksimal target)

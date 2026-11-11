@@ -947,6 +947,8 @@
                 <DockPanel>
                     <Button x:Name="ConnectBtn" DockPanel.Dock="Right" Content="Hubungkan"
                             Click="ToggleConnect_Click" Style="{StaticResource GoButton}" Padding="18,7"/>
+                    <Button DockPanel.Dock="Right" Content="Ringkasan" Click="ShowSummary_Click"
+                            Style="{StaticResource GhostButton}" Padding="14,7" Margin="0,0,8,0"/>
                     <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="#FBBF24"
                              VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBlock x:Name="StatusText" Foreground="{StaticResource TextBrush}" FontSize="13"

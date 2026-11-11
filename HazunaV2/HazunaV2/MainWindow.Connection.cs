@@ -134,6 +134,7 @@ public partial class MainWindow
     {
         ApplyLiveStateUi(state, message);
         AddLog("[TikTok] " + message.Replace("TikTok: ", ""));
+        TrackLiveSession(state);
     }
 
         private void ApplyLiveStateUi(LiveState state, string message)
@@ -177,6 +178,7 @@ public partial class MainWindow
     private void OnLiveGift(LiveGift g)
     {
         _liveGiftCount++;
+        _sum.AddGift(g.UserName, g.GiftName, g.Count, g.DiamondsEach);
         GiftCatalog.Observe(g);
         _engine.Process(new GiftEvent(g.UserName, g.GiftName, g.Count, g.DiamondsEach, 0, g.GiftId));
         _giftsProcessed += g.Count;

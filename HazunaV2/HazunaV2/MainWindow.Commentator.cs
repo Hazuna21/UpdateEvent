@@ -38,13 +38,16 @@ public partial class MainWindow
         switch (kind)
         {
             case RuleTrigger.Follow:
+                _sum.Follow();
                 NoteGameEvent($"{user} follow streamer", GameEventLevel.Medium);
                 break;
             case RuleTrigger.Share:
+                _sum.Share();
                 NoteGameEvent($"{user} membagikan LIVE", GameEventLevel.Medium);
                 break;
             case RuleTrigger.Like:
                 _likeTotal += Math.Max(1, count);
+                _sum.Likes(count);
                 if (_likeTotal - _likeNoted >= 100)
                 {
                     _likeNoted = _likeTotal;
@@ -58,6 +61,7 @@ public partial class MainWindow
     private void NoteChat(LiveChat c)
     {
         if (string.Equals(c.UserName, _settings.TikTokUsername, StringComparison.OrdinalIgnoreCase)) return;
+        _sum.Chat(c.UserName);
         string t = (c.Text ?? "").Trim();
         if (t.Length < 2) return;
         if (t.Length > 80) t = t[..80];

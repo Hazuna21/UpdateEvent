@@ -29,6 +29,8 @@ public partial class MainWindow
                 ? $"🏆 Game: sampai puncak, skor +{_score.WinDelta}"
                 : $"💀 Game: mati, skor -{_score.DeathDelta}");
 
+            if (kind == "win") _sum.Win(); else _sum.Death();
+
             NoteGameEvent(kind == "win"
                 ? "Streamer berhasil sampai puncak Gunung Chiliad dan kabur dengan helikopter (menang)"
                 : "Streamer mati di game", GameEventLevel.High);
