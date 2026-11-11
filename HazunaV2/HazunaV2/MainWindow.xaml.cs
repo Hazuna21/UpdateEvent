@@ -17,7 +17,6 @@ public partial class MainWindow : Window
         ["Lucky Wheel"] = "Roda keberuntungan: penonton mengirim gift tertentu untuk memutar roda. Isi roda dan peluangnya Anda atur sendiri.",
         ["Settings"] = "Pengaturan aplikasi. Klik Simpan Pengaturan agar perubahan tersimpan.",
         ["Text to Speech"] = "Membaca komentar TikTok LIVE dengan suara. Komentar dibersihkan dulu, lalu dibaca satu per satu.",
-        ["Voice Changer"] = "Mengubah suara mikrofon Anda secara real-time (nada dan efek). Kirim ke VB-Cable agar terdengar di LIVE.",
         ["AI Reply"] = "Menjawab komentar penonton secara otomatis dengan AI, lalu membacakannya lewat suara. Memakai API berbayar.",
     };
 
@@ -54,7 +53,6 @@ public partial class MainWindow : Window
         InitDashboard();
         InitTts();
         InitAi();
-        InitVoiceChanger();
         InitConnection();
         ShowPage("Dashboard");
     }
@@ -82,7 +80,6 @@ public partial class MainWindow : Window
         WheelPage.Visibility = name == "Lucky Wheel" ? Visibility.Visible : Visibility.Collapsed;
         TtsPage.Visibility = name == "Text to Speech" ? Visibility.Visible : Visibility.Collapsed;
         AiPage.Visibility = name == "AI Reply" ? Visibility.Visible : Visibility.Collapsed;
-        VcPage.Visibility = name == "Voice Changer" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPage.Visibility = name == "Settings" ? Visibility.Visible : Visibility.Collapsed;
 
         if (name == "Media & Sounds")
@@ -106,7 +103,6 @@ public partial class MainWindow : Window
                 "Top Gifters" => TopGiftersPage,
                 "Text to Speech" => TtsPage,
                 "AI Reply" => AiPage,
-                "Voice Changer" => VcPage,
                 "Settings" => SettingsPage,
                 _ => null
             };
@@ -298,8 +294,6 @@ public partial class MainWindow : Window
         GiftCatalog.Flush();
         _queue.Clear();
         FlushTtsSettings();
-        FlushVcSettings();
-        _vc.Dispose();
         _tts?.Dispose();
         _overlay?.Close();
         _menuOverlay?.Close();

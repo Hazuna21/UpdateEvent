@@ -97,9 +97,6 @@
                     <RadioButton Content="AI Reply" Tag="AI Reply" GroupName="Nav" Background="#FB923C"
                                  local:NavIcon.Data="{StaticResource IconSparkle}"
                                  Style="{StaticResource NavItem}" Click="Nav_Click"/>
-                    <RadioButton Content="Voice Changer" Tag="Voice Changer" GroupName="Nav" Background="#C084FC"
-                                 local:NavIcon.Data="{StaticResource IconMic}"
-                                 Style="{StaticResource NavItem}" Click="Nav_Click"/>
                     <RadioButton Content="Settings" Tag="Settings" GroupName="Nav" Background="#34D399"
                                  local:NavIcon.Data="{StaticResource IconSettings}"
                                  Style="{StaticResource NavItem}" Click="Nav_Click"/>
@@ -881,90 +878,6 @@
         </ListBox>
     </Grid>
 </Grid>
-
-            <!-- ============ VOICE CHANGER ============ -->
-            <ScrollViewer x:Name="VcPage" Grid.Row="2" Margin="0,14,0,10"
-                          Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-                <Border Style="{StaticResource Card}" MaxWidth="620" HorizontalAlignment="Left" Padding="24,20">
-                    <StackPanel>
-                        <DockPanel Margin="0,0,0,6">
-                            <Button x:Name="VcToggleButton" DockPanel.Dock="Right" Content="Mulai" Click="VcToggle_Click"
-                                    Style="{StaticResource PrimaryButton}" Padding="22,8" MinWidth="110"/>
-                            <TextBlock x:Name="VcStatus" Text="Tidak aktif" Foreground="{StaticResource MutedBrush}"
-                                       FontSize="14" VerticalAlignment="Center"/>
-                        </DockPanel>
-
-                        <Grid x:Name="VcLevelTrack" Height="8" Margin="0,6,0,20">
-                            <Border CornerRadius="4" Background="{StaticResource InputBrush}"/>
-                            <Border x:Name="VcLevelBar" CornerRadius="4" Width="0" HorizontalAlignment="Left"
-                                    Background="{StaticResource GreenBrush}"/>
-                        </Grid>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
-                            <TextBlock Text="Mikrofon (masuk)" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <ComboBox x:Name="VcInputBox" DisplayMemberPath="Name"
-                                  SelectionChanged="VcDevice_Changed" Margin="0,8,0,18"/>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
-                            <TextBlock Text="Keluaran suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <TextBlock Text="Pilih CABLE Input (VB-Cable) lalu jadikan CABLE Output sebagai mikrofon di TikTok LIVE Studio / OBS. Kalau memilih speaker, pakai headset agar tidak berdengung."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
-                        <ComboBox x:Name="VcOutputBox" DisplayMemberPath="Name"
-                                  SelectionChanged="VcDevice_Changed" Margin="0,8,0,8"/>
-                        <Button Content="Muat Ulang Perangkat" Click="VcRefresh_Click"
-                                Style="{StaticResource GhostButton}" Padding="12,5" HorizontalAlignment="Left" Margin="0,0,0,18"/>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AccentBrush}" Margin="0,0,10,0"/>
-                            <TextBlock Text="Preset suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <ComboBox x:Name="VcPresetBox" DisplayMemberPath="Name"
-                                  SelectionChanged="VcPreset_Changed" Margin="0,8,0,18"/>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource BlueBrush}" Margin="0,0,10,0"/>
-                            <TextBlock Text="Nada (semiton)" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <DockPanel Margin="0,8,0,18">
-                            <TextBlock x:Name="VcPitchLabel" DockPanel.Dock="Right" Width="52" TextAlignment="Right"
-                                       Foreground="{StaticResource CyanBrush}" FontWeight="SemiBold" Text="0"/>
-                            <Slider x:Name="VcPitchSlider" Minimum="-12" Maximum="12" TickFrequency="1"
-                                    IsSnapToTickEnabled="True" ValueChanged="VcPitch_Changed"/>
-                        </DockPanel>
-
-                        <CheckBox x:Name="VcRobotCheck" Content="Efek robot" Click="VcOption_Click" Margin="0,0,0,6"/>
-                        <CheckBox x:Name="VcEchoCheck" Content="Efek gema (echo)" Click="VcOption_Click" Margin="0,0,0,18"/>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource GreenBrush}" Margin="0,0,10,0"/>
-                            <TextBlock Text="Penguat mikrofon" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <DockPanel Margin="0,8,0,18">
-                            <TextBlock x:Name="VcGainLabel" DockPanel.Dock="Right" Width="52" TextAlignment="Right"
-                                       Foreground="{StaticResource CyanBrush}" FontWeight="SemiBold" Text="200%"/>
-                            <Slider x:Name="VcGainSlider" Minimum="50" Maximum="500" TickFrequency="10"
-                                    IsSnapToTickEnabled="True" ValueChanged="VcGain_Changed"/>
-                        </DockPanel>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
-                            <TextBlock Text="Volume keluaran" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <DockPanel Margin="0,8,0,10">
-                            <TextBlock x:Name="VcVolumeLabel" DockPanel.Dock="Right" Width="52" TextAlignment="Right"
-                                       Foreground="{StaticResource CyanBrush}" FontWeight="SemiBold" Text="100%"/>
-                            <Slider x:Name="VcVolumeSlider" Minimum="0" Maximum="300" TickFrequency="5"
-                                    IsSnapToTickEnabled="True" ValueChanged="VcVolume_Changed"/>
-                        </DockPanel>
-
-                        <TextBlock x:Name="VcNote" Foreground="Orange" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                    </StackPanel>
-                </Border>
-            </ScrollViewer>
 
             <!-- ============ SETTINGS ============ -->
             <ScrollViewer x:Name="SettingsPage" Grid.Row="2" Margin="0,14,0,10"

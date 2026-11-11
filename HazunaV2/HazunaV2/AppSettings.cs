@@ -34,16 +34,6 @@ public class AppSettings
     public bool TtsSkipCommands { get; set; } = true;
     public bool TtsSkipLinks { get; set; } = true;
 
-    // Voice Changer (saklar aktif sengaja tidak disimpan)
-    public string VcInputDevice { get; set; } = "";
-    public string VcOutputDevice { get; set; } = "";
-    public string VcPreset { get; set; } = "Normal";
-    public int VcPitch { get; set; } = 0;
-    public bool VcRobot { get; set; }
-    public bool VcEcho { get; set; }
-    public int VcVolume { get; set; } = 100;
-    public int VcMicGain { get; set; } = 200;
-
     // AI Reply (saklar aktif sengaja tidak disimpan)
     public string AiApiKey { get; set; } = "";
     public string AiModel { get; set; } = AiClient.DefaultModel;
