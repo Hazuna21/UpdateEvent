@@ -47,6 +47,7 @@ public partial class MainWindow : Window
 
         InitSettings();
         InitScore();
+        OverlayGuard.DisablePowerThrottling();
         InitWheel();
         InitSidebar();
         InitGifts();

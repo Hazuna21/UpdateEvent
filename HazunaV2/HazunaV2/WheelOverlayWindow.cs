@@ -47,6 +47,7 @@ public class WheelOverlayWindow : Window
         Background = Brushes.Transparent;
         Topmost = true;
         ShowInTaskbar = false;
+        OverlayGuard.Apply(this);
         ShowActivated = false;
         Left = x ?? 40;
         Top = y ?? 120;

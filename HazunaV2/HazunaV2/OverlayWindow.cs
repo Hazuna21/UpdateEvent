@@ -25,6 +25,7 @@ public class OverlayWindow : Window
         Background = Brushes.Transparent;
         Topmost = true;
         ShowInTaskbar = false;
+        OverlayGuard.Apply(this);
         ShowActivated = false;
         Left = 40;
         Top = 40;
