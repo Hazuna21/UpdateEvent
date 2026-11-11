@@ -654,6 +654,14 @@
                 <ComboBox x:Name="TtsVoiceBox" DisplayMemberPath="Label" SelectedValuePath="Name"
                           SelectionChanged="TtsVoice_Changed" Margin="0,8,0,10"/>
                 <StackPanel Margin="0,0,0,12">
+                    <TextBlock Text="ElevenLabs (opsional, untuk suara ElevenLabs di atas)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                    <PasswordBox x:Name="TtsElevenKeyBox" LostFocus="TtsAzure_LostFocus" Padding="8,6" Margin="0,0,0,6" ToolTip="API key ElevenLabs"/>
+                    <DockPanel>
+                        <TextBlock Text="Voice ID:" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="TtsElevenVoiceBox" LostFocus="TtsAzure_LostFocus" ToolTip="Salin dari My Voices di akun ElevenLabs"/>
+                    </DockPanel>
+                </StackPanel>
+                <StackPanel Margin="0,0,0,12">
                     <TextBlock Text="Azure (opsional, untuk suara Azure di atas)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                     <PasswordBox x:Name="TtsAzureKeyBox" LostFocus="TtsAzure_LostFocus" Padding="8,6" Margin="0,0,0,6" ToolTip="API key Azure AI Speech"/>
                     <DockPanel>

@@ -51,6 +51,8 @@ public partial class MainWindow
         TtsMaxQueueBox.Text = _settings.TtsMaxQueue.ToString();
         TtsRateSlider.Value = Math.Clamp(_settings.TtsRate, -10, 10);
         TtsVolumeSlider.Value = Math.Clamp(_settings.TtsVolume, 0, 100);
+        TtsElevenKeyBox.Password = _settings.TtsElevenKey;
+        TtsElevenVoiceBox.Text = _settings.TtsElevenVoiceId;
         TtsAzureKeyBox.Password = _settings.TtsAzureKey;
         TtsAzureRegionBox.Text = _settings.TtsAzureRegion;
         TtsPitchSlider.Value = Math.Clamp(_settings.TtsAnimePitch, 1.0, 2.0);
@@ -62,6 +64,7 @@ public partial class MainWindow
         ApplyTtsEngine();
 
         if (_settings.TtsVoice == TtsService.OnlineVoiceName || _settings.TtsVoice == TtsService.AnimeVoiceName
+            || _settings.TtsVoice == TtsService.ElevenVoiceName
             || _settings.TtsVoice.StartsWith(TtsService.AzurePrefix, StringComparison.Ordinal))
             TtsNote.Text = "Suara online memerlukan internet dan tidak mengikuti pengaturan kecepatan.";
 
@@ -71,6 +74,8 @@ public partial class MainWindow
     private void ApplyTtsEngine()
     {
         if (_tts == null) return;
+        _tts.ElevenKey = _settings.TtsElevenKey;
+        _tts.ElevenVoiceId = _settings.TtsElevenVoiceId;
         _tts.AzureKey = _settings.TtsAzureKey;
         _tts.AzureRegion = _settings.TtsAzureRegion;
         if (TtsVoiceBox.SelectedValue is string name)
@@ -98,6 +103,8 @@ public partial class MainWindow
     {
         if (!_ttsReady) return;
 
+        _settings.TtsElevenKey = TtsElevenKeyBox.Password.Trim();
+        _settings.TtsElevenVoiceId = TtsElevenVoiceBox.Text.Trim();
         _settings.TtsAzureKey = TtsAzureKeyBox.Password.Trim();
         _settings.TtsAzureRegion = string.IsNullOrWhiteSpace(TtsAzureRegionBox.Text) ? "southeastasia" : TtsAzureRegionBox.Text.Trim();
         _settings.TtsEnabled = TtsEnableCheck.IsChecked == true;

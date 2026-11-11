@@ -29,6 +29,12 @@ public class TtsService : IDisposable
     public string AzureRegion { get; set; } = "southeastasia";
     private string? _azureVoice;
 
+    // ElevenLabs: suara pilihan dari perpustakaan suara akunmu (isi Voice ID)
+    public const string ElevenVoiceName = "eleven:custom";
+    public string ElevenKey { get; set; } = "";
+    public string ElevenVoiceId { get; set; } = "";
+    private bool _eleven;
+
     private float _animePitch = 1.4f;
 
     public double AnimePitch
@@ -80,6 +86,7 @@ public class TtsService : IDisposable
     {
         var list = new List<TtsVoice>
         {
+            new(ElevenVoiceName, "ElevenLabs (Voice ID dari akunmu)"),
             new(AzurePrefix + "id-ID-GadisNeural", "Azure: Gadis (Indonesia, wanita, imut)"),
             new(AzurePrefix + "id-ID-ArdiNeural", "Azure: Ardi (Indonesia, pria)"),
             new(AnimeVoiceName, "Anime Imut ✿ (online)"),
@@ -96,6 +103,17 @@ public class TtsService : IDisposable
 
     public bool TrySelectVoice(string name)
     {
+        if (name == ElevenVoiceName)
+        {
+            _useOnline = true;
+            _anime = false;
+            _azureVoice = null;
+            _eleven = true;
+            return true;
+        }
+
+        _eleven = false;
+
         if (name.StartsWith(AzurePrefix, StringComparison.Ordinal))
         {
             _useOnline = true;
@@ -254,7 +272,9 @@ public class TtsService : IDisposable
         {
             // Unduh semua potongan sekaligus; potongan berikutnya sudah siap saat yang pertama selesai dibaca
             string? azure = _azureVoice;
-            var downloads = azure != null
+            var downloads = _eleven
+                ? SplitForOnline(text, 450).Select(c => DownloadElevenAsync(c, cts.Token)).ToList()
+                : azure != null
                 ? SplitForOnline(text, 400).Select(c => DownloadAzureAsync(c, azure, cts.Token)).ToList()
                 : SplitForOnline(text, 180).Select(c => DownloadOnlineAsync(c, cts.Token)).ToList();
             foreach (var d in downloads)
@@ -267,6 +287,40 @@ public class TtsService : IDisposable
         {
             _onlineCts = null;
         }
+    }
+
+    private async Task<byte[]> DownloadElevenAsync(string chunk, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(ElevenKey))
+            throw new InvalidOperationException("API key ElevenLabs belum diisi di halaman Text to Speech");
+        if (string.IsNullOrWhiteSpace(ElevenVoiceId))
+            throw new InvalidOperationException("Voice ID ElevenLabs belum diisi di halaman Text to Speech");
+
+        // Model Flash v2.5: cepat, mendukung bahasa Indonesia, dan paling hemat kredit
+        string json = "{\"text\":" + System.Text.Json.JsonSerializer.Serialize(chunk) +
+                      ",\"model_id\":\"eleven_flash_v2_5\",\"language_code\":\"id\"}";
+
+        string url = "https://api.elevenlabs.io/v1/text-to-speech/" + Uri.EscapeDataString(ElevenVoiceId.Trim()) +
+                     "?output_format=mp3_44100_64";
+        using var req = new HttpRequestMessage(HttpMethod.Post, url);
+        req.Headers.Add("xi-api-key", ElevenKey.Trim());
+        req.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        using var res = await OnlineHttp.SendAsync(req, ct);
+        if (!res.IsSuccessStatusCode)
+        {
+            string why = (int)res.StatusCode switch
+            {
+                401 => "API key ElevenLabs salah",
+                402 or 429 => "kuota atau batas ElevenLabs tercapai",
+                404 or 422 => "Voice ID ElevenLabs tidak ditemukan atau tidak boleh dipakai di paket ini",
+                _ => "ElevenLabs menjawab " + (int)res.StatusCode
+            };
+            throw new InvalidOperationException(why);
+        }
+        var bytes = await res.Content.ReadAsByteArrayAsync(ct);
+        if (bytes.Length < 200) throw new InvalidOperationException("suara kosong");
+        return bytes;
     }
 
     private async Task<byte[]> DownloadAzureAsync(string chunk, string voice, CancellationToken ct)
