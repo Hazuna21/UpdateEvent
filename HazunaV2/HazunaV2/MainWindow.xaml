@@ -652,7 +652,16 @@
                     <TextBlock Text="Suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <ComboBox x:Name="TtsVoiceBox" DisplayMemberPath="Label" SelectedValuePath="Name"
-                          SelectionChanged="TtsVoice_Changed" Margin="0,8,0,18"/>
+                          SelectionChanged="TtsVoice_Changed" Margin="0,8,0,10"/>
+                <StackPanel x:Name="TtsPitchPanel" Margin="0,0,0,18">
+                    <TextBlock Text="Tinggi nada suara Anime (makin tinggi makin imut)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                    <DockPanel>
+                        <TextBlock x:Name="TtsPitchLabel" DockPanel.Dock="Right" Width="52" TextAlignment="Right"
+                                   Foreground="{StaticResource CyanBrush}" FontWeight="SemiBold" Text="1.4x"/>
+                        <Slider x:Name="TtsPitchSlider" Minimum="1" Maximum="2" TickFrequency="0.05"
+                                IsSnapToTickEnabled="True" Value="1.4" ValueChanged="TtsPitch_Changed"/>
+                    </DockPanel>
+                </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
                     <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>

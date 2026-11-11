@@ -26,6 +26,7 @@ public class AppSettings
     // Text to Speech
     public bool TtsEnabled { get; set; }
     public string TtsVoice { get; set; } = "";
+    public double TtsAnimePitch { get; set; } = 1.4;
     public int TtsRate { get; set; } = 0;
     public int TtsVolume { get; set; } = 100;
     public string TtsTemplate { get; set; } = "{user} berkata, {text}";

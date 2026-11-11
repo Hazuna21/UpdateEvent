@@ -19,6 +19,16 @@ public class TtsService : IDisposable
 {
     // Suara online bahasa Indonesia (wanita): tidak ada suara wanita Indonesia bawaan di Windows
     public const string OnlineVoiceName = "online:google-id";
+    // Suara bergaya anime (imut): suara online yang dinaikkan nadanya, kecepatan tetap
+    public const string AnimeVoiceName = "online:anime-id";
+    private bool _anime;
+    private float _animePitch = 1.4f;
+
+    public double AnimePitch
+    {
+        get => _animePitch;
+        set => _animePitch = (float)Math.Clamp(value, 1.0, 2.0);
+    }
     private static readonly HttpClient OnlineHttp = CreateOnlineHttp();
     private bool _useOnline;
     private CancellationTokenSource? _onlineCts;
@@ -61,7 +71,11 @@ public class TtsService : IDisposable
 
     public List<TtsVoice> GetVoices()
     {
-        var list = new List<TtsVoice> { new(OnlineVoiceName, "Indonesia, Wanita (online)") };
+        var list = new List<TtsVoice>
+        {
+            new(AnimeVoiceName, "Anime Imut ✿ (online)"),
+            new(OnlineVoiceName, "Indonesia, Wanita (online)")
+        };
         foreach (var v in _synth.GetInstalledVoices())
         {
             if (!v.Enabled) continue;
@@ -73,9 +87,10 @@ public class TtsService : IDisposable
 
     public bool TrySelectVoice(string name)
     {
-        if (name == OnlineVoiceName)
+        if (name == OnlineVoiceName || name == AnimeVoiceName)
         {
             _useOnline = true;
+            _anime = name == AnimeVoiceName;
             return true;
         }
 
@@ -221,7 +236,13 @@ public class TtsService : IDisposable
 
         using var ms = new MemoryStream(bytes);
         using var reader = new Mp3FileReader(ms);
-        var sample = new VolumeSampleProvider(reader.ToSampleProvider()) { Volume = Math.Clamp(_synth.Volume, 0, 100) / 100f };
+        ISampleProvider source = reader.ToSampleProvider();
+        if (_anime && _animePitch > 1.001f)
+            source = new SmbPitchShiftingSampleProvider(source, 4096, 4, _animePitch);
+
+        // Suara anime sedikit lebih pelan karena pergeseran nada mengurangi tenaga suaranya: dikuatkan sedikit
+        float boost = _anime ? 1.25f : 1f;
+        var sample = new VolumeSampleProvider(source) { Volume = Math.Clamp(_synth.Volume, 0, 100) / 100f * boost };
 
         using var output = new WaveOutEvent();
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
