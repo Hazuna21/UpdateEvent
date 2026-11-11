@@ -62,7 +62,8 @@ public class GiftMenuOverlay : Window
         {
             Color = OverlayTheme.Rgb(0x0A, 0x02, 0x1A), BlurRadius = 8, ShadowDepth = 3, Direction = 270, Opacity = 1
         });
-        FrameBrushes = {
+        FrameBrushes = new Brush[]
+        {
             Gradient(OverlayTheme.Rgb(0x3E, 0x1C, 0x72), OverlayTheme.Rgb(0x16, 0x0A, 0x2E)),
             Gradient(OverlayTheme.Rgb(0x4B, 0x20, 0x84), OverlayTheme.Rgb(0x1D, 0x0B, 0x3A)),
             Gradient(OverlayTheme.Rgb(0x33, 0x16, 0x62), OverlayTheme.Rgb(0x12, 0x08, 0x26)),
