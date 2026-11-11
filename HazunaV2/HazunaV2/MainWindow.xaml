@@ -653,8 +653,16 @@
                 </StackPanel>
                 <ComboBox x:Name="TtsVoiceBox" DisplayMemberPath="Label" SelectedValuePath="Name"
                           SelectionChanged="TtsVoice_Changed" Margin="0,8,0,10"/>
+                <StackPanel Margin="0,0,0,12">
+                    <TextBlock Text="Azure (opsional, untuk suara Azure di atas)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                    <PasswordBox x:Name="TtsAzureKeyBox" LostFocus="TtsAzure_LostFocus" Padding="8,6" Margin="0,0,0,6" ToolTip="API key Azure AI Speech"/>
+                    <DockPanel>
+                        <TextBlock Text="Region:" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="TtsAzureRegionBox" LostFocus="TtsAzure_LostFocus" ToolTip="Contoh: southeastasia"/>
+                    </DockPanel>
+                </StackPanel>
                 <StackPanel x:Name="TtsPitchPanel" Margin="0,0,0,18">
-                    <TextBlock Text="Tinggi nada suara Anime (makin tinggi makin imut)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBlock Text="Tinggi nada (suara Anime dan Azure; makin tinggi makin imut)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                     <DockPanel>
                         <TextBlock x:Name="TtsPitchLabel" DockPanel.Dock="Right" Width="52" TextAlignment="Right"
                                    Foreground="{StaticResource CyanBrush}" FontWeight="SemiBold" Text="1.4x"/>

@@ -51,6 +51,8 @@ public partial class MainWindow
         TtsMaxQueueBox.Text = _settings.TtsMaxQueue.ToString();
         TtsRateSlider.Value = Math.Clamp(_settings.TtsRate, -10, 10);
         TtsVolumeSlider.Value = Math.Clamp(_settings.TtsVolume, 0, 100);
+        TtsAzureKeyBox.Password = _settings.TtsAzureKey;
+        TtsAzureRegionBox.Text = _settings.TtsAzureRegion;
         TtsPitchSlider.Value = Math.Clamp(_settings.TtsAnimePitch, 1.0, 2.0);
         TtsPitchLabel.Text = TtsPitchSlider.Value.ToString("0.00") + "x";
         TtsRateLabel.Text = ((int)TtsRateSlider.Value).ToString("+0;-0;0");
@@ -59,7 +61,8 @@ public partial class MainWindow
         _ttsReady = true;
         ApplyTtsEngine();
 
-        if (_settings.TtsVoice == TtsService.OnlineVoiceName || _settings.TtsVoice == TtsService.AnimeVoiceName)
+        if (_settings.TtsVoice == TtsService.OnlineVoiceName || _settings.TtsVoice == TtsService.AnimeVoiceName
+            || _settings.TtsVoice.StartsWith(TtsService.AzurePrefix, StringComparison.Ordinal))
             TtsNote.Text = "Suara online memerlukan internet dan tidak mengikuti pengaturan kecepatan.";
 
         UpdateTtsStatus();
@@ -68,6 +71,8 @@ public partial class MainWindow
     private void ApplyTtsEngine()
     {
         if (_tts == null) return;
+        _tts.AzureKey = _settings.TtsAzureKey;
+        _tts.AzureRegion = _settings.TtsAzureRegion;
         if (TtsVoiceBox.SelectedValue is string name)
             _tts.TrySelectVoice(name);
         _tts.Rate = (int)TtsRateSlider.Value;
@@ -93,6 +98,8 @@ public partial class MainWindow
     {
         if (!_ttsReady) return;
 
+        _settings.TtsAzureKey = TtsAzureKeyBox.Password.Trim();
+        _settings.TtsAzureRegion = string.IsNullOrWhiteSpace(TtsAzureRegionBox.Text) ? "southeastasia" : TtsAzureRegionBox.Text.Trim();
         _settings.TtsEnabled = TtsEnableCheck.IsChecked == true;
         _settings.TtsVoice = TtsVoiceBox.SelectedValue as string ?? "";
         _settings.TtsRate = (int)TtsRateSlider.Value;
@@ -190,6 +197,8 @@ public partial class MainWindow
     }
 
     private void TtsOption_Click(object sender, RoutedEventArgs e) => CommitTtsSettings();
+
+    private void TtsAzure_LostFocus(object sender, RoutedEventArgs e) => CommitTtsSettings();
 
     private void TtsVoice_Changed(object sender, SelectionChangedEventArgs e) => CommitTtsSettings();
 
