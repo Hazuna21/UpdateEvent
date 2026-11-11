@@ -196,6 +196,35 @@ public class TtsService : IDisposable
         }
     }
 
+    // Suara anime yang lebih bersih: nada dinaikkan dengan dua cara sekaligus supaya tidak "robot":
+    // sebagian lewat percepatan alami (suara jadi lebih ceria dan ringan), sisanya lewat pergeseran nada halus.
+    private static ISampleProvider MakeAnime(ISampleProvider source, float totalPitch)
+    {
+        float speed = 1f + (totalPitch - 1f) * 0.35f;          // mis. 1.4x nada -> 1.14x lebih cepat
+        float shift = totalPitch / speed;                       // sisanya lewat pergeseran nada
+
+        int rate = source.WaveFormat.SampleRate;
+        ISampleProvider chain = source;
+        if (shift > 1.001f)
+            chain = new SmbPitchShiftingSampleProvider(chain, 2048, 8, shift);
+
+        // Memutar sampel seolah-olah lebih cepat: nada naik sekaligus tempo naik
+        var claim = new RateClaim(chain, (int)Math.Round(rate * speed));
+        return new WdlResamplingSampleProvider(claim, rate);
+    }
+
+    private sealed class RateClaim : ISampleProvider
+    {
+        private readonly ISampleProvider _src;
+        public WaveFormat WaveFormat { get; }
+        public RateClaim(ISampleProvider src, int claimedRate)
+        {
+            _src = src;
+            WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(claimedRate, src.WaveFormat.Channels);
+        }
+        public int Read(float[] buffer, int offset, int count) => _src.Read(buffer, offset, count);
+    }
+
     // ---------- Suara online ----------
 
     private async Task SpeakOnlineAsync(string text)
@@ -238,7 +267,7 @@ public class TtsService : IDisposable
         using var reader = new Mp3FileReader(ms);
         ISampleProvider source = reader.ToSampleProvider();
         if (_anime && _animePitch > 1.001f)
-            source = new SmbPitchShiftingSampleProvider(source, 4096, 4, _animePitch);
+            source = MakeAnime(source, _animePitch);
 
         // Suara anime sedikit lebih pelan karena pergeseran nada mengurangi tenaga suaranya: dikuatkan sedikit
         float boost = _anime ? 1.25f : 1f;
