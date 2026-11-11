@@ -48,6 +48,45 @@ public partial class MainWindow
         return o;
     }
 
+    // Ganti tema: overlay dibuat ulang dengan warna baru (posisi dan keadaan tampil dipertahankan)
+    private void Theme_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (!_settingsReady || ThemeCombo.SelectedItem is not string name || name == OverlayTheme.Current.Name) return;
+
+        _settings.OverlayTheme = name;
+        SettingsStore.Save(_settings);
+        OverlayTheme.Set(name);
+        GiftMenuOverlay.ReloadTheme();
+
+        var keep = new List<(Window Win, double L, double T, bool Shown, int Kind)>();
+        if (_overlay != null) keep.Add((_overlay, _overlay.Left, _overlay.Top, _overlayShown.Contains(_overlay), 0));
+        if (_menuOverlay != null) keep.Add((_menuOverlay, _menuOverlay.Left, _menuOverlay.Top, _overlayShown.Contains(_menuOverlay), 1));
+        if (_scoreOverlay != null) keep.Add((_scoreOverlay, _scoreOverlay.Left, _scoreOverlay.Top, _overlayShown.Contains(_scoreOverlay), 2));
+
+        foreach (var k in keep) k.Win.Close();
+
+        foreach (var k in keep)
+        {
+            Window w = k.Kind switch { 0 => EnsureOverlay(), 1 => EnsureMenuOverlay(), _ => EnsureScoreOverlay() };
+            w.Left = k.L;
+            w.Top = k.T;
+            if (k.Shown) SetOverlayVisible(w, true);
+        }
+
+        // Roda: dibuat ulang kalau tidak sedang berputar (kalau sedang berputar, tema berlaku di pembukaan berikutnya)
+        if (_wheelWin != null && !_wheelBusy)
+        {
+            bool preview = _wheelPreview;
+            _wheelWin.Close();
+            EnsureWheelWindow();
+            _wheelPreview = preview;
+            if (preview) _wheelWin?.Reveal();
+            SettleWheel();
+            UpdateWheelOverlayBtn();
+        }
+        UpdateAllOverlayBtn();
+    }
+
     private void EnsureAllOverlays()
     {
         EnsureOverlay();

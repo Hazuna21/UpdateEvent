@@ -17,6 +17,11 @@ public partial class MainWindow
         AutoConnectCheck.IsChecked = _settings.AutoConnect;
         SimDelayBox.Text = _settings.SimDelaySeconds.ToString();
         ChromaCheck.IsChecked = _settings.OverlayChromaKey;
+
+        OverlayTheme.Set(_settings.OverlayTheme);
+        GiftMenuOverlay.ReloadTheme();
+        foreach (var t in OverlayTheme.All) ThemeCombo.Items.Add(t.Name);
+        ThemeCombo.SelectedItem = OverlayTheme.Current.Name;
         MigrateVolume();
 
         InitUpdate();

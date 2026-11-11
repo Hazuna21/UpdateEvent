@@ -70,7 +70,7 @@ public class WheelOverlayWindow : Window
         _sub.MaxWidth = Size;
         _sub.MinHeight = 50;
         _sub.Margin = new Thickness(0, 0, 0, 6);
-        _sub.Effect = new DropShadowEffect { Color = Color.FromRgb(0x8B, 0x5C, 0xF6), BlurRadius = 10, ShadowDepth = 0, Opacity = 1 };
+        _sub.Effect = new DropShadowEffect { Color = OverlayTheme.Rgb(0x8B, 0x5C, 0xF6), BlurRadius = 10, ShadowDepth = 0, Opacity = 1 };
 
         _result.Foreground = Brushes.White;
         _result.FontSize = 22;
@@ -81,7 +81,7 @@ public class WheelOverlayWindow : Window
         _result.MinHeight = 62;
         _result.Margin = new Thickness(0, 10, 0, 0);
         _result.HorizontalAlignment = HorizontalAlignment.Center;
-        _result.Effect = new DropShadowEffect { Color = Color.FromRgb(0x8B, 0x5C, 0xF6), BlurRadius = 14, ShadowDepth = 0, Opacity = 1 };
+        _result.Effect = new DropShadowEffect { Color = OverlayTheme.Rgb(0x8B, 0x5C, 0xF6), BlurRadius = 14, ShadowDepth = 0, Opacity = 1 };
 
         _wheel.RenderTransform = _rot;
         _wheel.CacheMode = new BitmapCache();
@@ -90,18 +90,18 @@ public class WheelOverlayWindow : Window
         var holder = new Grid { Width = Size, Height = Size, HorizontalAlignment = HorizontalAlignment.Center };
         holder.Children.Add(new Ellipse
         {
-            Width = Size - 2, Height = Size - 2, Fill = new SolidColorBrush(Color.FromRgb(0x14, 0x0B, 0x2E)),
-            Effect = new DropShadowEffect { Color = Color.FromRgb(0x8B, 0x5C, 0xF6), BlurRadius = 22, ShadowDepth = 0, Opacity = 0.8 }
+            Width = Size - 2, Height = Size - 2, Fill = new SolidColorBrush(OverlayTheme.Rgb(0x14, 0x0B, 0x2E)),
+            Effect = new DropShadowEffect { Color = OverlayTheme.Rgb(0x8B, 0x5C, 0xF6), BlurRadius = 22, ShadowDepth = 0, Opacity = 0.8 }
         });
         holder.Children.Add(_wheel);
         holder.Children.Add(new Ellipse
         {
-            Width = 2 * R + 8, Height = 2 * R + 8, Stroke = new SolidColorBrush(Color.FromRgb(0xC4, 0xB5, 0xFD)),
+            Width = 2 * R + 8, Height = 2 * R + 8, Stroke = new SolidColorBrush(OverlayTheme.Rgb(0xC4, 0xB5, 0xFD)),
             StrokeThickness = 4, IsHitTestVisible = false
         });
         holder.Children.Add(new Ellipse
         {
-            Width = 44, Height = 44, Fill = new SolidColorBrush(Color.FromRgb(0x1B, 0x10, 0x3A)),
+            Width = 44, Height = 44, Fill = new SolidColorBrush(OverlayTheme.Rgb(0x1B, 0x10, 0x3A)),
             Stroke = Brushes.White, StrokeThickness = 3
         });
         holder.Children.Add(new System.Windows.Shapes.Path
@@ -174,7 +174,7 @@ public class WheelOverlayWindow : Window
         int n = _cfg.Entries.Count;
         if (n == 0)
         {
-            _wheel.Children.Add(new Ellipse { Width = 2 * R, Height = 2 * R, Fill = new SolidColorBrush(Color.FromRgb(0x3B, 0x2A, 0x6B)) });
+            _wheel.Children.Add(new Ellipse { Width = 2 * R, Height = 2 * R, Fill = new SolidColorBrush(OverlayTheme.Rgb(0x3B, 0x2A, 0x6B)) });
             Canvas.SetLeft(_wheel.Children[0], C - R);
             Canvas.SetTop(_wheel.Children[0], C - R);
             AddLabel("Isi roda dulu", C - 90, C - 14, 180, 28, 0, 18);
@@ -189,9 +189,9 @@ public class WheelOverlayWindow : Window
 
         for (int i = 0; i < n; i++)
         {
-            var color = Palette[i % Palette.Length];
+            var color = OverlayTheme.Map(Palette[i % Palette.Length]);
             if (n > 1 && n % Palette.Length == 1 && i == n - 1)
-                color = Palette[(i + 3) % Palette.Length];      // sektor terakhir tidak sewarna dengan sektor pertama
+                color = OverlayTheme.Map(Palette[(i + 3) % Palette.Length]);      // sektor terakhir tidak sewarna dengan sektor pertama
 
             Shape sector;
             if (n == 1)

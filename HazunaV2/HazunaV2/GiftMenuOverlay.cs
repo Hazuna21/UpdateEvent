@@ -38,31 +38,47 @@ public class GiftMenuOverlay : Window
     private static readonly TimeSpan ShineInterval = TimeSpan.FromMilliseconds(1700);
 
     // ----- Gaya (semua beku supaya murah) -----
-    private static readonly Brush Neon = Frozen(new SolidColorBrush(Color.FromRgb(0xA7, 0x6B, 0xFF)));
+    private static Brush Neon = null!;
     private static readonly Brush TextWhite = Frozen(new SolidColorBrush(Colors.White));
-    private static readonly Brush TextLilac = Frozen(new SolidColorBrush(Color.FromRgb(0xF0, 0xC8, 0xFF)));
-    private static readonly Brush DividerBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x66, 0xC0, 0x84, 0xFC)));
+    private static Brush TextLilac = null!;
+    private static Brush DividerBrush = null!;
     private static readonly Brush FlashBrush = Frozen(new SolidColorBrush(Colors.White));
     private static readonly Brush GoldBrush = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0xC8, 0x3D)));
     private static readonly FontFamily CardFont = new("Segoe UI Black, Segoe UI, Arial");
 
-    private static readonly DropShadowEffect IconShadow = FrozenEffect(new DropShadowEffect
-    {
-        Color = Color.FromRgb(0x2A, 0x0A, 0x5E), BlurRadius = 8, ShadowDepth = 3, Direction = 270, Opacity = 0.7
-    });
+    static GiftMenuOverlay() => ReloadTheme();
 
-    private static readonly DropShadowEffect TextShadow = FrozenEffect(new DropShadowEffect
+    // Susun ulang warna bertema (dipanggil saat tema diganti; overlay yang sudah ada dibuat ulang)
+    public static void ReloadTheme()
     {
-        Color = Color.FromRgb(0x0A, 0x02, 0x1A), BlurRadius = 8, ShadowDepth = 3, Direction = 270, Opacity = 1
-    });
+        Neon = Frozen(new SolidColorBrush(OverlayTheme.Rgb(0xA7, 0x6B, 0xFF)));
+        TextLilac = Frozen(new SolidColorBrush(OverlayTheme.Rgb(0xF0, 0xC8, 0xFF)));
+        DividerBrush = Frozen(new SolidColorBrush(OverlayTheme.Argb(0x66, 0xC0, 0x84, 0xFC)));
+        IconShadow = FrozenEffect(new DropShadowEffect
+        {
+            Color = OverlayTheme.Rgb(0x2A, 0x0A, 0x5E), BlurRadius = 8, ShadowDepth = 3, Direction = 270, Opacity = 0.7
+        });
+        TextShadow = FrozenEffect(new DropShadowEffect
+        {
+            Color = OverlayTheme.Rgb(0x0A, 0x02, 0x1A), BlurRadius = 8, ShadowDepth = 3, Direction = 270, Opacity = 1
+        });
+        FrameBrushes = {
+            Gradient(OverlayTheme.Rgb(0x3E, 0x1C, 0x72), OverlayTheme.Rgb(0x16, 0x0A, 0x2E)),
+            Gradient(OverlayTheme.Rgb(0x4B, 0x20, 0x84), OverlayTheme.Rgb(0x1D, 0x0B, 0x3A)),
+            Gradient(OverlayTheme.Rgb(0x33, 0x16, 0x62), OverlayTheme.Rgb(0x12, 0x08, 0x26)),
+            Gradient(OverlayTheme.Rgb(0x56, 0x26, 0x96), OverlayTheme.Rgb(0x20, 0x0D, 0x40)),
+        };
+        InnerLineBrush = Frozen(new SolidColorBrush(OverlayTheme.Argb(0x55, 0xC0, 0x84, 0xFC)));
+        SparkleBrush = Frozen(new SolidColorBrush(OverlayTheme.Rgb(0xF5, 0xE1, 0xFF)));
+        IconGlowBrush = Frozen(new RadialGradientBrush(
+            OverlayTheme.Argb(0x90, 0xA8, 0x55, 0xF7), OverlayTheme.Argb(0x00, 0xA8, 0x55, 0xF7)));
+    }
 
-    private static readonly Brush[] FrameBrushes =
-    {
-        Gradient(Color.FromRgb(0x3E, 0x1C, 0x72), Color.FromRgb(0x16, 0x0A, 0x2E)),
-        Gradient(Color.FromRgb(0x4B, 0x20, 0x84), Color.FromRgb(0x1D, 0x0B, 0x3A)),
-        Gradient(Color.FromRgb(0x33, 0x16, 0x62), Color.FromRgb(0x12, 0x08, 0x26)),
-        Gradient(Color.FromRgb(0x56, 0x26, 0x96), Color.FromRgb(0x20, 0x0D, 0x40)),
-    };
+    private static DropShadowEffect IconShadow = null!;
+
+    private static DropShadowEffect TextShadow = null!;
+
+    private static Brush[] FrameBrushes = null!;
 
     private static readonly Brush ShineBrush = Frozen(new LinearGradientBrush(new GradientStopCollection
     {
@@ -75,16 +91,15 @@ public class GiftMenuOverlay : Window
 
     private static readonly Brush GlossBrush = Frozen(new LinearGradientBrush(
         Color.FromArgb(0x30, 0xFF, 0xFF, 0xFF), Color.FromArgb(0x00, 0xFF, 0xFF, 0xFF), 90));
-    private static readonly Brush InnerLineBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x55, 0xC0, 0x84, 0xFC)));
+    private static Brush InnerLineBrush = null!;
     private static readonly Brush ShadowBrush = Frozen(new RadialGradientBrush(
         Color.FromArgb(0x90, 0x00, 0x00, 0x00), Color.FromArgb(0x00, 0x00, 0x00, 0x00)));
-    private static readonly Brush SparkleBrush = Frozen(new SolidColorBrush(Color.FromRgb(0xF5, 0xE1, 0xFF)));
+    private static Brush SparkleBrush = null!;
     private static readonly Geometry StarGeometry = Frozen(Geometry.Parse(
         "M 0,-10 L 2.4,-2.4 L 10,0 L 2.4,2.4 L 0,10 L -2.4,2.4 L -10,0 L -2.4,-2.4 Z"));
 
     // Cahaya di belakang ikon (statis)
-    private static readonly Brush IconGlowBrush = Frozen(new RadialGradientBrush(
-        Color.FromArgb(0x90, 0xA8, 0x55, 0xF7), Color.FromArgb(0x00, 0xA8, 0x55, 0xF7)));
+    private static Brush IconGlowBrush = null!;
 
     private static T Frozen<T>(T f) where T : Freezable { f.Freeze(); return f; }
     private static DropShadowEffect FrozenEffect(DropShadowEffect e) { e.Freeze(); return e; }
@@ -235,11 +250,11 @@ public class GiftMenuOverlay : Window
         _progressBack.Height = 8;
         _progressBack.Width = 760;
         _progressBack.CornerRadius = new CornerRadius(4);
-        _progressBack.Background = Frozen(new SolidColorBrush(Color.FromArgb(0x55, 0xC0, 0x84, 0xFC)));
+        _progressBack.Background = Frozen(new SolidColorBrush(OverlayTheme.Argb(0x55, 0xC0, 0x84, 0xFC)));
         _progressBack.ClipToBounds = true;
         _progressFill.CornerRadius = new CornerRadius(4);
         _progressFill.Background = Frozen(new LinearGradientBrush(
-            Color.FromRgb(0xE8, 0x79, 0xF9), Color.FromRgb(0x8B, 0x5C, 0xF6), 0));
+            OverlayTheme.Rgb(0xE8, 0x79, 0xF9), OverlayTheme.Rgb(0x8B, 0x5C, 0xF6), 0));
         _progressFill.RenderTransformOrigin = new Point(0, 0.5);
         _progressFill.RenderTransform = _progressScale;
         _progressBack.Child = _progressFill;
@@ -547,7 +562,7 @@ public class GiftMenuOverlay : Window
                 CornerRadius = new CornerRadius(7),
                 Margin = new Thickness(6, 0, 6, 0),
                 Background = active
-                    ? Frozen(new SolidColorBrush(Color.FromRgb(0xC0, 0x84, 0xFC)))
+                    ? Frozen(new SolidColorBrush(OverlayTheme.Rgb(0xC0, 0x84, 0xFC)))
                     : Frozen(new SolidColorBrush(Color.FromArgb(0x88, 0xFF, 0xFF, 0xFF)))
             });
         }

@@ -111,7 +111,7 @@ public class OverlayWindow : Window
             Width = 34,
             Height = 34,
             CornerRadius = new CornerRadius(17),
-            Background = new SolidColorBrush(Color.FromRgb(0x7C, 0x3A, 0xED)),
+            Background = new SolidColorBrush(OverlayTheme.Rgb(0x7C, 0x3A, 0xED)),
             Child = new TextBlock
             {
                 Text = entry.Initial,
@@ -151,7 +151,7 @@ public class OverlayWindow : Window
 
         return new Border
         {
-            Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x0B, 0x0F, 0x1E)),
+            Background = new SolidColorBrush(OverlayTheme.Argb(0xCC, 0x0B, 0x0F, 0x1E)),
             CornerRadius = new CornerRadius(8),
             Padding = new Thickness(8, 6, 8, 6),
             Margin = new Thickness(0, 0, 0, 6),

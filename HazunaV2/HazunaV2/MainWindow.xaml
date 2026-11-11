@@ -434,6 +434,8 @@
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
                     <Button x:Name="AllOverlayBtn" Content="Buka Semua Overlay" Click="ToggleAllOverlays_Click"
                             Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
+                    <TextBlock Text="Tema:" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="4,0,8,0"/>
+                    <ComboBox x:Name="ThemeCombo" Width="140" Margin="0,0,16,0" SelectionChanged="Theme_Changed"/>
                     <Button x:Name="OverlayToggleBtn" Visibility="Collapsed" Content="Buka Overlay" Click="ToggleOverlay_Click"
                             Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
                     <Button x:Name="MenuOverlayBtn" Visibility="Collapsed" Content="Buka Overlay Menu Gift" Click="ToggleMenuOverlay_Click"
