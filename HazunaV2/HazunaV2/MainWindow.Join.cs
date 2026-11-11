@@ -27,6 +27,7 @@ public partial class MainWindow
         else
             AddLog($"   {user} bergabung, tapi antrean sedang penuh (zombie dilewati).");
 
+        NoteGameEvent($"{user} baru bergabung ke LIVE", GameEventLevel.Low);
         WelcomeWithAi(user);
     }
 

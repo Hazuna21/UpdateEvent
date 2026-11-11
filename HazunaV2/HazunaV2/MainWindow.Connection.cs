@@ -21,10 +21,15 @@ public partial class MainWindow
         _connector.SocialReceived += s => Dispatcher.InvokeAsync(() =>
         {
             if (s.Kind == RuleTrigger.Join) OnViewerJoin(s.UserName, 0);
-            else _engine.ProcessSocial(s.Kind, s.UserName, s.Count);
+            else
+            {
+                NoteSocial(s.Kind, s.UserName, s.Count);
+                _engine.ProcessSocial(s.Kind, s.UserName, s.Count);
+            }
         });
         _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => OnLiveChat(chat));
         _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => OnChatForAi(chat));
+        _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => NoteChat(chat));
         _connector.CatalogLoaded += list => Dispatcher.InvokeAsync(() => OnCatalog(list));
 
         ApplyLiveStateUi(LiveState.Idle, "TikTok: belum terhubung");

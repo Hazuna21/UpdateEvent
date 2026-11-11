@@ -46,6 +46,7 @@ public partial class MainWindow
         // AiWelcomeCheck sengaja tidak diisi dari pengaturan: selalu mati saat aplikasi dibuka
 
         _aiReady = true;
+        StartIdleChatter();
         UpdateAiStatus();
     }
 
@@ -170,9 +171,15 @@ public partial class MainWindow
         }
 
         if (job.GameEvent != null)
-            system += "\n\nTugas khusus kali ini: streamer sedang bermain game dan baru saja terjadi sesuatu (ada di dalam " +
-                      "<komentar_penonton>). Beri satu reaksi singkat yang antusias seperti komentator, boleh menyebut nama " +
-                      "penonton yang terlibat. Maksimal satu kalimat. Kalau kejadiannya tidak menarik, jawab SKIP.";
+        {
+            system += "\n\nTugas khusus kali ini: kamu ikut menonton LIVE ini dan tahu semua yang terjadi (lihat Info stream). " +
+                      "Di dalam <komentar_penonton> ada kejadian terbaru. Bereaksilah spontan seperti teman nonton atau komentator: " +
+                      "antusias, boleh menyebut nama penonton yang terlibat, boleh menyinggung kejadian sebelumnya atau skor. " +
+                      "Satu sampai dua kalimat pendek. Kalau suasana sedang sepi, komentari keadaan terakhir atau ajak penonton " +
+                      "ikut berinteraksi (kirim gift, komentar, atau tebak apa yang akan terjadi). Jangan mengarang kejadian yang tidak ada di info.";
+            if (_recentAiSays.Count > 0)
+                system += " Jangan mengulang kalimat yang baru kamu ucapkan: " + string.Join(" | ", _recentAiSays) + ".";
+        }
         else if (job.Welcome)
             system += "\n\nTugas khusus kali ini: penonton bernama di dalam <komentar_penonton> baru saja bergabung ke LIVE. " +
                       "Sambut dia dengan hangat dalam SATU kalimat singkat yang menyebut namanya. " +
@@ -200,6 +207,9 @@ public partial class MainWindow
         }
 
         AddAiLine($"   AI ({clock.Elapsed.TotalSeconds:0.0} dtk): " + answer);
+
+        _recentAiSays.Add(answer.Length > 80 ? answer[..80] : answer);
+        while (_recentAiSays.Count > 3) _recentAiSays.RemoveAt(0);
 
         if (_settings.AiSpeakAnswer)
             SpeakAiAnswer(job.UserName, answer, job.Welcome || job.GameEvent != null);
