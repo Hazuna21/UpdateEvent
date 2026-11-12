@@ -23,18 +23,6 @@ public class TtsService : IDisposable
     public const string AnimeVoiceName = "online:anime-id";
     private bool _anime;
 
-    // Azure AI Speech (suara neural alami, ada paket gratis 0,5 juta karakter per bulan)
-    public const string AzurePrefix = "azure:";
-    public string AzureKey { get; set; } = "";
-    public string AzureRegion { get; set; } = "southeastasia";
-    private string? _azureVoice;
-
-    // ElevenLabs: suara pilihan dari perpustakaan suara akunmu (isi Voice ID)
-    public const string ElevenVoiceName = "eleven:custom";
-    public string ElevenKey { get; set; } = "";
-    public string ElevenVoiceId { get; set; } = "";
-    private bool _eleven;
-
     private float _animePitch = 1.4f;
 
     public double AnimePitch
@@ -86,9 +74,6 @@ public class TtsService : IDisposable
     {
         var list = new List<TtsVoice>
         {
-            new(ElevenVoiceName, "ElevenLabs (Voice ID dari akunmu)"),
-            new(AzurePrefix + "id-ID-GadisNeural", "Azure: Gadis (Indonesia, wanita, imut)"),
-            new(AzurePrefix + "id-ID-ArdiNeural", "Azure: Ardi (Indonesia, pria)"),
             new(AnimeVoiceName, "Anime Imut ✿ (online)"),
             new(OnlineVoiceName, "Indonesia, Wanita (online)")
         };
@@ -103,30 +88,10 @@ public class TtsService : IDisposable
 
     public bool TrySelectVoice(string name)
     {
-        if (name == ElevenVoiceName)
-        {
-            _useOnline = true;
-            _anime = false;
-            _azureVoice = null;
-            _eleven = true;
-            return true;
-        }
-
-        _eleven = false;
-
-        if (name.StartsWith(AzurePrefix, StringComparison.Ordinal))
-        {
-            _useOnline = true;
-            _anime = false;
-            _azureVoice = name[AzurePrefix.Length..];
-            return true;
-        }
-
         if (name == OnlineVoiceName || name == AnimeVoiceName)
         {
             _useOnline = true;
             _anime = name == AnimeVoiceName;
-            _azureVoice = null;
             return true;
         }
 
@@ -134,7 +99,6 @@ public class TtsService : IDisposable
         {
             _synth.SelectVoice(name);
             _useOnline = false;
-            _azureVoice = null;
             return true;
         }
         catch
@@ -271,12 +235,7 @@ public class TtsService : IDisposable
         try
         {
             // Unduh semua potongan sekaligus; potongan berikutnya sudah siap saat yang pertama selesai dibaca
-            string? azure = _azureVoice;
-            var downloads = _eleven
-                ? SplitForOnline(text, 450).Select(c => DownloadElevenAsync(c, cts.Token, _elevenGate)).ToList()
-                : azure != null
-                ? SplitForOnline(text, 400).Select(c => DownloadAzureAsync(c, azure, cts.Token)).ToList()
-                : SplitForOnline(text, 180).Select(c => DownloadOnlineAsync(c, cts.Token)).ToList();
+            var downloads = SplitForOnline(text, 180).Select(c => DownloadOnlineAsync(c, cts.Token)).ToList();
             foreach (var d in downloads)
             {
                 var bytes = await d;
@@ -287,104 +246,6 @@ public class TtsService : IDisposable
         {
             _onlineCts = null;
         }
-    }
-
-    private readonly SemaphoreSlim _elevenGate = new(1, 1);
-
-    private async Task<byte[]> DownloadElevenAsync(string chunk, CancellationToken ct, SemaphoreSlim gate)
-    {
-        await gate.WaitAsync(ct);
-        try { return await DownloadElevenCoreAsync(chunk, ct); }
-        finally { gate.Release(); }
-    }
-
-    private async Task<byte[]> DownloadElevenCoreAsync(string chunk, CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(ElevenKey))
-            throw new InvalidOperationException("API key ElevenLabs belum diisi di halaman Text to Speech");
-        if (string.IsNullOrWhiteSpace(ElevenVoiceId))
-            throw new InvalidOperationException("Voice ID ElevenLabs belum diisi di halaman Text to Speech");
-
-        // Model Flash v2.5: cepat, mendukung bahasa Indonesia, dan paling hemat kredit
-        string json = "{\"text\":" + System.Text.Json.JsonSerializer.Serialize(chunk) +
-                      ",\"model_id\":\"eleven_flash_v2_5\",\"language_code\":\"id\"}";
-
-        string url = "https://api.elevenlabs.io/v1/text-to-speech/" + Uri.EscapeDataString(ElevenVoiceId.Trim()) +
-                     "?output_format=mp3_44100_64";
-        using var req = new HttpRequestMessage(HttpMethod.Post, url);
-        req.Headers.Add("xi-api-key", ElevenKey.Trim());
-        req.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        using var res = await OnlineHttp.SendAsync(req, ct);
-        if (!res.IsSuccessStatusCode)
-        {
-            string why = (int)res.StatusCode switch
-            {
-                401 => "API key ElevenLabs salah",
-                402 or 429 => "kuota atau batas ElevenLabs tercapai",
-                404 or 422 => "Voice ID ElevenLabs tidak ditemukan atau tidak boleh dipakai di paket ini",
-                _ => "ElevenLabs menjawab " + (int)res.StatusCode
-            };
-
-            // Alasan asli dari ElevenLabs (mis. suara perpustakaan tidak boleh dipakai di paket gratis)
-            try
-            {
-                string body = await res.Content.ReadAsStringAsync(ct);
-                using var doc = System.Text.Json.JsonDocument.Parse(body);
-                if (doc.RootElement.TryGetProperty("detail", out var d))
-                {
-                    string detail = d.ValueKind == System.Text.Json.JsonValueKind.String
-                        ? d.GetString() ?? ""
-                        : d.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
-                    if (detail.Length > 0)
-                        why += " [" + (int)res.StatusCode + ": " + (detail.Length > 160 ? detail[..160] : detail) + "]";
-                }
-            }
-            catch { /* isi jawaban tidak terbaca: pakai pesan umum */ }
-
-            throw new InvalidOperationException(why);
-        }
-        var bytes = await res.Content.ReadAsByteArrayAsync(ct);
-        if (bytes.Length < 200) throw new InvalidOperationException("suara kosong");
-        return bytes;
-    }
-
-    private async Task<byte[]> DownloadAzureAsync(string chunk, string voice, CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(AzureKey))
-            throw new InvalidOperationException("API key Azure belum diisi di halaman Text to Speech");
-
-        string region = string.IsNullOrWhiteSpace(AzureRegion) ? "southeastasia" : AzureRegion.Trim().ToLowerInvariant();
-
-        // Nada dan kecepatan dari slider: nada 1.0x-2.0x -> 0 sampai +50%, kecepatan -10..+10 -> -50% .. +50%
-        int pitch = (int)Math.Round((_animePitch - 1f) * 50f);
-        int rate = Math.Clamp(_synth.Rate * 5, -50, 50);
-        string ssml =
-            "<speak version='1.0' xml:lang='id-ID' xmlns='http://www.w3.org/2001/10/synthesis'>" +
-            $"<voice name='{voice}'><prosody pitch='{pitch:+0;-0;+0}%' rate='{rate:+0;-0;+0}%'>" +
-            System.Security.SecurityElement.Escape(chunk) +
-            "</prosody></voice></speak>";
-
-        using var req = new HttpRequestMessage(HttpMethod.Post, $"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1");
-        req.Headers.Add("Ocp-Apim-Subscription-Key", AzureKey.Trim());
-        req.Headers.Add("X-Microsoft-OutputFormat", "audio-24khz-96kbitrate-mono-mp3");
-        req.Headers.UserAgent.ParseAdd("HazunaLiveControl");
-        req.Content = new StringContent(ssml, Encoding.UTF8, "application/ssml+xml");
-
-        using var res = await OnlineHttp.SendAsync(req, ct);
-        if (!res.IsSuccessStatusCode)
-        {
-            string why = (int)res.StatusCode switch
-            {
-                401 or 403 => "API key atau region Azure salah",
-                429 => "kuota Azure habis atau terlalu cepat",
-                _ => "Azure menjawab " + (int)res.StatusCode
-            };
-            throw new InvalidOperationException(why);
-        }
-        var bytes = await res.Content.ReadAsByteArrayAsync(ct);
-        if (bytes.Length < 200) throw new InvalidOperationException("suara kosong");
-        return bytes;
     }
 
     private static async Task<byte[]> DownloadOnlineAsync(string chunk, CancellationToken ct)
