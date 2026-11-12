@@ -45,6 +45,10 @@ public class AppSettings
     public bool AiOnlyQuestions { get; set; }
     public bool AiSpeakAnswer { get; set; } = true;
     public string AiSpeakTemplate { get; set; } = "{user}, {text}";
+    public bool LoyalEnabled { get; set; } = true;
+    public int LoyalVisits { get; set; } = 3;             // hadir di sekian LIVE berbeda = penonton setia (0 = abaikan)
+    public int LoyalDiamonds { get; set; } = 500;         // atau total diamond sebesar ini (0 = abaikan)
+    public bool LoyalSpeak { get; set; } = true;
     public int KindnessBigGift { get; set; } = 100;      // gift dengan total diamond sebesar ini memicu ucapan terima kasih besar (0 = mati)
     public string OverlayTheme { get; set; } = "Neon Ungu";
     public int AiReactCooldown { get; set; } = 15;      // jeda minimal antar reaksi otomatis pada kejadian game (detik)

@@ -27,6 +27,8 @@ public partial class MainWindow
     // Gift masuk (termasuk uji coba): perbarui papan kebaikan hati penonton
     private void OnKindnessGift(GiftEvent g)
     {
+        LoyalTouch(g.UserName, Math.Max(0, g.DiamondsEach) * Math.Max(1, g.Count));
+
         var o = _kindnessOverlay;
         if (o == null) return;
 

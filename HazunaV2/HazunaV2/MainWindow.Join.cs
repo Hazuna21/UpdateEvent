@@ -28,6 +28,7 @@ public partial class MainWindow
             AddLog($"   {user} bergabung, tapi antrean sedang penuh (zombie dilewati).");
 
         _sum.Join(user);
+        LoyalTouch(user, 0);
         NoteGameEvent($"{user} baru bergabung ke LIVE", GameEventLevel.Low);
         WelcomeWithAi(user);
     }
@@ -49,6 +50,7 @@ public partial class MainWindow
 
         // Uji selalu jalan: lupakan catatan penonton ini dulu
         _joinSeen.Remove(user);
+        _loyalAlerted.Remove(user);
         OnViewerJoin(user, _settings.SimDelaySeconds);
     }
 }

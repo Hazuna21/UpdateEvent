@@ -455,6 +455,15 @@
                         <ComboBoxItem Content="Diamonds"/>
                         <ComboBoxItem Content="Jumlah Gift"/>
                     </ComboBox>
+                    <CheckBox x:Name="LoyalEnableCheck" Content="Alert penonton setia" Click="LoyalOption_Changed"
+                              VerticalAlignment="Center" Margin="24,0,8,0"
+                              ToolTip="Penonton yang hadir di beberapa LIVE atau total gift-nya besar diberi sambutan khusus."/>
+                    <TextBlock Text="hadir di" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox x:Name="LoyalVisitsBox" Width="42" LostFocus="LoyalOption_Changed"/>
+                    <TextBlock Text="LIVE atau total" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="6,0,6,0"/>
+                    <TextBox x:Name="LoyalDiamondsBox" Width="70" LostFocus="LoyalOption_Changed"/>
+                    <TextBlock Text="diamond" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="6,0,8,0"/>
+                    <CheckBox x:Name="LoyalSpeakCheck" Content="Bacakan" Click="LoyalOption_Changed" VerticalAlignment="Center"/>
                     <TextBlock Text="Gift besar mulai (diamond):" Foreground="{StaticResource MutedBrush}"
                                VerticalAlignment="Center" Margin="24,0,8,0"/>
                     <TextBox x:Name="KindnessBigBox" Width="70" LostFocus="KindnessBig_LostFocus"

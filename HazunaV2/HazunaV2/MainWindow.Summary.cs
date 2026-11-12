@@ -19,6 +19,7 @@ public partial class MainWindow
         {
             _sum.Begin(_score.Value);
             _kindnessOverlay?.Reset();
+            ResetLoyalSession();
             return;
         }
 

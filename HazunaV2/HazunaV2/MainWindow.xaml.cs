@@ -301,6 +301,7 @@ public partial class MainWindow : Window
         _menuOverlay?.Close();
         _scoreOverlay?.Close();
         _kindnessOverlay?.Close();
+        _loyal.Save();
         CloseAllWheelOverlays();
         WheelStore.Save(_wheelSet);
         SoundService.Stop();

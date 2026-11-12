@@ -188,9 +188,13 @@ public class KindnessOverlayWindow : Window
         }
     }
 
-    private void ShowThanks(string user, string gift, int count)
+    private void ShowThanks(string user, string gift, int count) =>
+        ShowBanner($"✨ Terima kasih {user}! ✨\n{count}x {gift}");
+
+    // Banner besar sebentar (terima kasih gift besar, alert penonton setia)
+    public void ShowBanner(string text)
     {
-        _bannerText.Text = $"✨ Terima kasih {user}! ✨\n{count}x {gift}";
+        _bannerText.Text = text;
         _banner.Visibility = Visibility.Visible;
 
         var pop = new DoubleAnimation(0.6, 1.0, TimeSpan.FromMilliseconds(500))

@@ -18,6 +18,11 @@ public partial class MainWindow
         SimDelayBox.Text = _settings.SimDelaySeconds.ToString();
         ChromaCheck.IsChecked = _settings.OverlayChromaKey;
         KindnessBigBox.Text = _settings.KindnessBigGift.ToString();
+        LoyalEnableCheck.IsChecked = _settings.LoyalEnabled;
+        LoyalSpeakCheck.IsChecked = _settings.LoyalSpeak;
+        LoyalVisitsBox.Text = _settings.LoyalVisits.ToString();
+        LoyalDiamondsBox.Text = _settings.LoyalDiamonds.ToString();
+        InitLoyal();
 
         OverlayTheme.Set(_settings.OverlayTheme);
         GiftMenuOverlay.ReloadTheme();
