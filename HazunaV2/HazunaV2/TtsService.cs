@@ -273,7 +273,7 @@ public class TtsService : IDisposable
             // Unduh semua potongan sekaligus; potongan berikutnya sudah siap saat yang pertama selesai dibaca
             string? azure = _azureVoice;
             var downloads = _eleven
-                ? SplitForOnline(text, 450).Select(c => DownloadElevenAsync(c, cts.Token)).ToList()
+                ? SplitForOnline(text, 450).Select(c => DownloadElevenAsync(c, cts.Token, _elevenGate)).ToList()
                 : azure != null
                 ? SplitForOnline(text, 400).Select(c => DownloadAzureAsync(c, azure, cts.Token)).ToList()
                 : SplitForOnline(text, 180).Select(c => DownloadOnlineAsync(c, cts.Token)).ToList();
@@ -289,7 +289,16 @@ public class TtsService : IDisposable
         }
     }
 
-    private async Task<byte[]> DownloadElevenAsync(string chunk, CancellationToken ct)
+    private readonly SemaphoreSlim _elevenGate = new(1, 1);
+
+    private async Task<byte[]> DownloadElevenAsync(string chunk, CancellationToken ct, SemaphoreSlim gate)
+    {
+        await gate.WaitAsync(ct);
+        try { return await DownloadElevenCoreAsync(chunk, ct); }
+        finally { gate.Release(); }
+    }
+
+    private async Task<byte[]> DownloadElevenCoreAsync(string chunk, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(ElevenKey))
             throw new InvalidOperationException("API key ElevenLabs belum diisi di halaman Text to Speech");
@@ -316,6 +325,23 @@ public class TtsService : IDisposable
                 404 or 422 => "Voice ID ElevenLabs tidak ditemukan atau tidak boleh dipakai di paket ini",
                 _ => "ElevenLabs menjawab " + (int)res.StatusCode
             };
+
+            // Alasan asli dari ElevenLabs (mis. suara perpustakaan tidak boleh dipakai di paket gratis)
+            try
+            {
+                string body = await res.Content.ReadAsStringAsync(ct);
+                using var doc = System.Text.Json.JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("detail", out var d))
+                {
+                    string detail = d.ValueKind == System.Text.Json.JsonValueKind.String
+                        ? d.GetString() ?? ""
+                        : d.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
+                    if (detail.Length > 0)
+                        why += " [" + (int)res.StatusCode + ": " + (detail.Length > 160 ? detail[..160] : detail) + "]";
+                }
+            }
+            catch { /* isi jawaban tidak terbaca: pakai pesan umum */ }
+
             throw new InvalidOperationException(why);
         }
         var bytes = await res.Content.ReadAsByteArrayAsync(ct);
