@@ -45,6 +45,7 @@ public class AppSettings
     public bool AiOnlyQuestions { get; set; }
     public bool AiSpeakAnswer { get; set; } = true;
     public string AiSpeakTemplate { get; set; } = "{user}, {text}";
+    public int KindnessBigGift { get; set; } = 100;      // gift dengan total diamond sebesar ini memicu ucapan terima kasih besar (0 = mati)
     public string OverlayTheme { get; set; } = "Neon Ungu";
     public int AiReactCooldown { get; set; } = 15;      // jeda minimal antar reaksi otomatis pada kejadian game (detik)
     public bool AiWelcome { get; set; }                 // sambut penonton baru (selalu mati saat aplikasi dibuka, seperti saklar AI)

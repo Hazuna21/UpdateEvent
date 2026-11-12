@@ -18,6 +18,7 @@ public partial class MainWindow
         if (state == LiveState.Connected && !_sum.Active)
         {
             _sum.Begin(_score.Value);
+            _kindnessOverlay?.Reset();
             return;
         }
 

@@ -9,6 +9,40 @@ public partial class MainWindow
 {
     private readonly HashSet<Window> _overlayShown = new();
 
+    private KindnessOverlayWindow? _kindnessOverlay;
+
+    private KindnessOverlayWindow EnsureKindnessOverlay()
+    {
+        if (_kindnessOverlay != null) return _kindnessOverlay;
+
+        var o = new KindnessOverlayWindow();
+        o.SetChromaKey(ChromaCheck.IsChecked == true);
+        o.Opacity = 0;
+        o.Closed += (s, a) => { _overlayShown.Remove(o); _kindnessOverlay = null; UpdateAllOverlayBtn(); };
+        _kindnessOverlay = o;
+        o.Show();
+        return o;
+    }
+
+    // Gift masuk (termasuk uji coba): perbarui papan kebaikan hati penonton
+    private void OnKindnessGift(GiftEvent g)
+    {
+        var o = _kindnessOverlay;
+        if (o == null) return;
+
+        long total = Math.Max(0, g.DiamondsEach) * Math.Max(1, g.Count);
+        bool big = _settings.KindnessBigGift > 0 && total >= _settings.KindnessBigGift;
+        o.AddGift(g.UserName, g.GiftName, g.Count, g.DiamondsEach, big);
+    }
+
+    private void KindnessBig_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (int.TryParse(KindnessBigBox.Text.Trim(), out var v))
+            _settings.KindnessBigGift = Math.Clamp(v, 0, 1000000);
+        KindnessBigBox.Text = _settings.KindnessBigGift.ToString();
+        SettingsStore.Save(_settings);
+    }
+
     private OverlayWindow EnsureOverlay()
     {
         if (_overlay != null) return _overlay;
@@ -62,12 +96,13 @@ public partial class MainWindow
         if (_overlay != null) keep.Add((_overlay, _overlay.Left, _overlay.Top, _overlayShown.Contains(_overlay), 0));
         if (_menuOverlay != null) keep.Add((_menuOverlay, _menuOverlay.Left, _menuOverlay.Top, _overlayShown.Contains(_menuOverlay), 1));
         if (_scoreOverlay != null) keep.Add((_scoreOverlay, _scoreOverlay.Left, _scoreOverlay.Top, _overlayShown.Contains(_scoreOverlay), 2));
+        if (_kindnessOverlay != null) keep.Add((_kindnessOverlay, _kindnessOverlay.Left, _kindnessOverlay.Top, _overlayShown.Contains(_kindnessOverlay), 3));
 
         foreach (var k in keep) k.Win.Close();
 
         foreach (var k in keep)
         {
-            Window w = k.Kind switch { 0 => EnsureOverlay(), 1 => EnsureMenuOverlay(), _ => EnsureScoreOverlay() };
+            Window w = k.Kind switch { 0 => EnsureOverlay(), 1 => EnsureMenuOverlay(), 2 => EnsureScoreOverlay(), _ => EnsureKindnessOverlay() };
             w.Left = k.L;
             w.Top = k.T;
             if (k.Shown) SetOverlayVisible(w, true);
@@ -92,6 +127,7 @@ public partial class MainWindow
         EnsureOverlay();
         EnsureMenuOverlay();
         EnsureScoreOverlay();
+        EnsureKindnessOverlay();
         UpdateAllOverlayBtn();
     }
 
@@ -115,6 +151,7 @@ public partial class MainWindow
             SetOverlayVisible(EnsureOverlay(), true);
             SetOverlayVisible(EnsureMenuOverlay(), true);
             SetOverlayVisible(EnsureScoreOverlay(), true);
+            SetOverlayVisible(EnsureKindnessOverlay(), true);
         }
     }
 

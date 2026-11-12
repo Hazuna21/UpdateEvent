@@ -455,6 +455,10 @@
                         <ComboBoxItem Content="Diamonds"/>
                         <ComboBoxItem Content="Jumlah Gift"/>
                     </ComboBox>
+                    <TextBlock Text="Gift besar mulai (diamond):" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Center" Margin="24,0,8,0"/>
+                    <TextBox x:Name="KindnessBigBox" Width="70" LostFocus="KindnessBig_LostFocus"
+                             ToolTip="Gift sebesar ini memicu ucapan terima kasih besar di overlay Kebaikan Hati Penonton. 0 = mati."/>
                     <CheckBox x:Name="ChromaCheck" Content="Latar hijau (untuk chroma key)"
                               VerticalAlignment="Center" Margin="24,0,0,0" Click="ChromaCheck_Click"/>
                     <TextBlock Text="Ukuran overlay menu gift:" Foreground="{StaticResource MutedBrush}"

@@ -17,6 +17,7 @@ public partial class MainWindow
         AutoConnectCheck.IsChecked = _settings.AutoConnect;
         SimDelayBox.Text = _settings.SimDelaySeconds.ToString();
         ChromaCheck.IsChecked = _settings.OverlayChromaKey;
+        KindnessBigBox.Text = _settings.KindnessBigGift.ToString();
 
         OverlayTheme.Set(_settings.OverlayTheme);
         GiftMenuOverlay.ReloadTheme();

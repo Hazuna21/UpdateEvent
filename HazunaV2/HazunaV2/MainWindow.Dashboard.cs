@@ -30,7 +30,7 @@ public partial class MainWindow
             OnLog = AddLog,
             OnRulesChanged = () => RuleStore.Save(_rules),
             OnRuleFired = r => _menuOverlay?.Pulse(r),
-            OnGift = g => { NoteGameEvent($"{g.UserName} mengirim {g.Count}x {g.GiftName}", GameEventLevel.Medium); OnWheelGift(g); }
+            OnGift = g => { NoteGameEvent($"{g.UserName} mengirim {g.Count}x {g.GiftName}", GameEventLevel.Medium); OnWheelGift(g); OnKindnessGift(g); }
         };
 
         UpdateQueueText();
