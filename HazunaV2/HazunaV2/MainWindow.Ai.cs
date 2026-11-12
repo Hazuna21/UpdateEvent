@@ -10,7 +10,9 @@ public partial class MainWindow
     {
         "apa", "apakah", "siapa", "kapan", "dimana", "kemana", "kenapa", "mengapa",
         "bagaimana", "gimana", "berapa", "kok", "bisa", "boleh", "mana",
-        "what", "who", "when", "where", "why", "how"
+        "what", "who", "when", "where", "why", "how",
+        "can", "could", "do", "does", "did", "is", "are", "will", "would", "should",
+        "何", "なぜ", "どう", "いつ", "どこ", "誰", "だれ", "どれ", "どの", "いくら"
     };
 
     private AiReplyQueue? _aiQueue;
@@ -147,7 +149,11 @@ public partial class MainWindow
 
     private static bool LooksLikeQuestion(string text)
     {
-        if (text.Contains('?')) return true;
+        if (text.Contains('?') || text.Contains('？')) return true;
+
+        // Kalimat tanya bahasa Jepang biasanya berakhiran "か" ("ですか", "ますか")
+        var tail = text.TrimEnd(' ', '。', '!', '！', '.', '~', '〜');
+        if (tail.EndsWith("か") || tail.EndsWith("かな") || tail.EndsWith("の")) return true;
 
         var first = text.Split(new[] { ' ', ',', '.', '!' }, StringSplitOptions.RemoveEmptyEntries)
                         .FirstOrDefault()?.ToLowerInvariant();

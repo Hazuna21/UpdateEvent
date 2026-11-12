@@ -184,7 +184,7 @@ public class TtsService : IDisposable
         _synth.SpeakCompleted += OnDone;
         try
         {
-            _synth.SpeakAsync(text);
+            _synth.SpeakAsync(BuildPrompt(text));
 
             // Pengaman: kalau suara macet lebih dari 60 detik, hentikan
             var finished = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(60)));
@@ -226,6 +226,35 @@ public class TtsService : IDisposable
         public int Read(float[] buffer, int offset, int count) => _src.Read(buffer, offset, count);
     }
 
+    // Suara Windows: bagian bahasa Jepang / Inggris memakai suara bahasanya kalau terpasang di komputer
+    private PromptBuilder BuildPrompt(string text)
+    {
+        var pb = new PromptBuilder();
+        var baseLang = _synth.Voice.Culture.TwoLetterISOLanguageName;
+
+        foreach (var (lang, part) in TtsLang.Split(text))
+        {
+            string? code = lang switch { "ja" => "ja-JP", "en" => "en-US", _ => null };
+            if (code != null && !string.Equals(lang, baseLang, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var culture = new CultureInfo(code);
+                    if (_synth.GetInstalledVoices(culture).Any(v => v.Enabled))
+                    {
+                        pb.StartVoice(culture);
+                        pb.AppendText(part);
+                        pb.EndVoice();
+                        continue;
+                    }
+                }
+                catch { /* pakai suara terpilih */ }
+            }
+            pb.AppendText(part);
+        }
+        return pb;
+    }
+
     // ---------- Suara online ----------
 
     private async Task SpeakOnlineAsync(string text)
@@ -235,7 +264,11 @@ public class TtsService : IDisposable
         try
         {
             // Unduh semua potongan sekaligus; potongan berikutnya sudah siap saat yang pertama selesai dibaca
-            var downloads = SplitForOnline(text, 180).Select(c => DownloadOnlineAsync(c, cts.Token)).ToList();
+            // Tiap bagian dibaca dengan suara bahasanya (Jepang / Inggris / Indonesia)
+            var downloads = TtsLang.Split(text)
+                .SelectMany(seg => SplitForOnline(seg.Text, 180).Select(c => (seg.Lang, Chunk: c)))
+                .Select(x => DownloadOnlineAsync(x.Chunk, x.Lang, cts.Token))
+                .ToList();
             foreach (var d in downloads)
             {
                 var bytes = await d;
@@ -248,9 +281,9 @@ public class TtsService : IDisposable
         }
     }
 
-    private static async Task<byte[]> DownloadOnlineAsync(string chunk, CancellationToken ct)
+    private static async Task<byte[]> DownloadOnlineAsync(string chunk, string lang, CancellationToken ct)
     {
-        string url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=id&q=" + Uri.EscapeDataString(chunk);
+        string url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=" + lang + "&q=" + Uri.EscapeDataString(chunk);
         using var res = await OnlineHttp.GetAsync(url, ct);
         if (!res.IsSuccessStatusCode)
             throw new InvalidOperationException("server menjawab " + (int)res.StatusCode);
@@ -292,7 +325,7 @@ public class TtsService : IDisposable
     private static IEnumerable<string> SplitForOnline(string text, int max)
     {
         var sb = new StringBuilder();
-        foreach (var part in Regex.Split(text.Trim(), @"(?<=[\.\!\?\,\n])\s*"))
+        foreach (var part in Regex.Split(text.Trim(), @"(?<=[\.\!\?\,\n。！？、])\s*"))
         {
             var piece = part.Trim();
             if (piece.Length == 0) continue;
