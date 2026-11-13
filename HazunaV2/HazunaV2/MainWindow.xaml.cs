@@ -275,6 +275,12 @@ public partial class MainWindow : Window
         _overlay?.Refresh();
     }
 
+    private void AutoShow_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.AutoShowOverlays = AutoShowCheck.IsChecked == true;
+        SettingsStore.Save(_settings);
+    }
+
     private void ChromaCheck_Click(object sender, RoutedEventArgs e)
     {
         bool on = ChromaCheck.IsChecked == true;

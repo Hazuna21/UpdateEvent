@@ -37,6 +37,9 @@ public partial class MainWindow
             EnsureWheelWindow();
             SettleWheel();
             EnsureAllOverlays();
+            if (_settings.AutoShowOverlays)
+                foreach (var w in new Window?[] { _overlay, _menuOverlay, _scoreOverlay, _kindnessOverlay })
+                    if (w != null) SetOverlayVisible(w, true);
         }, DispatcherPriority.ApplicationIdle);
     }
 

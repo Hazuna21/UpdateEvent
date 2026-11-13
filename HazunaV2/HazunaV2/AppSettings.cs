@@ -50,6 +50,7 @@ public class AppSettings
     public int LoyalDiamonds { get; set; } = 500;         // atau total diamond sebesar ini (0 = abaikan)
     public bool LoyalSpeak { get; set; } = true;
     public int KindnessBigGift { get; set; } = 100;      // gift dengan total diamond sebesar ini memicu ucapan terima kasih besar (0 = mati)
+    public bool AutoShowOverlays { get; set; } = true;
     public string OverlayTheme { get; set; } = "Neon Ungu";
     public string AppTheme { get; set; } = "Navy Ungu (bawaan)";
     public int AiReactCooldown { get; set; } = 15;      // jeda minimal antar reaksi otomatis pada kejadian game (detik)
