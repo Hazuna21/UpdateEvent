@@ -20,6 +20,7 @@ public partial class MainWindow
         AutoShowCheck.IsChecked = _settings.AutoShowOverlays;
         ShowSongReqSettings();
         ShowYtSettings();
+        InitSoundboard();
         KindnessBigBox.Text = _settings.KindnessBigGift.ToString();
         LoyalEnableCheck.IsChecked = _settings.LoyalEnabled;
         LoyalSpeakCheck.IsChecked = _settings.LoyalSpeak;

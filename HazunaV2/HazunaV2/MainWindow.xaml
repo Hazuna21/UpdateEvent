@@ -78,6 +78,9 @@
                     <RadioButton Content="Media &amp; Sounds" Tag="Media &amp; Sounds" GroupName="Nav" Background="#F472B6"
                                  local:NavIcon.Data="{StaticResource IconMedia}"
                                  Style="{StaticResource NavItem}" Click="Nav_Click"/>
+                    <RadioButton Content="Soundboard" Tag="Soundboard" GroupName="Nav" Background="{DynamicResource GreenBrush}"
+                                 local:NavIcon.Data="{StaticResource IconBolt}"
+                                 Style="{StaticResource NavItem}" Click="Nav_Click"/>
                     <RadioButton Content="Top Gifters" Tag="Top Gifters" GroupName="Nav" Background="#FBBF24"
                                  local:NavIcon.Data="{StaticResource IconCrown}"
                                  Style="{StaticResource NavItem}" Click="Nav_Click"/>
@@ -413,6 +416,31 @@
             </Grid>
 
             <!-- ============ TOP GIFTERS ============ -->
+            <Grid x:Name="SoundboardPage" Grid.Row="2" Margin="0,14,0,10" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <WrapPanel Grid.Row="0" Margin="0,0,0,12">
+                    <TextBlock Text="Cari" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox x:Name="BoardSearchBox" Width="180" TextChanged="BoardSearch_Changed" Margin="0,0,18,0"/>
+                    <TextBlock Text="Volume" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Slider x:Name="BoardVolumeSlider" Width="140" Minimum="10" Maximum="200" SmallChange="5" LargeChange="10"
+                            VerticalAlignment="Center" ValueChanged="BoardVolume_Changed"/>
+                    <TextBlock x:Name="BoardVolumeLabel" Width="48" Foreground="{DynamicResource CyanBrush}" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="6,0,12,0"/>
+                    <CheckBox x:Name="BoardOverlapCheck" Content="Boleh menumpuk" Click="BoardOverlap_Click" VerticalAlignment="Center" Margin="0,0,18,0"
+                              ToolTip="Kalau mati, suara baru menggantikan yang sedang diputar."/>
+                    <Button Content="Stop semua" Click="BoardStop_Click" Style="{StaticResource DangerButton}" Padding="16,7"/>
+                </WrapPanel>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <WrapPanel x:Name="BoardPanel"/>
+                        <TextBlock x:Name="BoardEmptyText" Foreground="{DynamicResource MutedBrush}" Visibility="Collapsed" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
             <Grid x:Name="TopGiftersPage" Grid.Row="2" Margin="0,14,0,10" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

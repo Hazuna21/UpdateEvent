@@ -13,6 +13,7 @@ public partial class MainWindow : Window
         ["Dashboard"] = "Ringkasan aplikasi dan status koneksi.",
         ["Gift Rules"] = "Hubungkan gift dengan tombol, suara, dan media dari pustaka. Durasi = lama satu giliran. Per gift = tiap gift dalam kombo jadi satu giliran.",
         ["Media & Sounds"] = "Pustaka suara dan media. Atur urutan dengan ▲▼, pilih jenisnya, lalu pakai di Gift Rules.",
+        ["Soundboard"] = "Klik tombol untuk memutar suara dari Media & Sounds (jenis Suara) langsung saat LIVE.",
         ["Top Gifters"] = "Overlay leaderboard penonton dan skor game (WIN = x / target). Skor bisa diatur manual atau otomatis dari script GTA.",
         ["Lucky Wheel"] = "Roda keberuntungan: penonton mengirim gift tertentu untuk memutar roda. Isi roda dan peluangnya Anda atur sendiri.",
         ["Settings"] = "Pengaturan aplikasi. Klik Simpan Pengaturan agar perubahan tersimpan.",
@@ -77,6 +78,7 @@ public partial class MainWindow : Window
         DashboardPage.Visibility = name == "Dashboard" ? Visibility.Visible : Visibility.Collapsed;
         GiftRulesPage.Visibility = name == "Gift Rules" ? Visibility.Visible : Visibility.Collapsed;
         MediaPage.Visibility = name == "Media & Sounds" ? Visibility.Visible : Visibility.Collapsed;
+        SoundboardPage.Visibility = name == "Soundboard" ? Visibility.Visible : Visibility.Collapsed;
         TopGiftersPage.Visibility = name == "Top Gifters" ? Visibility.Visible : Visibility.Collapsed;
         WheelPage.Visibility = name == "Lucky Wheel" ? Visibility.Visible : Visibility.Collapsed;
         TtsPage.Visibility = name == "Text to Speech" ? Visibility.Visible : Visibility.Collapsed;
@@ -85,6 +87,8 @@ public partial class MainWindow : Window
 
         if (name == "Media & Sounds")
             LibraryGrid.Items.Refresh();
+        if (name == "Soundboard")
+            BuildSoundboard();
         if (name == "Dashboard")
             RefreshDashboard();
 
@@ -101,6 +105,7 @@ public partial class MainWindow : Window
                 "Dashboard" => DashboardPage,
                 "Gift Rules" => GiftRulesPage,
                 "Media & Sounds" => MediaPage,
+                "Soundboard" => SoundboardPage,
                 "Top Gifters" => TopGiftersPage,
                 "Text to Speech" => TtsPage,
                 "AI Reply" => AiPage,
