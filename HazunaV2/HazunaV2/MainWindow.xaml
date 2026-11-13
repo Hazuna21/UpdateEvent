@@ -5,7 +5,7 @@
         Title="Hazuna LIVE Control" Height="680" Width="1120"
         MinHeight="480" MinWidth="760"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BgBrush}">
+        Background="{DynamicResource BgBrush}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -20,15 +20,15 @@
         <!-- Cahaya warna di latar -->
         <Rectangle Grid.ColumnSpan="2" IsHitTestVisible="False">
             <Rectangle.Fill>
-                <StaticResource ResourceKey="GlowBrush"/>
+                <DynamicResource ResourceKey="GlowBrush"/>
             </Rectangle.Fill>
         </Rectangle>
 
         <!-- ================= SIDEBAR ================= -->
                 <Border x:Name="Sidebar" Grid.Column="0" Width="230" ClipToBounds="True"
-                BorderBrush="{StaticResource SideLineBrush}" BorderThickness="0,0,1,0">
+                BorderBrush="{DynamicResource SideLineBrush}" BorderThickness="0,0,1,0">
             <Border.Background>
-                <StaticResource ResourceKey="SidebarBrush"/>
+                <DynamicResource ResourceKey="SidebarBrush"/>
             </Border.Background>
             <DockPanel>
                 <!-- Logo + judul -->
@@ -52,14 +52,14 @@
                                 </LinearGradientBrush>
                             </TextBlock.Foreground>
                         </TextBlock>
-                        <TextBlock Text="LIVE Control" Foreground="{StaticResource Muted2Brush}" FontSize="12"/>
+                        <TextBlock Text="LIVE Control" Foreground="{DynamicResource Muted2Brush}" FontSize="12"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Tombol lipat / buka sidebar -->
                 <Button DockPanel.Dock="Bottom" Click="ToggleSidebar_Click" Height="38" Margin="14,10,14,16"
                         ToolTip="Lipat / buka menu">
-                    <Path Data="{StaticResource IconChevron}" Stroke="{StaticResource TextBrush}" StrokeThickness="2"
+                    <Path Data="{StaticResource IconChevron}" Stroke="{DynamicResource TextBrush}" StrokeThickness="2"
                           StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                           Width="14" Height="14" Stretch="Uniform" RenderTransformOrigin="0.5,0.5">
                         <Path.RenderTransform>
@@ -69,7 +69,7 @@
                 </Button>
 
                 <StackPanel x:Name="NavPanel">
-                    <RadioButton Content="Dashboard" Tag="Dashboard" GroupName="Nav" Background="{StaticResource CyanBrush}"
+                    <RadioButton Content="Dashboard" Tag="Dashboard" GroupName="Nav" Background="{DynamicResource CyanBrush}"
                                  local:NavIcon.Data="{StaticResource IconDashboard}"
                                  Style="{StaticResource NavItem}" Click="Nav_Click"/>
                     <RadioButton Content="Gift Rules" Tag="Gift Rules" GroupName="Nav" Background="#A78BFA"
@@ -114,7 +114,7 @@
                     </LinearGradientBrush>
                 </TextBlock.Foreground>
             </TextBlock>
-            <TextBlock x:Name="PageDesc" Grid.Row="1" Foreground="{StaticResource MutedBrush}"
+            <TextBlock x:Name="PageDesc" Grid.Row="1" Foreground="{DynamicResource MutedBrush}"
                        FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
 
             <!-- ============ DASHBOARD ============ -->
@@ -126,7 +126,7 @@
                 </Grid.RowDefinitions>
 
                 <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,10">
-                    <TextBlock x:Name="SummaryText" Foreground="{StaticResource TextBrush}"
+                    <TextBlock x:Name="SummaryText" Foreground="{DynamicResource TextBrush}"
                                FontSize="13" TextWrapping="Wrap"/>
                 </Border>
 
@@ -141,36 +141,36 @@
                 <Border x:Name="SimCard" Visibility="Collapsed" Style="{StaticResource Card}" Margin="0,0,0,10">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
+                            <Border Width="4" Height="18" CornerRadius="2" Background="{DynamicResource CyanBrush}" Margin="0,0,10,0"/>
                             <TextBlock Text="Simulasi Gift" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
                         </StackPanel>
                         <TextBlock Text="Menguji aturan tanpa TikTok. Pilih atau ketik nama gift yang sama dengan di Gift Rules."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,12" TextWrapping="Wrap"/>
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,0,0,12" TextWrapping="Wrap"/>
                         <WrapPanel>
                             <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="Nama penonton" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock Text="Nama penonton" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                                 <TextBox x:Name="UserBox" Text="Tester" Width="150"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="Gift" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock Text="Gift" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                                 <ComboBox x:Name="GiftCombo" IsEditable="True" Width="190"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="Jumlah" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock Text="Jumlah" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                                 <TextBox x:Name="CountBox" Text="1" Width="70"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="Diamond per gift" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock Text="Diamond per gift" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                                 <TextBox x:Name="DiamondBox" Text="1" Width="100"/>
                             </StackPanel>
                             <Button Content="Kirim Gift Simulasi" Click="SendTestGift_Click"
                                     Style="{StaticResource PrimaryButton}" Margin="0,20,0,8" Padding="16,6"/>
                         </WrapPanel>
                         <TextBlock Text="Tap-tap, Follow, dan Share memakai nama penonton di atas."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,4,0,8" TextWrapping="Wrap"/>
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,8" TextWrapping="Wrap"/>
                         <WrapPanel>
                             <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="Jumlah tap" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock Text="Jumlah tap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                                 <TextBox x:Name="SimTapBox" Text="50" Width="90"/>
                             </StackPanel>
                             <Button Content="Kirim Tap-tap" Click="SendTestTap_Click"
@@ -199,16 +199,16 @@
                                 Padding="14,5" Margin="0,0,8,0"/>
                         <Button DockPanel.Dock="Right" Content="Salin Log" Click="CopyLog_Click"
                                 Style="{StaticResource GhostButton}" Padding="12,5" Margin="0,0,8,0"/>
-                        <Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource PinkBrush}"
+                        <Border Width="4" Height="18" CornerRadius="2" Background="{DynamicResource PinkBrush}"
                                 Margin="0,0,10,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Log Aktivitas" Foreground="White" FontSize="16"
                                    FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="QueueText" Foreground="{StaticResource MutedBrush}" FontSize="12"
+                        <TextBlock x:Name="QueueText" Foreground="{DynamicResource MutedBrush}" FontSize="12"
                                    VerticalAlignment="Center" Margin="16,0,16,0"
                                    TextTrimming="CharacterEllipsis"/>
                     </DockPanel>
-                    <ListBox x:Name="LogList" Grid.Row="1" Background="{StaticResource SurfaceBrush}"
-                             Foreground="{StaticResource SoftTextBrush}" BorderThickness="0"
+                    <ListBox x:Name="LogList" Grid.Row="1" Background="{DynamicResource SurfaceBrush}"
+                             Foreground="{DynamicResource SoftTextBrush}" BorderThickness="0"
                              FontFamily="Consolas" FontSize="12"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
@@ -237,7 +237,7 @@
                     <Button Content="Impor Daftar Gift" Click="LoadCatalog_Click"
                             Style="{StaticResource GhostButton}" Padding="16,8"/>
                     <TextBlock Text="Geser ☰ untuk urutan · klik dua kali baris untuk mengubah"
-                               Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
+                               Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
                                Margin="14,0,0,0" TextWrapping="Wrap" MaxWidth="320"/>
                 </StackPanel>
 
@@ -245,16 +245,16 @@
                           MouseDoubleClick="RulesGrid_DoubleClick"
                           DragOver="RulesGrid_DragOver" Drop="RulesGrid_Drop" DragLeave="RulesGrid_DragLeave"
                           AutoGenerateColumns="False" CanUserAddRows="False"
-                          Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextBrush}"
-                          RowBackground="{StaticResource SurfaceBrush}"
-                          AlternatingRowBackground="{StaticResource Surface2Brush}"
+                          Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"
+                          RowBackground="{DynamicResource SurfaceBrush}"
+                          AlternatingRowBackground="{DynamicResource Surface2Brush}"
                           HeadersVisibility="Column" SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="" Width="40" IsReadOnly="True"
                                                 CanUserSort="False" CanUserReorder="False" CanUserResize="False">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="☰" FontSize="18" Foreground="{StaticResource Muted2Brush}" Background="Transparent"
+                                    <TextBlock Text="☰" FontSize="18" Foreground="{DynamicResource Muted2Brush}" Background="Transparent"
                                                Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Cursor="SizeAll" ToolTip="Tahan dan geser untuk mengubah urutan"
                                                PreviewMouseLeftButtonDown="RuleHandle_Down" PreviewMouseMove="RuleHandle_Move"/>
@@ -277,7 +277,7 @@
                                     <StackPanel Margin="8,5" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding SourceText}" Foreground="White" FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding DetailText}" Foreground="{StaticResource Muted2Brush}" FontSize="11"
+                                        <TextBlock Text="{Binding DetailText}" Foreground="{DynamicResource Muted2Brush}" FontSize="11"
                                                    TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -302,12 +302,12 @@
                                                     Padding="10,2" Margin="4,0,0,0" ToolTip="Tes suara saja"/>
                                             <Button DockPanel.Dock="Right" Content="Pilih..." Click="PickSound_Click"
                                                     Padding="10,2"/>
-                                            <TextBlock Text="{Binding SoundName}" Foreground="{StaticResource SoftTextBrush}"
+                                            <TextBlock Text="{Binding SoundName}" Foreground="{DynamicResource SoftTextBrush}"
                                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                        Margin="0,0,8,0"/>
                                         </DockPanel>
                                         <DockPanel Margin="0,3,0,0">
-                                            <TextBlock DockPanel.Dock="Right" Text="%" Foreground="{StaticResource CyanBrush}"
+                                            <TextBlock DockPanel.Dock="Right" Text="%" Foreground="{DynamicResource CyanBrush}"
                                                        VerticalAlignment="Center" Margin="2,0,0,0"/>
                                             <TextBox DockPanel.Dock="Right" Width="48" Padding="3,1" TextAlignment="Right"
                                                      VerticalContentAlignment="Center"
@@ -348,7 +348,7 @@
                 <DockPanel Margin="0,0,0,12">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
                                 VerticalAlignment="Top" Margin="12,0,0,0">
-                        <TextBlock Text="Tampilkan:" Foreground="{StaticResource MutedBrush}"
+                        <TextBlock Text="Tampilkan:" Foreground="{DynamicResource MutedBrush}"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <ComboBox x:Name="LibraryFilterBox" Width="120" SelectedIndex="0"
                                   SelectionChanged="LibraryFilter_Changed">
@@ -378,9 +378,9 @@
                 <DataGrid x:Name="LibraryGrid" Grid.Row="1"
                           AutoGenerateColumns="False" CanUserAddRows="False"
                           CanUserSortColumns="False"
-                          Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextBrush}"
-                          RowBackground="{StaticResource SurfaceBrush}"
-                          AlternatingRowBackground="{StaticResource Surface2Brush}"
+                          Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"
+                          RowBackground="{DynamicResource SurfaceBrush}"
+                          AlternatingRowBackground="{DynamicResource Surface2Brush}"
                           HeadersVisibility="Column" SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Nama (bisa diubah)"
@@ -427,7 +427,7 @@
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
                     <Button x:Name="AllOverlayBtn" Content="Buka Semua Overlay" Click="ToggleAllOverlays_Click"
                             Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
-                    <TextBlock Text="Tema:" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="4,0,8,0"/>
+                    <TextBlock Text="Tema:" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="4,0,8,0"/>
                     <ComboBox x:Name="ThemeCombo" Width="140" Margin="0,0,16,0" SelectionChanged="Theme_Changed"/>
                     <Button x:Name="OverlayToggleBtn" Visibility="Collapsed" Content="Buka Overlay" Click="ToggleOverlay_Click"
                             Style="{StaticResource PrimaryButton}" Padding="16,8" Margin="0,0,8,0"/>
@@ -442,7 +442,7 @@
                 </StackPanel>
 
                 <WrapPanel x:Name="BoardOptions" Grid.Row="1" Margin="0,0,0,12" Visibility="Collapsed">
-                    <TextBlock Text="Urutkan berdasarkan:" Foreground="{StaticResource MutedBrush}"
+                    <TextBlock Text="Urutkan berdasarkan:" Foreground="{DynamicResource MutedBrush}"
                                VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <ComboBox Width="150" SelectedIndex="0" SelectionChanged="SortCombo_Changed">
                         <ComboBoxItem Content="Diamonds"/>
@@ -451,19 +451,19 @@
                     <CheckBox x:Name="LoyalEnableCheck" Content="Alert penonton setia" Click="LoyalOption_Changed"
                               VerticalAlignment="Center" Margin="24,0,8,0"
                               ToolTip="Penonton yang hadir di beberapa LIVE atau total gift-nya besar diberi sambutan khusus."/>
-                    <TextBlock Text="hadir di" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="hadir di" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <TextBox x:Name="LoyalVisitsBox" Width="42" LostFocus="LoyalOption_Changed"/>
-                    <TextBlock Text="LIVE atau total" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="6,0,6,0"/>
+                    <TextBlock Text="LIVE atau total" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="6,0,6,0"/>
                     <TextBox x:Name="LoyalDiamondsBox" Width="70" LostFocus="LoyalOption_Changed"/>
-                    <TextBlock Text="diamond" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="6,0,8,0"/>
+                    <TextBlock Text="diamond" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="6,0,8,0"/>
                     <CheckBox x:Name="LoyalSpeakCheck" Content="Bacakan" Click="LoyalOption_Changed" VerticalAlignment="Center"/>
-                    <TextBlock Text="Gift besar mulai (diamond):" Foreground="{StaticResource MutedBrush}"
+                    <TextBlock Text="Gift besar mulai (diamond):" Foreground="{DynamicResource MutedBrush}"
                                VerticalAlignment="Center" Margin="24,0,8,0"/>
                     <TextBox x:Name="KindnessBigBox" Width="70" LostFocus="KindnessBig_LostFocus"
                              ToolTip="Gift sebesar ini memicu ucapan terima kasih besar di overlay Kebaikan Hati Penonton. 0 = mati."/>
                     <CheckBox x:Name="ChromaCheck" Content="Latar hijau (untuk chroma key)"
                               VerticalAlignment="Center" Margin="24,0,0,0" Click="ChromaCheck_Click"/>
-                    <TextBlock Text="Ukuran overlay menu gift:" Foreground="{StaticResource MutedBrush}"
+                    <TextBlock Text="Ukuran overlay menu gift:" Foreground="{DynamicResource MutedBrush}"
                                VerticalAlignment="Center" Margin="24,0,8,0"/>
                     <ComboBox x:Name="MenuScaleCombo" Width="250" SelectionChanged="MenuScale_Changed">
                         <ComboBoxItem Content="Kecil 864×480 (9×5 inci)"/>
@@ -483,18 +483,18 @@
                         <WrapPanel Margin="0,12,0,0">
                             <Button Content="−1" Click="ScoreMinus_Click" Padding="14,5" Margin="0,0,6,0"/>
                             <Button Content="+1" Click="ScorePlus_Click" Padding="14,5" Margin="0,0,16,0"/>
-                            <TextBlock Text="Atur skor ke:" Foreground="{StaticResource MutedBrush}"
+                            <TextBlock Text="Atur skor ke:" Foreground="{DynamicResource MutedBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBox x:Name="ScoreSetBox" Width="60" Margin="0,0,6,0"/>
                             <Button Content="Terapkan" Click="ScoreSet_Click" Padding="12,5" Margin="0,0,6,0"/>
                             <Button Content="Reset ke 0" Click="ScoreReset_Click" Style="{StaticResource DangerButton}" Padding="12,5"/>
                         </WrapPanel>
                         <WrapPanel Margin="0,10,0,0">
-                            <TextBlock Text="Target:" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Target:" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBox x:Name="ScoreTargetBox" Width="55" Margin="0,0,16,0"/>
-                            <TextBlock Text="Sampai puncak:  +" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Sampai puncak:  +" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                             <TextBox x:Name="ScoreWinBox" Width="45" Margin="0,0,16,0"/>
-                            <TextBlock Text="Mati:  −" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Mati:  −" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                             <TextBox x:Name="ScoreDeathBox" Width="45" Margin="0,0,10,0"/>
                             <Button Content="Simpan aturan" Click="ScoreRules_Click" Style="{StaticResource GhostButton}" Padding="12,5"/>
                         </WrapPanel>
@@ -503,9 +503,9 @@
 
                 <DataGrid x:Name="BoardGrid" Grid.Row="3"
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                          Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextBrush}"
-                          RowBackground="{StaticResource SurfaceBrush}"
-                          AlternatingRowBackground="{StaticResource Surface2Brush}"
+                          Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"
+                          RowBackground="{DynamicResource SurfaceBrush}"
+                          AlternatingRowBackground="{DynamicResource Surface2Brush}"
                           HeadersVisibility="Column" SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Peringkat" Binding="{Binding Rank}" Width="100"/>
@@ -527,11 +527,11 @@
                     <Border Style="{StaticResource Card}" Padding="20,16" Margin="0,0,16,0">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AccentBrush}" Margin="0,0,10,0"/>
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource AccentBrush}" Margin="0,0,10,0"/>
                                 <TextBlock Text="Daftar wheel" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                             </StackPanel>
                             <ListBox x:Name="WheelList" DisplayMemberPath="Name" Height="110" Margin="0,8,0,8"
-                                     Background="{StaticResource InputBrush}" Foreground="White" BorderThickness="0"
+                                     Background="{DynamicResource InputBrush}" Foreground="White" BorderThickness="0"
                                      SelectionChanged="WheelList_SelectionChanged"/>
                             <WrapPanel Margin="0,0,0,16">
                                 <Button Content="+ Wheel Baru" Click="WheelNew_Click" Style="{StaticResource PrimaryButton}" Padding="12,6" Margin="0,0,8,0"/>
@@ -540,17 +540,17 @@
                             </WrapPanel>
 
                             <StackPanel Orientation="Horizontal">
-                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource PinkBrush}" Margin="0,0,10,0"/>
                                 <TextBlock Text="Wheel terpilih" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                             </StackPanel>
-                            <TextBlock Text="Nama (tampil di atas roda)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
+                            <TextBlock Text="Nama (tampil di atas roda)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
                             <TextBox x:Name="WheelNameBox" LostFocus="WheelField_LostFocus" Margin="0,0,0,10"/>
 
-                            <TextBlock Text="Gift pemutar" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
+                            <TextBlock Text="Gift pemutar" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
                             <Button x:Name="WheelGiftBtn" Click="WheelPickGift_Click" Padding="10,7"
-                                    HorizontalContentAlignment="Stretch" Background="{StaticResource Raised2Brush}">
+                                    HorizontalContentAlignment="Stretch" Background="{DynamicResource Raised2Brush}">
                                 <DockPanel>
-                                    <TextBlock DockPanel.Dock="Right" Text="▾" Foreground="{StaticResource CyanBrush}" Margin="8,0,0,0"/>
+                                    <TextBlock DockPanel.Dock="Right" Text="▾" Foreground="{DynamicResource CyanBrush}" Margin="8,0,0,0"/>
                                     <TextBlock x:Name="WheelGiftText" Foreground="White" TextTrimming="CharacterEllipsis"/>
                                 </DockPanel>
                             </Button>
@@ -559,23 +559,23 @@
                             <CheckBox x:Name="WheelShuffleCheck" Click="WheelOption_Click" Margin="0,0,0,14"
                                       Content="Acak posisi isi di roda sebelum tiap putaran"/>
 
-                            <TextBlock Text="Lama roda berputar (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
+                            <TextBlock Text="Lama roda berputar (detik)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
                             <TextBox x:Name="WheelSecondsBox" Width="90" HorizontalAlignment="Left" LostFocus="WheelField_LostFocus"/>
-                            <TextBlock Text="Lama tombol hasil dijalankan (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
+                            <TextBlock Text="Lama tombol hasil dijalankan (detik)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,8,0,4"/>
                             <TextBox x:Name="WheelActionBox" Width="90" HorizontalAlignment="Left" Margin="0,0,0,16" LostFocus="WheelField_LostFocus"/>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource AmberBrush}" Margin="0,0,10,0"/>
                                 <TextBlock Text="Suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                             </StackPanel>
-                            <TextBlock Text="Suara saat roda berputar" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
+                            <TextBlock Text="Suara saat roda berputar" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBox x:Name="WheelSpinVolBox" DockPanel.Dock="Right" Width="52" Margin="6,0,0,0" ToolTip="Volume 1-200%" LostFocus="WheelField_LostFocus"/>
                                 <Button DockPanel.Dock="Right" Content="Hapus" Tag="spin" Click="WheelClearSound_Click" Style="{StaticResource GhostButton}" Padding="10,6" Margin="6,0,0,0"/>
                                 <Button DockPanel.Dock="Right" Content="Pilih..." Tag="spin" Click="WheelPickSound_Click" Style="{StaticResource GhostButton}" Padding="10,6" Margin="6,0,0,0"/>
                                 <TextBlock x:Name="WheelSpinSoundText" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                             </DockPanel>
-                            <TextBlock Text="Suara saat hasil keluar" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
+                            <TextBlock Text="Suara saat hasil keluar" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
                             <DockPanel Margin="0,0,0,16">
                                 <TextBox x:Name="WheelResultVolBox" DockPanel.Dock="Right" Width="52" Margin="6,0,0,0" ToolTip="Volume 1-200%" LostFocus="WheelField_LostFocus"/>
                                 <Button DockPanel.Dock="Right" Content="Hapus" Tag="result" Click="WheelClearSound_Click" Style="{StaticResource GhostButton}" Padding="10,6" Margin="6,0,0,0"/>
@@ -584,11 +584,11 @@
                             </DockPanel>
 
                             <StackPanel Orientation="Horizontal">
-                                <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
+                                <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource AmberBrush}" Margin="0,0,10,0"/>
                                 <TextBlock Text="Overlay" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                             </StackPanel>
                             <TextBlock Text="Semua roda memakai satu jendela &quot;Lucky Wheel Overlay&quot; yang selalu ada (tangkap sekali di TikTok Studio). Roda tak terlihat sampai gift pemutarnya masuk, lalu hilang setelah selesai."
-                                       Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,8"/>
+                                       Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,8"/>
                             <CheckBox x:Name="WheelAlwaysCheck" Click="WheelOption_Click" Margin="0,0,0,8"
                                       Content="Selalu tampil (tidak disembunyikan)"/>
                             <Button x:Name="WheelOverlayBtn" Content="Tampilkan / atur posisi" Click="ToggleWheelOverlay_Click"
@@ -610,14 +610,14 @@
                         <Button Content="Hapus Terpilih" Click="WheelDelete_Click" Style="{StaticResource DangerButton}" Padding="16,8" Margin="0,0,8,0"/>
                         <Button Content="🔀 Acak Urutan" Click="WheelShuffle_Click" Style="{StaticResource GhostButton}" Padding="16,8" Margin="0,0,8,0"/>
                         <TextBlock Text="Bobot lebih besar = lebih sering terpilih. Skor WIN: angka yang ditambahkan (atau dikurangi dengan minus) ke skor saat isi itu menang."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center"
                                    Margin="6,0,0,0" TextWrapping="Wrap" MaxWidth="360"/>
                     </StackPanel>
                     <DataGrid x:Name="WheelGrid" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False"
                               CellEditEnding="WheelGrid_CellEditEnding"
-                              Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextBrush}"
-                              RowBackground="{StaticResource SurfaceBrush}"
-                              AlternatingRowBackground="{StaticResource Surface2Brush}"
+                              Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"
+                              RowBackground="{DynamicResource SurfaceBrush}"
+                              AlternatingRowBackground="{DynamicResource Surface2Brush}"
                               HeadersVisibility="Column" SelectionMode="Single">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Isi roda (teks)" Binding="{Binding Text, UpdateSourceTrigger=LostFocus}" Width="*"/>
@@ -628,7 +628,7 @@
                                     <DataTemplate>
                                         <DockPanel Margin="4,2">
                                             <Button DockPanel.Dock="Right" Content="Atur..." Click="WheelPickKey_Click" Padding="10,3" Margin="4,0,0,0"/>
-                                            <TextBlock Text="{Binding KeyDisplay}" Foreground="{StaticResource SoftTextBrush}" VerticalAlignment="Center"
+                                            <TextBlock Text="{Binding KeyDisplay}" Foreground="{DynamicResource SoftTextBrush}" VerticalAlignment="Center"
                                                        TextTrimming="CharacterEllipsis"/>
                                         </DockPanel>
                                     </DataTemplate>
@@ -654,62 +654,62 @@
                           Click="TtsEnable_Click" FontSize="14" Margin="0,0,0,20"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource CyanBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <ComboBox x:Name="TtsVoiceBox" DisplayMemberPath="Label" SelectedValuePath="Name"
                           SelectionChanged="TtsVoice_Changed" Margin="0,8,0,10"/>
                 <StackPanel x:Name="TtsPitchPanel" Margin="0,0,0,18">
-                    <TextBlock Text="Tinggi nada suara Anime (makin tinggi makin imut)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBlock Text="Tinggi nada suara Anime (makin tinggi makin imut)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                     <DockPanel>
                         <TextBlock x:Name="TtsPitchLabel" DockPanel.Dock="Right" Width="52" TextAlignment="Right"
-                                   Foreground="{StaticResource CyanBrush}" FontWeight="SemiBold" Text="1.4x"/>
+                                   Foreground="{DynamicResource CyanBrush}" FontWeight="SemiBold" Text="1.4x"/>
                         <Slider x:Name="TtsPitchSlider" Minimum="1" Maximum="2" TickFrequency="0.05"
                                 IsSnapToTickEnabled="True" Value="1.4" ValueChanged="TtsPitch_Changed"/>
                     </DockPanel>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource PinkBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Kecepatan" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <DockPanel Margin="0,8,0,18">
                     <TextBlock x:Name="TtsRateLabel" DockPanel.Dock="Right" Width="52" TextAlignment="Right"
-                               Foreground="{StaticResource CyanBrush}" FontWeight="SemiBold" Text="0"/>
+                               Foreground="{DynamicResource CyanBrush}" FontWeight="SemiBold" Text="0"/>
                     <Slider x:Name="TtsRateSlider" Minimum="-10" Maximum="10" TickFrequency="1"
                             IsSnapToTickEnabled="True" ValueChanged="TtsRate_Changed"/>
                 </DockPanel>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource AmberBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Volume" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <DockPanel Margin="0,8,0,18">
                     <TextBlock x:Name="TtsVolumeLabel" DockPanel.Dock="Right" Width="52" TextAlignment="Right"
-                               Foreground="{StaticResource CyanBrush}" FontWeight="SemiBold" Text="100%"/>
+                               Foreground="{DynamicResource CyanBrush}" FontWeight="SemiBold" Text="100%"/>
                     <Slider x:Name="TtsVolumeSlider" Minimum="0" Maximum="100" TickFrequency="5"
                             IsSnapToTickEnabled="True" ValueChanged="TtsVolume_Changed"/>
                 </DockPanel>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource GreenBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource GreenBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Format bacaan" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <TextBlock Text="Pakai {user} untuk nama penonton dan {text} untuk isi komentar. Isi {text} saja kalau nama tidak perlu dibaca."
-                           Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
+                           Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                 <TextBox x:Name="TtsTemplateBox" LostFocus="TtsField_LostFocus" Margin="0,8,0,18"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource RoseBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource RoseBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Saring komentar" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <WrapPanel Margin="0,8,0,4">
                     <StackPanel Margin="0,0,16,8">
-                        <TextBlock Text="Panjang maks (karakter)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                        <TextBlock Text="Panjang maks (karakter)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                         <TextBox x:Name="TtsMaxCharsBox" Width="90" LostFocus="TtsField_LostFocus"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,8">
-                        <TextBlock Text="Antrean maks (komentar)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                        <TextBlock Text="Antrean maks (komentar)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                         <TextBox x:Name="TtsMaxQueueBox" Width="90" LostFocus="TtsField_LostFocus"/>
                     </StackPanel>
                 </WrapPanel>
@@ -719,7 +719,7 @@
                           Click="TtsOption_Click" Margin="0,0,0,18"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource BlueBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource BlueBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Uji suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <TextBox x:Name="TtsTestBox" Text="Halo, ini tes suara." Margin="0,8,0,8"/>
@@ -747,17 +747,17 @@
         <DockPanel Grid.Row="0" Margin="0,0,0,6">
             <Button DockPanel.Dock="Right" Content="Bersihkan" Click="ClearChatLog_Click"
                     Style="{StaticResource GhostButton}" Padding="12,5"/>
-            <Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource CyanBrush}"
+            <Border Width="4" Height="18" CornerRadius="2" Background="{DynamicResource CyanBrush}"
                     Margin="0,0,10,0" VerticalAlignment="Center"/>
             <TextBlock Text="Komentar Terakhir" Foreground="White" FontSize="16"
                        FontWeight="SemiBold" VerticalAlignment="Center"/>
         </DockPanel>
 
-        <TextBlock x:Name="TtsStatus" Grid.Row="1" Foreground="{StaticResource MutedBrush}"
+        <TextBlock x:Name="TtsStatus" Grid.Row="1" Foreground="{DynamicResource MutedBrush}"
                    FontSize="12" Margin="14,0,0,10" TextTrimming="CharacterEllipsis"/>
 
-        <ListBox x:Name="ChatList" Grid.Row="2" Background="{StaticResource SurfaceBrush}"
-                 Foreground="{StaticResource SoftTextBrush}" BorderThickness="0" FontFamily="Consolas" FontSize="12"
+        <ListBox x:Name="ChatList" Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+                 Foreground="{DynamicResource SoftTextBrush}" BorderThickness="0" FontFamily="Consolas" FontSize="12"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -782,48 +782,48 @@
                 <CheckBox x:Name="AiEnableCheck" Content="Jawab komentar otomatis dengan AI"
                           Click="AiEnable_Click" FontSize="14" Margin="0,0,0,4"/>
                 <TextBlock Text="Saklar ini selalu mati saat aplikasi dibuka, karena setiap komentar memakai API berbayar."
-                           Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,20"/>
+                           Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,20"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource AmberBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="API key (Claude atau Gemini)" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <TextBlock Text="Claude: buat di console.anthropic.com, model contoh claude-haiku-5-5. Gemini: buat di aistudio.google.com, lalu isi Model dengan nama berawalan gemini (contoh gemini-2.5-flash). Satu kunci saja, sesuai model yang dipilih. Kunci disimpan di komputer ini sebagai teks biasa; jangan tampilkan layar ini saat siaran."
-                           Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
+                           Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                 <PasswordBox x:Name="AiKeyBox" LostFocus="AiField_LostFocus" Margin="0,8,0,18" Padding="8,6"
-                             Background="{StaticResource InputBrush}" Foreground="{StaticResource TextBrush}" BorderBrush="{StaticResource LineBrush}"/>
+                             Background="{DynamicResource InputBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource LineBrush}"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource CyanBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Model" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <TextBox x:Name="AiModelBox" LostFocus="AiField_LostFocus" Margin="0,8,0,18"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource PinkBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Kepribadian AI" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <TextBlock Text="Ceritakan siapa kamu dan tentang apa siaranmu, supaya jawaban AI nyambung."
-                           Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
+                           Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                 <TextBox x:Name="AiPersonaBox" LostFocus="AiField_LostFocus" AcceptsReturn="True"
                          TextWrapping="Wrap" Height="120" VerticalContentAlignment="Top"
                          VerticalScrollBarVisibility="Auto" Margin="0,8,0,18"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource GreenBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource GreenBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Batas dan biaya" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <WrapPanel Margin="0,8,0,4">
                     <StackPanel Margin="0,0,16,8">
-                        <TextBlock Text="Jeda antar jawaban (detik)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                        <TextBlock Text="Jeda antar jawaban (detik)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                         <TextBox x:Name="AiCooldownBox" Width="90" LostFocus="AiField_LostFocus"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,16,8">
-                        <TextBlock Text="Antrean maks (komentar)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                        <TextBlock Text="Antrean maks (komentar)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                         <TextBox x:Name="AiMaxPendingBox" Width="90" LostFocus="AiField_LostFocus"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,8">
-                        <TextBlock Text="Panjang jawaban (karakter)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                        <TextBlock Text="Panjang jawaban (karakter)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                         <TextBox x:Name="AiMaxCharsBox" Width="90" LostFocus="AiField_LostFocus"/>
                     </StackPanel>
                 </WrapPanel>
@@ -834,23 +834,23 @@
                 <CheckBox x:Name="AiReactCheck" Content="Beri reaksi otomatis pada kejadian di game (mati, sampai puncak, hasil roda, gift, zombie)"
                           Click="AiOption_Click" Margin="0,0,0,8"/>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
-                    <TextBlock Text="Jeda minimal antar reaksi (detik):" Foreground="{StaticResource MutedBrush}"
+                    <TextBlock Text="Jeda minimal antar reaksi (detik):" Foreground="{DynamicResource MutedBrush}"
                                VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBox x:Name="AiReactCooldownBox" Width="70" LostFocus="AiField_LostFocus"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource BlueBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource BlueBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Suara" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <CheckBox x:Name="AiSpeakCheck" Content="Bacakan jawaban AI dengan suara"
                           Click="AiOption_Click" Margin="0,8,0,8"/>
                 <TextBlock Text="Format ucapan: {user} = nama penonton, {text} = jawaban AI."
-                           Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
+                           Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,4"/>
                 <TextBox x:Name="AiTemplateBox" LostFocus="AiField_LostFocus" Margin="0,0,0,18"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource RoseBrush}" Margin="0,0,10,0"/>
+                    <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource RoseBrush}" Margin="0,0,10,0"/>
                     <TextBlock Text="Uji AI" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                 </StackPanel>
                 <TextBox x:Name="AiTestBox" Text="Halo, kamu siapa?" Margin="0,8,0,8"/>
@@ -875,17 +875,17 @@
         <DockPanel Grid.Row="0" Margin="0,0,0,6">
             <Button DockPanel.Dock="Right" Content="Bersihkan" Click="ClearAiLog_Click"
                     Style="{StaticResource GhostButton}" Padding="12,5"/>
-            <Border Width="4" Height="18" CornerRadius="2" Background="{StaticResource AmberBrush}"
+            <Border Width="4" Height="18" CornerRadius="2" Background="{DynamicResource AmberBrush}"
                     Margin="0,0,10,0" VerticalAlignment="Center"/>
             <TextBlock Text="Tanya Jawab" Foreground="White" FontSize="16"
                        FontWeight="SemiBold" VerticalAlignment="Center"/>
         </DockPanel>
 
-        <TextBlock x:Name="AiStatus" Grid.Row="1" Foreground="{StaticResource MutedBrush}"
+        <TextBlock x:Name="AiStatus" Grid.Row="1" Foreground="{DynamicResource MutedBrush}"
                    FontSize="12" Margin="14,0,0,10" TextTrimming="CharacterEllipsis"/>
 
-        <ListBox x:Name="AiList" Grid.Row="2" Background="{StaticResource SurfaceBrush}"
-                 Foreground="{StaticResource SoftTextBrush}" BorderThickness="0" FontFamily="Consolas" FontSize="12"
+        <ListBox x:Name="AiList" Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+                 Foreground="{DynamicResource SoftTextBrush}" BorderThickness="0" FontFamily="Consolas" FontSize="12"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -903,56 +903,56 @@
                     <StackPanel>
 
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
+                            <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource PinkBrush}" Margin="0,0,10,0"/>
                             <TextBlock Text="Tema aplikasi" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
                         <TextBlock Text="Warna tampilan jendela ini. Tidak mengubah tema overlay."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                         <ComboBox x:Name="AppThemeCombo" Width="220" HorizontalAlignment="Left" Margin="0,8,0,22"
                                   SelectionChanged="AppTheme_Changed"/>
 
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
+                            <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource CyanBrush}" Margin="0,0,10,0"/>
                             <TextBlock Text="Akun TikTok" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
                         <TextBlock Text="Nama pengguna tanpa @. Dipakai saat menghubungkan ke LIVE."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                         <TextBox x:Name="UsernameBox" Margin="0,8,0,8"/>
                         <CheckBox x:Name="AutoConnectCheck" Click="AutoConnect_Click" Margin="0,0,0,22"
                                   Content="Hubungkan otomatis saat LIVE dimulai (dicoba tiap 20 detik)"/>
 
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource AmberBrush}" Margin="0,0,10,0"/>
+                            <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource AmberBrush}" Margin="0,0,10,0"/>
                             <TextBlock Text="API key TikTools (opsional)" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
                         <TextBlock Text="Tidak wajib. Kunci disimpan di komputer ini dalam bentuk teks biasa; jangan tampilkan layar ini saat siaran."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                         <PasswordBox x:Name="ApiKeyBox" Margin="0,8,0,22" Padding="8,6"
-                                     Background="{StaticResource InputBrush}" Foreground="{StaticResource TextBrush}" BorderBrush="{StaticResource LineBrush}"/>
+                                     Background="{DynamicResource InputBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource LineBrush}"/>
 
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource GreenBrush}" Margin="0,0,10,0"/>
+                            <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource GreenBrush}" Margin="0,0,10,0"/>
                             <TextBlock Text="Tunda uji tombol (detik)" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
                         <TextBlock Text="Hanya untuk gift simulasi, memberi waktu berpindah ke jendela lain. Gift asli dari TikTok tidak ditunda."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                         <TextBox x:Name="SimDelayBox" Width="80" HorizontalAlignment="Left" Margin="0,8,0,22"/>
 
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource GreenBrush}" Margin="0,0,10,0"/>
+                            <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource GreenBrush}" Margin="0,0,10,0"/>
                             <TextBlock Text="Update aplikasi" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
-                        <TextBlock x:Name="UpdateVersionText" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,2,0,6"/>
-                        <TextBlock Text="Repo GitHub (pemilik/nama-repo)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,2"/>
+                        <TextBlock x:Name="UpdateVersionText" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,2,0,6"/>
+                        <TextBlock Text="Repo GitHub (pemilik/nama-repo)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,0,0,2"/>
                         <TextBox x:Name="UpdateRepoBox" Width="300" HorizontalAlignment="Left" Margin="0,0,0,6"/>
-                        <TextBlock Text="Token GitHub (hanya kalau repo private, boleh kosong)" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,2"/>
+                        <TextBlock Text="Token GitHub (hanya kalau repo private, boleh kosong)" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="14,0,0,2"/>
                         <PasswordBox x:Name="UpdateTokenBox" Width="300" HorizontalAlignment="Left" Margin="0,0,0,8"/>
                         <Button x:Name="UpdateButton" Content="Cek &amp; Update" Click="CheckUpdate_Click"
                                 Style="{StaticResource PrimaryButton}" Padding="18,8" HorizontalAlignment="Left"/>
-                        <TextBlock x:Name="UpdateStatus" Foreground="{StaticResource GreenBrush}" FontSize="12" Margin="0,8,0,22" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="UpdateStatus" Foreground="{DynamicResource GreenBrush}" FontSize="12" Margin="0,8,0,22" TextWrapping="Wrap"/>
 
                         <TextBlock Text="Catatan: saklar &quot;Aktifkan aksi keyboard&quot; di Dashboard tidak disimpan dan selalu mati saat aplikasi dibuka, demi keamanan."
-                                   Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,18"/>
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,18"/>
 
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Simpan Pengaturan" Click="SaveSettings_Click"
@@ -960,7 +960,7 @@
                             <Button Content="Buka Folder Data" Click="OpenDataFolder_Click"
                                     Style="{StaticResource GhostButton}" Padding="16,8"/>
                         </StackPanel>
-                        <TextBlock x:Name="SettingsStatus" Foreground="{StaticResource GreenBrush}"
+                        <TextBlock x:Name="SettingsStatus" Foreground="{DynamicResource GreenBrush}"
                                    FontSize="12" Margin="0,10,0,0"/>
                     </StackPanel>
                 </Border>
@@ -973,9 +973,9 @@
                             Click="ToggleConnect_Click" Style="{StaticResource GoButton}" Padding="18,7"/>
                     <Button DockPanel.Dock="Right" Content="Ringkasan" Click="ShowSummary_Click"
                             Style="{StaticResource GhostButton}" Padding="14,7" Margin="0,0,8,0"/>
-                    <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource AmberBrush}"
+                    <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{DynamicResource AmberBrush}"
                              VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBlock x:Name="StatusText" Foreground="{StaticResource TextBrush}" FontSize="13"
+                    <TextBlock x:Name="StatusText" Foreground="{DynamicResource TextBrush}" FontSize="13"
                                VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                Text="TikTok: belum terhubung"/>
                 </DockPanel>

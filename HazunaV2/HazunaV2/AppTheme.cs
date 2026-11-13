@@ -59,13 +59,18 @@ public static class AppTheme
 
     static void Set(string key, Color c)
     {
-        if (Application.Current.Resources[key] is SolidColorBrush b && !b.IsFrozen) b.Color = c;
+        // Brush diganti baru (bukan diubah) karena brush dari Theme.xaml bisa beku; XAML memakai DynamicResource.
+        Application.Current.Resources[key] = new SolidColorBrush(c);
     }
 
     static void SetStops(string key, params Color[] colors)
     {
-        if (Application.Current.Resources[key] is GradientBrush g && !g.IsFrozen)
+        if (Application.Current.TryFindResource(key) is GradientBrush src)
+        {
+            var g = src.Clone();
             for (int i = 0; i < colors.Length && i < g.GradientStops.Count; i++) g.GradientStops[i].Color = colors[i];
+            Application.Current.Resources[key] = g;
+        }
     }
 
     public static void Set(string name)
