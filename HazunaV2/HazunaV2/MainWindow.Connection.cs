@@ -29,6 +29,7 @@ public partial class MainWindow
         });
         _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => OnLiveChat(chat));
         _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => OnChatForAi(chat));
+        _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => OnSongRequestChat(chat));
         _connector.ChatReceived += chat => Dispatcher.InvokeAsync(() => NoteChat(chat));
         _connector.CatalogLoaded += list => Dispatcher.InvokeAsync(() => OnCatalog(list));
 

@@ -18,6 +18,7 @@ public partial class MainWindow
         SimDelayBox.Text = _settings.SimDelaySeconds.ToString();
         ChromaCheck.IsChecked = _settings.OverlayChromaKey;
         AutoShowCheck.IsChecked = _settings.AutoShowOverlays;
+        ShowSongReqSettings();
         KindnessBigBox.Text = _settings.KindnessBigGift.ToString();
         LoyalEnableCheck.IsChecked = _settings.LoyalEnabled;
         LoyalSpeakCheck.IsChecked = _settings.LoyalSpeak;

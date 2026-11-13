@@ -911,6 +911,29 @@
                                   SelectionChanged="AppTheme_Changed"/>
 
                         <StackPanel Orientation="Horizontal">
+                            <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource GreenBrush}" Margin="0,0,10,0"/>
+                            <TextBlock Text="Permintaan lagu dari chat" Foreground="{DynamicResource TextBrush}" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <TextBlock Text="Penonton mengetik perintah lalu judul, misalnya &quot;!lagu nama suara&quot;. Yang bisa diminta: semua item jenis Suara di Media &amp; Sounds."
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,6"/>
+                        <CheckBox x:Name="SongReqCheck" Content="Aktifkan permintaan lagu" Click="SongReq_Changed" Margin="0,0,0,8"/>
+                        <WrapPanel Margin="0,0,0,6">
+                            <TextBlock Text="Perintah" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="SongReqCmdBox" Width="90" LostFocus="SongReq_Changed" Margin="0,0,18,6"/>
+                            <TextBlock Text="Jeda per orang (detik)" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="SongReqUserBox" Width="50" LostFocus="SongReq_Changed" Margin="0,0,18,6"/>
+                            <TextBlock Text="Jeda umum (detik)" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="SongReqGlobalBox" Width="50" LostFocus="SongReq_Changed" Margin="0,0,18,6"/>
+                            <TextBlock Text="Volume (%)" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="SongReqVolumeBox" Width="50" LostFocus="SongReq_Changed" Margin="0,0,18,6"/>
+                            <TextBlock Text="Maks. putar (detik, 0 = penuh)" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="SongReqMaxBox" Width="50" LostFocus="SongReq_Changed" Margin="0,0,0,6"/>
+                        </WrapPanel>
+                        <Button Content="Salin daftar perintah" Click="SongReqCopyList_Click"
+                                Style="{StaticResource GhostButton}" Padding="14,7" HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="SongReqStatus" Foreground="{DynamicResource GreenBrush}" FontSize="12" Margin="0,6,0,22"/>
+
+                        <StackPanel Orientation="Horizontal">
                             <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource CyanBrush}" Margin="0,0,10,0"/>
                             <TextBlock Text="Akun TikTok" Foreground="{DynamicResource TextBrush}" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>

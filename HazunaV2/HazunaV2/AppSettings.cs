@@ -50,6 +50,12 @@ public class AppSettings
     public int LoyalDiamonds { get; set; } = 500;         // atau total diamond sebesar ini (0 = abaikan)
     public bool LoyalSpeak { get; set; } = true;
     public int KindnessBigGift { get; set; } = 100;      // gift dengan total diamond sebesar ini memicu ucapan terima kasih besar (0 = mati)
+    public bool SongReqEnabled { get; set; } = true;
+    public string SongReqCommand { get; set; } = "!lagu";
+    public int SongReqUserCooldown { get; set; } = 60;
+    public int SongReqGlobalCooldown { get; set; } = 10;
+    public int SongReqVolume { get; set; } = 80;
+    public int SongReqMaxSeconds { get; set; } = 45;
     public bool AutoShowOverlays { get; set; } = true;
     public string OverlayTheme { get; set; } = "Neon Ungu";
     public string AppTheme { get; set; } = "Navy Ungu (bawaan)";

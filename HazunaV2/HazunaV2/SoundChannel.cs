@@ -11,6 +11,8 @@ public sealed class SoundChannel
 
     public event Action<string>? Error;
 
+    public bool IsPlaying { get { lock (_gate) return _output != null; } }
+
     public void Play(string path, int percent)
     {
         Stop();
