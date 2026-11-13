@@ -10,7 +10,26 @@ public static class AppTheme
 {
     // H = hue warna netral (null = tidak diubah), S/V = pengali kejenuhan/kecerahan netral.
     public sealed record Def(string Name, double? H, double S, double V,
-        string Accent, string AccentDeep, string Secondary, string GradA, string GradB);
+        string Accent, string AccentDeep, string Secondary, string GradA, string GradB,
+        System.Collections.Generic.Dictionary<string, string>? Map = null);
+
+    static readonly System.Collections.Generic.Dictionary<string, string> DarkMap = new()
+    {
+        ["#0B0F1E"] = "#0F0F10", ["#131A2E"] = "#171718", ["#171F38"] = "#1B1B1D", ["#0E1424"] = "#0C0C0D",
+        ["#1E2846"] = "#262628", ["#2A3560"] = "#35353A", ["#2B3760"] = "#333338", ["#EEF2FF"] = "#F2F2F3",
+        ["#A5B0D0"] = "#A8A8B0", ["#222E58"] = "#2E2E32", ["#3A4680"] = "#46464C", ["#C9D2F5"] = "#D0D0D6",
+        ["#8C97C2"] = "#8E8E96", ["#1A2242"] = "#212123", ["#252E5C"] = "#2A2A2E", ["#27336A"] = "#303034",
+        ["#1B2449"] = "#222225", ["#1C1456"] = "#1A1A1C", ["#101437"] = "#131315",
+    };
+
+    static readonly System.Collections.Generic.Dictionary<string, string> LightMap = new()
+    {
+        ["#0B0F1E"] = "#F3F5FA", ["#131A2E"] = "#FFFFFF", ["#171F38"] = "#F7F8FC", ["#0E1424"] = "#FFFFFF",
+        ["#1E2846"] = "#E8ECF5", ["#2A3560"] = "#DDE3F0", ["#2B3760"] = "#CBD3E4", ["#EEF2FF"] = "#1B2238",
+        ["#A5B0D0"] = "#5B6680", ["#222E58"] = "#E6EBF7", ["#3A4680"] = "#B8C1D8", ["#C9D2F5"] = "#2E3A5C",
+        ["#8C97C2"] = "#6B7694", ["#1A2242"] = "#EDF0F8", ["#252E5C"] = "#D5DCEB", ["#27336A"] = "#E3E8F5",
+        ["#1B2449"] = "#D8DFEF", ["#1C1456"] = "#E9E4FF", ["#101437"] = "#EEF0FA",
+    };
 
     public static readonly Def[] All =
     {
@@ -19,6 +38,8 @@ public static class AppTheme
         new("Samudra",            200, 1.0, 1.0, "#22D3EE", "#0E7490", "#38BDF8", "#0891B2", "#2563EB"),
         new("Hutan",              150, 0.85, 0.95, "#34D399", "#047857", "#A3E635", "#059669", "#0D9488"),
         new("Sakura Gelap",       330, 0.8, 1.0, "#F472B6", "#9D174D", "#FBCFE8", "#DB2777", "#9333EA"),
+        new("Gelap",              null, 1.0, 1.0, "#3B82F6", "#1E40AF", "#22D3EE", "#2563EB", "#7C3AED", DarkMap),
+        new("Terang",             null, 1.0, 1.0, "#7C3AED", "#5B21B6", "#0891B2", "#7C3AED", "#3B82F6", LightMap),
         new("Senja",              20, 0.8, 1.0, "#FB923C", "#9A3412", "#FBBF24", "#EA580C", "#DB2777"),
     };
 
@@ -52,6 +73,7 @@ public static class AppTheme
     static Color Neutral(string baseHex, Def t)
     {
         var c = C(baseHex);
+        if (t.Map is not null && t.Map.TryGetValue(baseHex.ToUpperInvariant(), out var mapped)) return C(mapped);
         if (t.H is null && t.S == 1.0 && t.V == 1.0) return c;
         ToHsv(c, out var h, out var s, out var v);
         return FromHsv(t.H ?? h, s * t.S, v * t.V, c.A);
@@ -101,6 +123,7 @@ public static class AppTheme
         SetStops("CardBorderBrush", Color.FromArgb(0x66, accent.R, accent.G, accent.B),
                  Color.FromArgb(0x55, C(t.Secondary).R, C(t.Secondary).G, C(t.Secondary).B));
         SetStops("HeaderGradient", N("#27336A"), N("#1B2449"));
+        SetStops("TitleGradient", N("#EEF2FF"), accent);
         SetStops("SidebarBrush", N("#1C1456"), N("#101437"), N("#0B0F1E"));
         SetStops("GlowBrush", Color.FromArgb(0x46, accent.R, accent.G, accent.B),
                  Color.FromArgb(0x00, accent.R, accent.G, accent.B));

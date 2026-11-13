@@ -57,6 +57,10 @@
     <SolidColorBrush x:Key="Muted2Brush" Color="#8C97C2"/>
     <SolidColorBrush x:Key="Raised2Brush" Color="#1A2242"/>
     <SolidColorBrush x:Key="SideLineBrush" Color="#252E5C"/>
+    <LinearGradientBrush x:Key="TitleGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#C4B5FD" Offset="1"/>
+    </LinearGradientBrush>
     <LinearGradientBrush x:Key="SidebarBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="#1C1456" Offset="0"/>
         <GradientStop Color="#101437" Offset="0.5"/>
@@ -108,7 +112,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"/>
-                        <Border x:Name="Overlay" CornerRadius="8" Background="White"
+                        <Border x:Name="Overlay" CornerRadius="8" Background="{DynamicResource TextBrush}"
                                 Opacity="0" IsHitTestVisible="False"/>
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -633,7 +637,7 @@
                 <ControlTemplate TargetType="RadioButton">
                     <Grid Background="Transparent" ClipToBounds="True">
                         <Border x:Name="ActiveBg" CornerRadius="10" Background="{TemplateBinding Background}" Opacity="0"/>
-                        <Border x:Name="HoverBg" CornerRadius="10" Background="White" Opacity="0"/>
+                        <Border x:Name="HoverBg" CornerRadius="10" Background="{DynamicResource TextBrush}" Opacity="0"/>
                         <Border x:Name="Bar" Width="4" Height="22" CornerRadius="2"
                                 Background="{TemplateBinding Background}"
                                 HorizontalAlignment="Left" Margin="2,0,0,0" Opacity="0"/>
@@ -667,7 +671,7 @@
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
