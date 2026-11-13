@@ -20,22 +20,15 @@
         <!-- Cahaya warna di latar -->
         <Rectangle Grid.ColumnSpan="2" IsHitTestVisible="False">
             <Rectangle.Fill>
-                <RadialGradientBrush Center="0.2,0.0" GradientOrigin="0.2,0.0" RadiusX="0.65" RadiusY="0.6">
-                    <GradientStop Color="#468B5CF6" Offset="0"/>
-                    <GradientStop Color="#008B5CF6" Offset="1"/>
-                </RadialGradientBrush>
+                <StaticResource ResourceKey="GlowBrush"/>
             </Rectangle.Fill>
         </Rectangle>
 
         <!-- ================= SIDEBAR ================= -->
                 <Border x:Name="Sidebar" Grid.Column="0" Width="230" ClipToBounds="True"
-                BorderBrush="#252E5C" BorderThickness="0,0,1,0">
+                BorderBrush="{StaticResource SideLineBrush}" BorderThickness="0,0,1,0">
             <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#1C1456" Offset="0"/>
-                    <GradientStop Color="#101437" Offset="0.5"/>
-                    <GradientStop Color="#0B0F1E" Offset="1"/>
-                </LinearGradientBrush>
+                <StaticResource ResourceKey="SidebarBrush"/>
             </Border.Background>
             <DockPanel>
                 <!-- Logo + judul -->
@@ -59,7 +52,7 @@
                                 </LinearGradientBrush>
                             </TextBlock.Foreground>
                         </TextBlock>
-                        <TextBlock Text="LIVE Control" Foreground="#8C97C2" FontSize="12"/>
+                        <TextBlock Text="LIVE Control" Foreground="{StaticResource Muted2Brush}" FontSize="12"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -76,7 +69,7 @@
                 </Button>
 
                 <StackPanel x:Name="NavPanel">
-                    <RadioButton Content="Dashboard" Tag="Dashboard" GroupName="Nav" Background="#22D3EE"
+                    <RadioButton Content="Dashboard" Tag="Dashboard" GroupName="Nav" Background="{StaticResource CyanBrush}"
                                  local:NavIcon.Data="{StaticResource IconDashboard}"
                                  Style="{StaticResource NavItem}" Click="Nav_Click"/>
                     <RadioButton Content="Gift Rules" Tag="Gift Rules" GroupName="Nav" Background="#A78BFA"
@@ -215,7 +208,7 @@
                                    TextTrimming="CharacterEllipsis"/>
                     </DockPanel>
                     <ListBox x:Name="LogList" Grid.Row="1" Background="{StaticResource SurfaceBrush}"
-                             Foreground="#C9D2F5" BorderThickness="0"
+                             Foreground="{StaticResource SoftTextBrush}" BorderThickness="0"
                              FontFamily="Consolas" FontSize="12"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
@@ -261,7 +254,7 @@
                                                 CanUserSort="False" CanUserReorder="False" CanUserResize="False">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="☰" FontSize="18" Foreground="#8C97C2" Background="Transparent"
+                                    <TextBlock Text="☰" FontSize="18" Foreground="{StaticResource Muted2Brush}" Background="Transparent"
                                                Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Cursor="SizeAll" ToolTip="Tahan dan geser untuk mengubah urutan"
                                                PreviewMouseLeftButtonDown="RuleHandle_Down" PreviewMouseMove="RuleHandle_Move"/>
@@ -284,7 +277,7 @@
                                     <StackPanel Margin="8,5" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding SourceText}" Foreground="White" FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding DetailText}" Foreground="#8C97C2" FontSize="11"
+                                        <TextBlock Text="{Binding DetailText}" Foreground="{StaticResource Muted2Brush}" FontSize="11"
                                                    TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -309,12 +302,12 @@
                                                     Padding="10,2" Margin="4,0,0,0" ToolTip="Tes suara saja"/>
                                             <Button DockPanel.Dock="Right" Content="Pilih..." Click="PickSound_Click"
                                                     Padding="10,2"/>
-                                            <TextBlock Text="{Binding SoundName}" Foreground="#C9D2F5"
+                                            <TextBlock Text="{Binding SoundName}" Foreground="{StaticResource SoftTextBrush}"
                                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                        Margin="0,0,8,0"/>
                                         </DockPanel>
                                         <DockPanel Margin="0,3,0,0">
-                                            <TextBlock DockPanel.Dock="Right" Text="%" Foreground="#22D3EE"
+                                            <TextBlock DockPanel.Dock="Right" Text="%" Foreground="{StaticResource CyanBrush}"
                                                        VerticalAlignment="Center" Margin="2,0,0,0"/>
                                             <TextBox DockPanel.Dock="Right" Width="48" Padding="3,1" TextAlignment="Right"
                                                      VerticalContentAlignment="Center"
@@ -555,9 +548,9 @@
 
                             <TextBlock Text="Gift pemutar" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="14,0,0,4"/>
                             <Button x:Name="WheelGiftBtn" Click="WheelPickGift_Click" Padding="10,7"
-                                    HorizontalContentAlignment="Stretch" Background="#1A2242">
+                                    HorizontalContentAlignment="Stretch" Background="{StaticResource Raised2Brush}">
                                 <DockPanel>
-                                    <TextBlock DockPanel.Dock="Right" Text="▾" Foreground="#22D3EE" Margin="8,0,0,0"/>
+                                    <TextBlock DockPanel.Dock="Right" Text="▾" Foreground="{StaticResource CyanBrush}" Margin="8,0,0,0"/>
                                     <TextBlock x:Name="WheelGiftText" Foreground="White" TextTrimming="CharacterEllipsis"/>
                                 </DockPanel>
                             </Button>
@@ -635,7 +628,7 @@
                                     <DataTemplate>
                                         <DockPanel Margin="4,2">
                                             <Button DockPanel.Dock="Right" Content="Atur..." Click="WheelPickKey_Click" Padding="10,3" Margin="4,0,0,0"/>
-                                            <TextBlock Text="{Binding KeyDisplay}" Foreground="#C9D2F5" VerticalAlignment="Center"
+                                            <TextBlock Text="{Binding KeyDisplay}" Foreground="{StaticResource SoftTextBrush}" VerticalAlignment="Center"
                                                        TextTrimming="CharacterEllipsis"/>
                                         </DockPanel>
                                     </DataTemplate>
@@ -764,7 +757,7 @@
                    FontSize="12" Margin="14,0,0,10" TextTrimming="CharacterEllipsis"/>
 
         <ListBox x:Name="ChatList" Grid.Row="2" Background="{StaticResource SurfaceBrush}"
-                 Foreground="#C9D2F5" BorderThickness="0" FontFamily="Consolas" FontSize="12"
+                 Foreground="{StaticResource SoftTextBrush}" BorderThickness="0" FontFamily="Consolas" FontSize="12"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -798,7 +791,7 @@
                 <TextBlock Text="Claude: buat di console.anthropic.com, model contoh claude-haiku-5-5. Gemini: buat di aistudio.google.com, lalu isi Model dengan nama berawalan gemini (contoh gemini-2.5-flash). Satu kunci saja, sesuai model yang dipilih. Kunci disimpan di komputer ini sebagai teks biasa; jangan tampilkan layar ini saat siaran."
                            Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                 <PasswordBox x:Name="AiKeyBox" LostFocus="AiField_LostFocus" Margin="0,8,0,18" Padding="8,6"
-                             Background="#0E1424" Foreground="#EEF2FF" BorderBrush="#2B3760"/>
+                             Background="{StaticResource InputBrush}" Foreground="{StaticResource TextBrush}" BorderBrush="{StaticResource LineBrush}"/>
 
                 <StackPanel Orientation="Horizontal">
                     <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
@@ -892,7 +885,7 @@
                    FontSize="12" Margin="14,0,0,10" TextTrimming="CharacterEllipsis"/>
 
         <ListBox x:Name="AiList" Grid.Row="2" Background="{StaticResource SurfaceBrush}"
-                 Foreground="#C9D2F5" BorderThickness="0" FontFamily="Consolas" FontSize="12"
+                 Foreground="{StaticResource SoftTextBrush}" BorderThickness="0" FontFamily="Consolas" FontSize="12"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -908,6 +901,15 @@
                           Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                 <Border Style="{StaticResource Card}" MaxWidth="620" HorizontalAlignment="Left" Padding="24,20">
                     <StackPanel>
+
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource PinkBrush}" Margin="0,0,10,0"/>
+                            <TextBlock Text="Tema aplikasi" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <TextBlock Text="Warna tampilan jendela ini. Tidak mengubah tema overlay."
+                                   Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
+                        <ComboBox x:Name="AppThemeCombo" Width="220" HorizontalAlignment="Left" Margin="0,8,0,22"
+                                  SelectionChanged="AppTheme_Changed"/>
 
                         <StackPanel Orientation="Horizontal">
                             <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource CyanBrush}" Margin="0,0,10,0"/>
@@ -926,7 +928,7 @@
                         <TextBlock Text="Tidak wajib. Kunci disimpan di komputer ini dalam bentuk teks biasa; jangan tampilkan layar ini saat siaran."
                                    Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,0"/>
                         <PasswordBox x:Name="ApiKeyBox" Margin="0,8,0,22" Padding="8,6"
-                                     Background="#0E1424" Foreground="#EEF2FF" BorderBrush="#2B3760"/>
+                                     Background="{StaticResource InputBrush}" Foreground="{StaticResource TextBrush}" BorderBrush="{StaticResource LineBrush}"/>
 
                         <StackPanel Orientation="Horizontal">
                             <Border Width="4" Height="16" CornerRadius="2" Background="{StaticResource GreenBrush}" Margin="0,0,10,0"/>
@@ -971,7 +973,7 @@
                             Click="ToggleConnect_Click" Style="{StaticResource GoButton}" Padding="18,7"/>
                     <Button DockPanel.Dock="Right" Content="Ringkasan" Click="ShowSummary_Click"
                             Style="{StaticResource GhostButton}" Padding="14,7" Margin="0,0,8,0"/>
-                    <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="#FBBF24"
+                    <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource AmberBrush}"
                              VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBlock x:Name="StatusText" Foreground="{StaticResource TextBrush}" FontSize="13"
                                VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
@@ -980,4 +982,4 @@
             </Border>
         </Grid>
     </Grid>
-</Window>
+</Window>

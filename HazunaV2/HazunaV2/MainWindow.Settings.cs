@@ -24,6 +24,9 @@ public partial class MainWindow
         LoyalDiamondsBox.Text = _settings.LoyalDiamonds.ToString();
         InitLoyal();
 
+        HazunaV2.AppTheme.Set(_settings.AppTheme);
+        foreach (var t in HazunaV2.AppTheme.All) AppThemeCombo.Items.Add(t.Name);
+        AppThemeCombo.SelectedItem = HazunaV2.AppTheme.Current.Name;
         OverlayTheme.Set(_settings.OverlayTheme);
         GiftMenuOverlay.ReloadTheme();
         foreach (var t in OverlayTheme.All) ThemeCombo.Items.Add(t.Name);
@@ -94,5 +97,13 @@ public partial class MainWindow
         {
             MessageBox.Show("Gagal membuka folder:\n" + ex.Message);
         }
+    }
+
+    private void AppTheme_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_settingsReady || AppThemeCombo.SelectedItem is not string name || name == HazunaV2.AppTheme.Current.Name) return;
+        HazunaV2.AppTheme.Set(name);
+        _settings.AppTheme = name;
+        SettingsStore.Save(_settings);
     }
 }

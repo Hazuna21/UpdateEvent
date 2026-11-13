@@ -17,11 +17,11 @@
 
     <!-- Tooltip bergaya gelap -->
     <Style TargetType="ToolTip">
-        <Setter Property="Foreground" Value="#EEF2FF"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
-                    <Border Background="#1E2846" BorderBrush="#8B5CF6" BorderThickness="1"
+                    <Border Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="10,5">
                         <ContentPresenter/>
                     </Border>
@@ -53,6 +53,19 @@
     <SolidColorBrush x:Key="GreenBrush" Color="#34D399"/>
     <SolidColorBrush x:Key="RoseBrush" Color="#FB7185"/>
     <SolidColorBrush x:Key="BlueBrush" Color="#60A5FA"/>
+    <SolidColorBrush x:Key="SoftTextBrush" Color="#C9D2F5"/>
+    <SolidColorBrush x:Key="Muted2Brush" Color="#8C97C2"/>
+    <SolidColorBrush x:Key="Raised2Brush" Color="#1A2242"/>
+    <SolidColorBrush x:Key="SideLineBrush" Color="#252E5C"/>
+    <LinearGradientBrush x:Key="SidebarBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#1C1456" Offset="0"/>
+        <GradientStop Color="#101437" Offset="0.5"/>
+        <GradientStop Color="#0B0F1E" Offset="1"/>
+    </LinearGradientBrush>
+    <RadialGradientBrush x:Key="GlowBrush" Center="0.2,0.0" GradientOrigin="0.2,0.0" RadiusX="0.65" RadiusY="0.6">
+        <GradientStop Color="#468B5CF6" Offset="0"/>
+        <GradientStop Color="#008B5CF6" Offset="1"/>
+    </RadialGradientBrush>
 
     <!-- ================= GRADASI ================= -->
     <LinearGradientBrush x:Key="PrimaryGradient" StartPoint="0,0" EndPoint="1,0">
@@ -170,7 +183,7 @@
     </Style>
 
     <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-        <Setter Property="Background" Value="#1A2242"/>
+        <Setter Property="Background" Value="{StaticResource Raised2Brush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
     </Style>
@@ -533,7 +546,7 @@
 
     <Style TargetType="DataGridColumnHeader">
         <Setter Property="Background" Value="{StaticResource HeaderGradient}"/>
-        <Setter Property="Foreground" Value="#C9D2F5"/>
+        <Setter Property="Foreground" Value="{StaticResource SoftTextBrush}"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Padding" Value="10,10"/>
@@ -677,4 +690,4 @@
             </Setter.Value>
         </Setter>
     </Style>
-</ResourceDictionary>
+</ResourceDictionary>

@@ -51,6 +51,7 @@ public class AppSettings
     public bool LoyalSpeak { get; set; } = true;
     public int KindnessBigGift { get; set; } = 100;      // gift dengan total diamond sebesar ini memicu ucapan terima kasih besar (0 = mati)
     public string OverlayTheme { get; set; } = "Neon Ungu";
+    public string AppTheme { get; set; } = "Navy Ungu (bawaan)";
     public int AiReactCooldown { get; set; } = 15;      // jeda minimal antar reaksi otomatis pada kejadian game (detik)
     public bool AiWelcome { get; set; }                 // sambut penonton baru (selalu mati saat aplikasi dibuka, seperti saklar AI)
     public int JoinCooldownMinutes { get; set; } = 30;  // penonton yang sama tidak diproses lagi dalam waktu ini
