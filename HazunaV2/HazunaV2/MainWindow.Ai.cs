@@ -215,7 +215,7 @@ public partial class MainWindow
         {
             system += "\n\nTugas khusus kali ini: kamu ikut menonton LIVE ini dan tahu semua yang terjadi (lihat Info stream). " +
                       "Di dalam <komentar_penonton> ada kejadian terbaru. Bereaksilah spontan seperti teman nonton atau komentator: " +
-                      "antusias, boleh menyebut nama penonton yang terlibat, boleh menyinggung kejadian sebelumnya atau skor. " +
+                      "ekspresif dan penuh perasaan (boleh berteriak kaget, tertawa, atau heboh dengan seruan dan tanda seru), boleh menyebut nama penonton yang terlibat, boleh menyinggung kejadian sebelumnya atau skor. " +
                       "Satu sampai dua kalimat pendek. Kalau suasana sedang sepi, komentari keadaan terakhir atau ajak penonton " +
                       "ikut berinteraksi (kirim gift, komentar, atau tebak apa yang akan terjadi). Jangan mengarang kejadian yang tidak ada di info.";
         }
