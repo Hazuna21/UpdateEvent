@@ -23,6 +23,7 @@ public partial class MainWindow
             if (s.Kind == RuleTrigger.Join) OnViewerJoin(s.UserName, 0);
             else
             {
+                if (s.Kind == RuleTrigger.Follow) FollowerStore.Add(s.UserName, s.UserId, s.Nick);
                 NoteSocial(s.Kind, s.UserName, s.Count);
                 _engine.ProcessSocial(s.Kind, s.UserName, s.Count);
             }

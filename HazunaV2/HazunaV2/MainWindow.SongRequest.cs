@@ -47,11 +47,22 @@ public partial class MainWindow
             ?? Pick(n => words.All(w => n.Contains(w)));
     }
 
+    // Kalau "hanya yang follow" aktif: izinkan kalau datanya menunjukkan follow, atau tercatat follow selama aplikasi terhubung
+    private bool FollowerAllowed(LiveChat c, string tag)
+    {
+        if (!_settings.SongReqFollowerOnly) return true;
+        if (c.IsFollower == true || FollowerStore.Contains(c.UserName, c.UserId)) return true;
+        AddLog($"[{tag}] {c.UserName}: belum follow, permintaan ditolak (follow dulu lalu ketik lagi).");
+        return false;
+    }
+
     private void OnSongRequestChat(LiveChat c)
     {
         if (!_settings.SongReqEnabled) return;
         var query = SongQuery(c.Text);
         if (query == null) return;
+
+        if (!FollowerAllowed(c, "Lagu")) return;
 
         var items = SongChoices();
         if (query.Length == 0)
@@ -112,6 +123,7 @@ public partial class MainWindow
         if (!_settingsReady) return;
 
         _settings.SongReqEnabled = SongReqCheck.IsChecked == true;
+        _settings.SongReqFollowerOnly = SongReqFollowCheck.IsChecked == true;
         var cmd = SongReqCmdBox.Text.Trim();
         _settings.SongReqCommand = cmd.Length == 0 ? "!lagu" : cmd;
 
@@ -129,6 +141,7 @@ public partial class MainWindow
     private void ShowSongReqSettings()
     {
         SongReqCheck.IsChecked = _settings.SongReqEnabled;
+        SongReqFollowCheck.IsChecked = _settings.SongReqFollowerOnly;
         SongReqCmdBox.Text = _settings.SongReqCommand;
         SongReqUserBox.Text = _settings.SongReqUserCooldown.ToString();
         SongReqGlobalBox.Text = _settings.SongReqGlobalCooldown.ToString();

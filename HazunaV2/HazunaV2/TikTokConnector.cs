@@ -8,8 +8,8 @@ namespace HazunaV2;
 public enum LiveState { Idle, Connecting, Connected, Disconnected, Error }
 public record LiveGift(string UserName, string GiftName, long GiftId, int Count, long DiamondsEach,string? ImageUrl = null);
 public record LiveGiftInfo(long Id, string Name, long Diamonds, string? ImageUrl = null);
-public record LiveChat(string UserName, string Text);
-public record LiveSocial(string UserName, RuleTrigger Kind, int Count);
+public record LiveChat(string UserName, string Text, string UserId = "", bool? IsFollower = null);
+public record LiveSocial(string UserName, RuleTrigger Kind, int Count, string UserId = "", string Nick = "");
 
 // Jembatan ke pustaka TikTokLive_Sharp. Memakai refleksi supaya tidak bergantung pada
 // nama method yang belum bisa diverifikasi; semua yang ditemukan ditulis ke log.
@@ -435,7 +435,9 @@ public class TikTokConnector
             if (IsDuplicateFromOtherEvent(eventName, $"social|{kind}|{user}|{count}"))
                 return;
 
-            SocialReceived?.Invoke(new LiveSocial(user, kind.Value, count));
+            string uid = FirstString(p, "User.UniqueId", "Sender.UniqueId", "UniqueId") ?? "";
+            string nick = FirstString(p, "User.NickName", "User.Nickname", "Sender.NickName", "Sender.Nickname", "NickName", "Nickname") ?? "";
+            SocialReceived?.Invoke(new LiveSocial(user, kind.Value, count, uid, nick));
         }
         catch (Exception ex)
         {
@@ -887,6 +889,33 @@ public class TikTokConnector
         }
     }
 
+    private bool _loggedFollowHint;
+
+    // Tebakan dari data komentar apakah penontonnya sudah follow host (null = tidak ada datanya)
+    private static bool? FollowHint(object p)
+    {
+        foreach (var path in new[] { "User.FollowInfo.FollowStatus", "Sender.FollowInfo.FollowStatus", "FollowInfo.FollowStatus",
+                                     "User.FollowRole", "Sender.FollowRole", "FollowRole", "User.FollowStatus" })
+        {
+            var v = GetPath(p, path);
+            if (v == null) continue;
+            if (v is bool b) return b;
+            if (v.GetType().IsEnum || v is string)
+            {
+                var s = v.ToString() ?? "";
+                if (s.Contains("None", StringComparison.OrdinalIgnoreCase) || s.Contains("Not", StringComparison.OrdinalIgnoreCase) || s == "0") return false;
+                if (s.Contains("Follow", StringComparison.OrdinalIgnoreCase) || s.Contains("Friend", StringComparison.OrdinalIgnoreCase)) return true;
+                if (long.TryParse(s, out var n)) return n >= 1;
+                continue;
+            }
+            if (v is IConvertible)
+            {
+                try { return Convert.ToInt64(v) >= 1; } catch { }
+            }
+        }
+        return null;
+    }
+
     private void OnChatPayload(string eventName, object? p)
     {
         try
@@ -919,7 +948,14 @@ public class TikTokConnector
             if (IsDuplicateFromOtherEvent(eventName, $"chat|{user}|{text}"))
                 return;
 
-            ChatReceived?.Invoke(new LiveChat(user, text.Trim()));
+            string uid = FirstString(p, "User.UniqueId", "Sender.UniqueId", "UniqueId") ?? "";
+            bool? follower = FollowHint(p);
+            if (!_loggedFollowHint)
+            {
+                _loggedFollowHint = true;
+                Log?.Invoke("Status follow dari data komentar: " + (follower == null ? "tidak terbaca (hanya follow yang terlihat aplikasi yang dikenali)" : follower.Value ? "terbaca (follow)" : "terbaca (belum follow)"));
+            }
+            ChatReceived?.Invoke(new LiveChat(user, text.Trim(), uid, follower));
         }
         catch (Exception ex)
         {

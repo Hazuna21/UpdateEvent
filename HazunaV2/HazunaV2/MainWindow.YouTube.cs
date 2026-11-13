@@ -74,6 +74,7 @@ public partial class MainWindow
             return;
         }
         if (query.Length > 100) query = query[..100];
+        if (!FollowerAllowed(c, "YouTube")) return;
 
         if (_ytBusy) { AddLog($"[YouTube] {c.UserName}: masih mencari lagu lain, dilewati."); return; }
         if (_songChannel.IsPlaying) { AddLog($"[YouTube] {c.UserName}: masih ada lagu yang diputar, dilewati."); return; }

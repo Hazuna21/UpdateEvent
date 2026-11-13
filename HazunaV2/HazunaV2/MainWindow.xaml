@@ -917,6 +917,8 @@
                         <TextBlock Text="Penonton mengetik perintah lalu judul, misalnya &quot;!lagu nama suara&quot;. Yang bisa diminta: semua item jenis Suara di Media &amp; Sounds."
                                    Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,6"/>
                         <CheckBox x:Name="SongReqCheck" Content="Aktifkan permintaan lagu" Click="SongReq_Changed" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="SongReqFollowCheck" Content="Hanya penonton yang sudah follow (berlaku untuk !lagu dan !play)" Click="SongReq_Changed" Margin="0,0,0,8"
+                                  ToolTip="Status follow dibaca dari data komentar kalau tersedia, dan dari event follow yang terlihat aplikasi saat terhubung."/>
                         <WrapPanel Margin="0,0,0,6">
                             <TextBlock Text="Perintah" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBox x:Name="SongReqCmdBox" Width="90" LostFocus="SongReq_Changed" Margin="0,0,18,6"/>
