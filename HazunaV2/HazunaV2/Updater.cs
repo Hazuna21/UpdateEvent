@@ -8,6 +8,8 @@ using System.Text.Json;
 
 namespace HazunaV2;
 
+public record ReleaseNote(string Tag, DateTime Date, string Notes);
+
 public record UpdateInfo(Version Version, string Tag, string AssetApiUrl, string Notes, bool IsNewer = true);
 
 // Memeriksa GitHub Releases, mengunduh HazunaV2.zip, lalu mengganti file aplikasi
@@ -75,6 +77,33 @@ public static class Updater
 
         string notes = root.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
         return new UpdateInfo(latest, tag, assetUrl, notes);
+    }
+
+    // Daftar rilis terbaru (paling baru di atas) beserta catatannya
+    public static async Task<List<ReleaseNote>> HistoryAsync(string repo, string token, int count = 20)
+    {
+        repo = (repo ?? "").Trim().Trim('/');
+        if (!repo.Contains('/') || repo.Contains(' '))
+            throw new InvalidOperationException("Isi repo GitHub dengan format pemilik/nama-repo.");
+
+        using var http = CreateClient(token);
+        using var resp = await http.GetAsync($"https://api.github.com/repos/{repo}/releases?per_page={count}");
+        resp.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+
+        var list = new List<ReleaseNote>();
+        foreach (var r in doc.RootElement.EnumerateArray())
+        {
+            string tag = r.GetProperty("tag_name").GetString() ?? "";
+            DateTime date = DateTime.Now;
+            if (r.TryGetProperty("published_at", out var pa) && pa.ValueKind == JsonValueKind.String
+                && DateTime.TryParse(pa.GetString(), null, System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var d))
+                date = d.ToLocalTime();
+            string body = r.TryGetProperty("body", out var b) && b.ValueKind == JsonValueKind.String ? b.GetString() ?? "" : "";
+            list.Add(new ReleaseNote(tag, date, body.Trim()));
+        }
+        // Urut dari versi terbaru ke terlama
+        return list.OrderByDescending(x => Version.TryParse(x.Tag.TrimStart('v', 'V'), out var v) ? v : new Version(0, 0)).ToList();
     }
 
     // Mengunduh, menyiapkan skrip pemasang, lalu mengembalikan true kalau aplikasi harus ditutup sekarang

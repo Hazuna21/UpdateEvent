@@ -24,11 +24,34 @@ public partial class MainWindow
                 UpdateStatus.Text = failed ? result : "Update berhasil: " + result.Replace("OK", "").Trim();
                 if (failed)
                     Dispatcher.InvokeAsync(() => MessageBox.Show(result, "Update Hazuna"));
+                else
+                    Loaded += (s2, e2) => WhatsNew_Click(null, null); // tampilkan isi update yang baru terpasang
             }
         }
         catch
         {
             // abaikan
+        }
+    }
+
+    private async void WhatsNew_Click(object? sender, RoutedEventArgs? e)
+    {
+        if (_updating) return;
+        WhatsNewButton.IsEnabled = false;
+        try
+        {
+            string repo = UpdateRepoBox.Text.Trim().Length > 0 ? UpdateRepoBox.Text.Trim() : _settings.UpdateRepo;
+            string token = UpdateTokenBox.Password.Trim().Length > 0 ? UpdateTokenBox.Password.Trim() : _settings.UpdateToken;
+            var list = await Updater.HistoryAsync(repo, token);
+            new HistoryWindow(list, "v" + Updater.Current) { Owner = this }.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus.Text = "Gagal memuat riwayat: " + ex.Message;
+        }
+        finally
+        {
+            WhatsNewButton.IsEnabled = true;
         }
     }
 

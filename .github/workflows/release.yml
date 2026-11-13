@@ -13,6 +13,8 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -26,6 +28,15 @@ jobs:
           Write-Host "Proyek: $($proj.FullName)"
           dotnet publish $proj.FullName -c Release -r win-x64 --self-contained false -p:Version=1.0.${{ github.run_number }} -o out
 
+      - name: Catatan rilis
+        shell: pwsh
+        run: |
+          $prev = git tag --list "v1.0.*" --sort=-v:refname | Select-Object -First 1
+          if ($prev) { $log = git log "$prev..HEAD" --pretty=format:"%s" } else { $log = git log -10 --pretty=format:"%s" }
+          $lines = @($log | Where-Object { $_ -and $_.Trim() } | ForEach-Object { "- " + $_.Trim() })
+          if ($lines.Count -eq 0) { $lines = @("- Perbaikan kecil") }
+          Set-Content -Path notes.md -Value ($lines -join "`n") -Encoding utf8
+
       - name: Zip
         shell: pwsh
         run: Compress-Archive -Path out\* -DestinationPath HazunaV2.zip
@@ -36,3 +47,4 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: Hazuna v1.0.${{ github.run_number }}
           files: HazunaV2.zip
+          body_path: notes.md
