@@ -435,6 +435,7 @@
                 </WrapPanel>
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
+                        <TextBlock x:Name="BoardHintText" Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,10"/>
                         <WrapPanel x:Name="BoardPanel"/>
                         <TextBlock x:Name="BoardEmptyText" Foreground="{DynamicResource MutedBrush}" Visibility="Collapsed" Margin="0,8,0,0"/>
                     </StackPanel>
