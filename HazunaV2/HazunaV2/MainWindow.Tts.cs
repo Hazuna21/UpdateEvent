@@ -136,7 +136,7 @@ public partial class MainWindow
     private void OnLiveChat(LiveChat c)
     {
         // Perintah permintaan lagu tidak dibacakan TTS
-        if (_settings.SongReqEnabled && SongQuery(c.Text) != null)
+        if ((_settings.SongReqEnabled && SongQuery(c.Text) != null) || (_settings.YtEnabled && YtQuery(c.Text) != null))
         {
             AddChatLog(c, "permintaan lagu");
             return;

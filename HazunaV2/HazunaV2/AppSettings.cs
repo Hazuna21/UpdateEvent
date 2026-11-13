@@ -50,6 +50,9 @@ public class AppSettings
     public int LoyalDiamonds { get; set; } = 500;         // atau total diamond sebesar ini (0 = abaikan)
     public bool LoyalSpeak { get; set; } = true;
     public int KindnessBigGift { get; set; } = 100;      // gift dengan total diamond sebesar ini memicu ucapan terima kasih besar (0 = mati)
+    public bool YtEnabled { get; set; } = false;
+    public string YtCommand { get; set; } = "!play";
+    public int YtMaxMinutes { get; set; } = 6;
     public bool SongReqEnabled { get; set; } = true;
     public string SongReqCommand { get; set; } = "!lagu";
     public int SongReqUserCooldown { get; set; } = 60;

@@ -931,7 +931,21 @@
                         </WrapPanel>
                         <Button Content="Salin daftar perintah" Click="SongReqCopyList_Click"
                                 Style="{StaticResource GhostButton}" Padding="14,7" HorizontalAlignment="Left"/>
-                        <TextBlock x:Name="SongReqStatus" Foreground="{DynamicResource GreenBrush}" FontSize="12" Margin="0,6,0,22"/>
+                        <TextBlock x:Name="SongReqStatus" Foreground="{DynamicResource GreenBrush}" FontSize="12" Margin="0,6,0,14"/>
+
+                        <TextBlock Text="Permintaan dari YouTube" Foreground="{DynamicResource TextBrush}" FontSize="14" FontWeight="SemiBold" Margin="14,0,0,2"/>
+                        <TextBlock Text="Penonton mengetik misalnya &quot;!play judul artis&quot;. Audio dicari dan diunduh dengan yt-dlp (diunduh otomatis, perlu internet). Jeda, volume, dan batas putar memakai pengaturan di atas. Awas: memutar lagu berhak cipta di LIVE bisa membuat suara dibisukan atau akun diperingatkan TikTok, dan mengunduh dari YouTube melanggar ketentuan layanannya."
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,0,0,6"/>
+                        <CheckBox x:Name="YtCheck" Content="Aktifkan permintaan dari YouTube" Click="YtOption_Changed" Margin="0,0,0,8"/>
+                        <WrapPanel Margin="0,0,0,6">
+                            <TextBlock Text="Perintah" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="YtCmdBox" Width="90" LostFocus="YtOption_Changed" Margin="0,0,18,6"/>
+                            <TextBlock Text="Maks. durasi video (menit)" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="YtMaxBox" Width="50" LostFocus="YtOption_Changed" Margin="0,0,0,6"/>
+                        </WrapPanel>
+                        <Button x:Name="YtInstallBtn" Content="Pasang / perbarui yt-dlp" Click="YtInstall_Click"
+                                Style="{StaticResource GhostButton}" Padding="14,7" HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="YtStatus" Foreground="{DynamicResource GreenBrush}" FontSize="12" Margin="0,6,0,22" TextWrapping="Wrap"/>
 
                         <StackPanel Orientation="Horizontal">
                             <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource CyanBrush}" Margin="0,0,10,0"/>

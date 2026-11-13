@@ -19,6 +19,7 @@ public partial class MainWindow
         ChromaCheck.IsChecked = _settings.OverlayChromaKey;
         AutoShowCheck.IsChecked = _settings.AutoShowOverlays;
         ShowSongReqSettings();
+        ShowYtSettings();
         KindnessBigBox.Text = _settings.KindnessBigGift.ToString();
         LoyalEnableCheck.IsChecked = _settings.LoyalEnabled;
         LoyalSpeakCheck.IsChecked = _settings.LoyalSpeak;
