@@ -11,7 +11,7 @@ namespace HazunaV2;
 // Soundboard: tombol buatan sendiri (nama, file, warna, volume, tombol pintas), terpisah dari Media & Sounds.
 public partial class MainWindow
 {
-    private List<SoundboardItem> _board = new();
+    private List<SoundboardItem> _soundBoard = new();
     private readonly List<SoundChannel> _boardChannels = new();
     private readonly SoundChannel _boardSingle = new();
     private bool _boardReady;
@@ -25,7 +25,7 @@ public partial class MainWindow
 
     private void InitSoundboard()
     {
-        _board = SoundboardStore.Load();
+        _soundBoard = SoundboardStore.Load();
         BoardVolumeSlider.Value = Math.Clamp(_settings.SoundboardVolume, 10, 200);
         BoardVolumeLabel.Text = (int)BoardVolumeSlider.Value + "%";
         BoardOverlapCheck.IsChecked = _settings.SoundboardOverlap;
@@ -39,7 +39,7 @@ public partial class MainWindow
 
     private void SaveBoard()
     {
-        SoundboardStore.Save(_board);
+        SoundboardStore.Save(_soundBoard);
         RegisterAllHotkeys();
         BuildSoundboard();
     }
@@ -71,7 +71,7 @@ public partial class MainWindow
         _hotkeyMap.Clear();
 
         int n = 0;
-        foreach (var m in _board.Where(m => !string.IsNullOrWhiteSpace(m.Hotkey)))
+        foreach (var m in _soundBoard.Where(m => !string.IsNullOrWhiteSpace(m.Hotkey)))
         {
             if (!Hotkeys.Parse(m.Hotkey, out var mods, out var vk)) continue;
             int id = HotkeyBase + n++;
@@ -89,7 +89,7 @@ public partial class MainWindow
         string q = (BoardSearchBox.Text ?? "").Trim().ToLowerInvariant();
         BoardPanel.Children.Clear();
 
-        foreach (var m in _board)
+        foreach (var m in _soundBoard)
         {
             if (q.Length > 0 && !m.Name.ToLowerInvariant().Contains(q)) continue;
 
@@ -145,7 +145,7 @@ public partial class MainWindow
             Item("Hapus tombol", () =>
             {
                 if (MessageBox.Show(this, $"Hapus tombol \"{m.Name}\"?", "Soundboard", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
-                _board.Remove(m);
+                _soundBoard.Remove(m);
                 SaveBoard();
             });
 
@@ -155,7 +155,7 @@ public partial class MainWindow
 
         BoardHintText.Text = "Klik kiri untuk memutar. Klik kanan sebuah tombol untuk mengubah nama, file, warna, volume, atau tombol pintasnya.";
         BoardEmptyText.Visibility = BoardPanel.Children.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        BoardEmptyText.Text = _board.Count == 0
+        BoardEmptyText.Text = _soundBoard.Count == 0
             ? "Belum ada tombol. Klik \"Tambah tombol\" untuk memilih file suara, atau \"Impor dari pustaka\" untuk mengambil dari Media & Sounds."
             : "Tidak ada tombol yang cocok dengan pencarian.";
     }
@@ -170,7 +170,7 @@ public partial class MainWindow
 
         // Tombol pintas yang sama tidak boleh dipakai dua tombol: yang lama dilepas
         if (copy.Hotkey.Length > 0)
-            foreach (var other in _board.Where(o => o != m && o.Hotkey == copy.Hotkey)) other.Hotkey = "";
+            foreach (var other in _soundBoard.Where(o => o != m && o.Hotkey == copy.Hotkey)) other.Hotkey = "";
 
         m.Name = copy.Name; m.FilePath = copy.FilePath; m.Hotkey = copy.Hotkey; m.Color = copy.Color; m.Volume = copy.Volume;
         SaveBoard();
@@ -178,10 +178,10 @@ public partial class MainWindow
 
     private void MoveBoardItem(SoundboardItem m, int delta)
     {
-        int i = _board.IndexOf(m), j = i + delta;
-        if (i < 0 || j < 0 || j >= _board.Count) return;
-        _board.RemoveAt(i);
-        _board.Insert(j, m);
+        int i = _soundBoard.IndexOf(m), j = i + delta;
+        if (i < 0 || j < 0 || j >= _soundBoard.Count) return;
+        _soundBoard.RemoveAt(i);
+        _soundBoard.Insert(j, m);
         SaveBoard();
     }
 
@@ -202,11 +202,11 @@ public partial class MainWindow
             {
                 Name = Path.GetFileNameWithoutExtension(f),
                 FilePath = f,
-                Color = SoundboardEditWindow.Colors[(_board.Count + added.Count) % SoundboardEditWindow.Colors.Length].Key
+                Color = SoundboardEditWindow.Colors[(_soundBoard.Count + added.Count) % SoundboardEditWindow.Colors.Length].Key
             };
             added.Add(item);
         }
-        _board.AddRange(added);
+        _soundBoard.AddRange(added);
         SaveBoard();
 
         // Satu file saja: langsung buka dialog ubah supaya bisa diberi nama, warna, dan tombol pintas
@@ -218,12 +218,12 @@ public partial class MainWindow
         int n = 0;
         foreach (var m in _library.Where(m => m.Kind == "Suara"))
         {
-            if (_board.Any(b => string.Equals(b.FilePath, m.FilePath, StringComparison.OrdinalIgnoreCase))) continue;
-            _board.Add(new SoundboardItem
+            if (_soundBoard.Any(b => string.Equals(b.FilePath, m.FilePath, StringComparison.OrdinalIgnoreCase))) continue;
+            _soundBoard.Add(new SoundboardItem
             {
                 Name = m.DisplayName,
                 FilePath = m.FilePath,
-                Color = SoundboardEditWindow.Colors[_board.Count % SoundboardEditWindow.Colors.Length].Key
+                Color = SoundboardEditWindow.Colors[_soundBoard.Count % SoundboardEditWindow.Colors.Length].Key
             });
             n++;
         }
