@@ -35,9 +35,6 @@ public class MediaItem : INotifyPropertyChanged
         set { _name = value; OnChanged(); OnChanged(nameof(DisplayName)); }
     }
 
-    // Tombol pintas global untuk soundboard, mis. "Ctrl+Alt+1" (kosong = tidak ada)
-    public string Hotkey { get; set; } = "";
-
     // "Suara" atau "Media"
     public string Kind
     {

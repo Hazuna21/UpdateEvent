@@ -1,18 +1,19 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Runtime.InteropServices;
+using Microsoft.Win32;
 
 namespace HazunaV2;
 
-// Soundboard: semua item jenis Suara di Media & Sounds jadi tombol yang bisa diklik untuk diputar langsung.
+// Soundboard: tombol buatan sendiri (nama, file, warna, volume, tombol pintas), terpisah dari Media & Sounds.
 public partial class MainWindow
 {
+    private List<SoundboardItem> _board = new();
     private readonly List<SoundChannel> _boardChannels = new();
     private readonly SoundChannel _boardSingle = new();
-    private static readonly string[] BoardColors = { "AccentBrush", "CyanBrush", "PinkBrush", "GreenBrush", "AmberBrush", "BlueBrush", "RoseBrush" };
     private bool _boardReady;
 
     [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -20,20 +21,27 @@ public partial class MainWindow
     private const int WmHotkey = 0x0312;
     private const int HotkeyBase = 0xB000;
     private HwndSource? _hotkeySource;
-    private readonly Dictionary<int, MediaItem> _hotkeyMap = new();
+    private readonly Dictionary<int, SoundboardItem> _hotkeyMap = new();
 
     private void InitSoundboard()
     {
-        BoardVolumeSlider.Value = Math.Clamp(_settings.SoundboardVolume, 1, 200);
-        BoardVolumeLabel.Text = _settings.SoundboardVolume + "%";
+        _board = SoundboardStore.Load();
+        BoardVolumeSlider.Value = Math.Clamp(_settings.SoundboardVolume, 10, 200);
+        BoardVolumeLabel.Text = (int)BoardVolumeSlider.Value + "%";
         BoardOverlapCheck.IsChecked = _settings.SoundboardOverlap;
         _boardSingle.Error += msg => Dispatcher.InvokeAsync(() => AddLog("[Soundboard] " + msg));
         _boardReady = true;
 
-        // Tombol pintas global: dipasang setelah jendela punya handle, dan dipasang ulang saat pustaka berubah
+        // Tombol pintas global dipasang setelah jendela punya handle
         if (new WindowInteropHelper(this).Handle != IntPtr.Zero) HookHotkeys();
         else SourceInitialized += (s, e) => HookHotkeys();
-        AppData.LibraryChanged += () => Dispatcher.InvokeAsync(RegisterAllHotkeys);
+    }
+
+    private void SaveBoard()
+    {
+        SoundboardStore.Save(_board);
+        RegisterAllHotkeys();
+        BuildSoundboard();
     }
 
     private void HookHotkeys()
@@ -63,32 +71,15 @@ public partial class MainWindow
         _hotkeyMap.Clear();
 
         int n = 0;
-        foreach (var m in _library.Where(m => m.Kind == "Suara" && !string.IsNullOrWhiteSpace(m.Hotkey)))
+        foreach (var m in _board.Where(m => !string.IsNullOrWhiteSpace(m.Hotkey)))
         {
             if (!Hotkeys.Parse(m.Hotkey, out var mods, out var vk)) continue;
             int id = HotkeyBase + n++;
             if (RegisterHotKey(hwnd, id, mods | Hotkeys.NoRepeat, vk))
                 _hotkeyMap[id] = m;
             else
-                AddLog($"[Soundboard] Tombol {Hotkeys.Pretty(m.Hotkey)} untuk \"{m.DisplayName}\" tidak bisa dipakai (sudah dipakai aplikasi lain atau tombol pintas lain).");
+                AddLog($"[Soundboard] Tombol {Hotkeys.Pretty(m.Hotkey)} untuk \"{m.Name}\" tidak bisa dipakai (sudah dipakai aplikasi lain atau tombol pintas lain).");
         }
-    }
-
-    private void SetBoardHotkey(MediaItem m)
-    {
-        var dlg = new HotkeyCaptureWindow(m.DisplayName, m.Hotkey) { Owner = this };
-        dlg.ShowDialog();
-        if (!dlg.Saved) return;
-
-        // Tombol yang sama tidak boleh dipakai dua suara: yang lama dilepas
-        if (dlg.Result.Length > 0)
-            foreach (var other in _library.Where(o => o != m && o.Hotkey == dlg.Result))
-                other.Hotkey = "";
-
-        m.Hotkey = dlg.Result;
-        LibraryStore.Save(_library);
-        RegisterAllHotkeys();
-        BuildSoundboard();
     }
 
     private void BuildSoundboard()
@@ -98,13 +89,10 @@ public partial class MainWindow
         string q = (BoardSearchBox.Text ?? "").Trim().ToLowerInvariant();
         BoardPanel.Children.Clear();
 
-        var items = _library.Where(m => m.Kind == "Suara")
-            .Where(m => q.Length == 0 || m.DisplayName.ToLowerInvariant().Contains(q))
-            .ToList();
-
-        int i = 0;
-        foreach (var m in items)
+        foreach (var m in _board)
         {
+            if (q.Length > 0 && !m.Name.ToLowerInvariant().Contains(q)) continue;
+
             bool exists = File.Exists(m.FilePath);
             var btn = new Button
             {
@@ -116,13 +104,15 @@ public partial class MainWindow
                 FontWeight = FontWeights.SemiBold,
                 IsEnabled = exists,
                 Opacity = exists ? 1 : 0.4,
-                ToolTip = exists ? m.DisplayName : m.DisplayName + " (file hilang)",
-                Tag = m,
+                ToolTip = exists ? m.Name : m.Name + " (file hilang, klik kanan > Ubah untuk memilih file lagi)",
+                Tag = m
             };
+            btn.SetResourceReference(Control.BackgroundProperty, m.Color);
+
             var label = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             label.Children.Add(new TextBlock
             {
-                Text = m.DisplayName,
+                Text = m.Name,
                 TextWrapping = TextWrapping.Wrap,
                 TextAlignment = TextAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
@@ -137,40 +127,119 @@ public partial class MainWindow
                     TextAlignment = TextAlignment.Center
                 });
             btn.Content = label;
-
-            var menu = new ContextMenu();
-            var setItem = new MenuItem { Header = "Atur tombol pintas..." };
-            setItem.Click += (s, e) => SetBoardHotkey(m);
-            menu.Items.Add(setItem);
-            if (m.Hotkey.Length > 0)
-            {
-                var clear = new MenuItem { Header = "Hapus tombol pintas" };
-                clear.Click += (s, e) => { m.Hotkey = ""; LibraryStore.Save(_library); RegisterAllHotkeys(); BuildSoundboard(); };
-                menu.Items.Add(clear);
-            }
-            btn.ContextMenu = menu;
-            btn.SetResourceReference(Control.BackgroundProperty, BoardColors[i++ % BoardColors.Length]);
             btn.Click += BoardButton_Click;
-            BoardPanel.Children.Add(btn);
+
+            // Klik kanan tetap berfungsi walau tombolnya nonaktif (file hilang): pasang di pembungkus
+            var menu = new ContextMenu();
+            MenuItem Item(string header, Action act)
+            {
+                var mi = new MenuItem { Header = header };
+                mi.Click += (s, e) => act();
+                menu.Items.Add(mi);
+                return mi;
+            }
+            Item("Ubah...", () => EditBoardItem(m));
+            Item("Geser ke kiri", () => MoveBoardItem(m, -1));
+            Item("Geser ke kanan", () => MoveBoardItem(m, 1));
+            menu.Items.Add(new Separator());
+            Item("Hapus tombol", () =>
+            {
+                if (MessageBox.Show(this, $"Hapus tombol \"{m.Name}\"?", "Soundboard", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+                _board.Remove(m);
+                SaveBoard();
+            });
+
+            var host = new Border { Child = btn, ContextMenu = menu, Background = Brushes.Transparent };
+            BoardPanel.Children.Add(host);
         }
 
-        BoardHintText.Text = "Klik kiri untuk memutar. Klik kanan sebuah tombol untuk mengatur tombol pintas (jalan juga saat game dibuka).";
-        BoardEmptyText.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        BoardEmptyText.Text = _library.Any(m => m.Kind == "Suara")
-            ? "Tidak ada suara yang cocok dengan pencarian."
-            : "Belum ada suara. Tambahkan di Media & Sounds, jenis \"Suara\".";
+        BoardHintText.Text = "Klik kiri untuk memutar. Klik kanan sebuah tombol untuk mengubah nama, file, warna, volume, atau tombol pintasnya.";
+        BoardEmptyText.Visibility = BoardPanel.Children.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        BoardEmptyText.Text = _board.Count == 0
+            ? "Belum ada tombol. Klik \"Tambah tombol\" untuk memilih file suara, atau \"Impor dari pustaka\" untuk mengambil dari Media & Sounds."
+            : "Tidak ada tombol yang cocok dengan pencarian.";
+    }
+
+    private void EditBoardItem(SoundboardItem m)
+    {
+        // Edit pada salinan supaya "Batal" tidak mengubah apa pun
+        var copy = new SoundboardItem { Id = m.Id, Name = m.Name, FilePath = m.FilePath, Hotkey = m.Hotkey, Color = m.Color, Volume = m.Volume };
+        var dlg = new SoundboardEditWindow(copy) { Owner = this };
+        dlg.ShowDialog();
+        if (!dlg.Saved) return;
+
+        // Tombol pintas yang sama tidak boleh dipakai dua tombol: yang lama dilepas
+        if (copy.Hotkey.Length > 0)
+            foreach (var other in _board.Where(o => o != m && o.Hotkey == copy.Hotkey)) other.Hotkey = "";
+
+        m.Name = copy.Name; m.FilePath = copy.FilePath; m.Hotkey = copy.Hotkey; m.Color = copy.Color; m.Volume = copy.Volume;
+        SaveBoard();
+    }
+
+    private void MoveBoardItem(SoundboardItem m, int delta)
+    {
+        int i = _board.IndexOf(m), j = i + delta;
+        if (i < 0 || j < 0 || j >= _board.Count) return;
+        _board.RemoveAt(i);
+        _board.Insert(j, m);
+        SaveBoard();
+    }
+
+    private void BoardAdd_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title = "Pilih file suara untuk tombol soundboard",
+            Multiselect = true,
+            Filter = "File suara|*.mp3;*.wav;*.wma;*.m4a;*.aac|Semua file|*.*"
+        };
+        if (dlg.ShowDialog() != true) return;
+
+        var added = new List<SoundboardItem>();
+        foreach (var f in dlg.FileNames)
+        {
+            var item = new SoundboardItem
+            {
+                Name = Path.GetFileNameWithoutExtension(f),
+                FilePath = f,
+                Color = SoundboardEditWindow.Colors[(_board.Count + added.Count) % SoundboardEditWindow.Colors.Length].Key
+            };
+            added.Add(item);
+        }
+        _board.AddRange(added);
+        SaveBoard();
+
+        // Satu file saja: langsung buka dialog ubah supaya bisa diberi nama, warna, dan tombol pintas
+        if (added.Count == 1) EditBoardItem(added[0]);
+    }
+
+    private void BoardImport_Click(object sender, RoutedEventArgs e)
+    {
+        int n = 0;
+        foreach (var m in _library.Where(m => m.Kind == "Suara"))
+        {
+            if (_board.Any(b => string.Equals(b.FilePath, m.FilePath, StringComparison.OrdinalIgnoreCase))) continue;
+            _board.Add(new SoundboardItem
+            {
+                Name = m.DisplayName,
+                FilePath = m.FilePath,
+                Color = SoundboardEditWindow.Colors[_board.Count % SoundboardEditWindow.Colors.Length].Key
+            });
+            n++;
+        }
+        SaveBoard();
+        AddLog($"[Soundboard] {n} suara diimpor dari Media & Sounds.");
     }
 
     private void BoardButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: MediaItem m }) return;
-        PlayBoard(m);
+        if (sender is Button { Tag: SoundboardItem m }) PlayBoard(m);
     }
 
-    private void PlayBoard(MediaItem m)
+    private void PlayBoard(SoundboardItem m)
     {
         if (!File.Exists(m.FilePath)) return;
-        int vol = (int)BoardVolumeSlider.Value;
+        int vol = Math.Clamp((int)(BoardVolumeSlider.Value * m.Volume / 100.0), 1, 200);
 
         if (BoardOverlapCheck.IsChecked == true)
         {

@@ -431,6 +431,8 @@
                                VerticalAlignment="Center" Margin="6,0,12,0"/>
                     <CheckBox x:Name="BoardOverlapCheck" Content="Boleh menumpuk" Click="BoardOverlap_Click" VerticalAlignment="Center" Margin="0,0,18,0"
                               ToolTip="Kalau mati, suara baru menggantikan yang sedang diputar."/>
+                    <Button Content="Tambah tombol" Click="BoardAdd_Click" Style="{StaticResource PrimaryButton}" Padding="16,7" Margin="0,0,8,0"/>
+                    <Button Content="Impor dari pustaka" Click="BoardImport_Click" Style="{StaticResource GhostButton}" Padding="16,7" Margin="0,0,8,0"/>
                     <Button Content="Stop semua" Click="BoardStop_Click" Style="{StaticResource DangerButton}" Padding="16,7"/>
                 </WrapPanel>
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">

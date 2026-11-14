@@ -13,7 +13,7 @@ public partial class MainWindow : Window
         ["Dashboard"] = "Ringkasan aplikasi dan status koneksi.",
         ["Gift Rules"] = "Hubungkan gift dengan tombol, suara, dan media dari pustaka. Durasi = lama satu giliran. Per gift = tiap gift dalam kombo jadi satu giliran.",
         ["Media & Sounds"] = "Pustaka suara dan media. Atur urutan dengan ▲▼, pilih jenisnya, lalu pakai di Gift Rules.",
-        ["Soundboard"] = "Klik tombol untuk memutar suara dari Media & Sounds (jenis Suara) langsung saat LIVE.",
+        ["Soundboard"] = "Tombol suara buatan sendiri untuk diputar langsung saat LIVE, bisa diberi nama, warna, volume, dan tombol pintas.",
         ["Top Gifters"] = "Overlay leaderboard penonton dan skor game (WIN = x / target). Skor bisa diatur manual atau otomatis dari script GTA.",
         ["Lucky Wheel"] = "Roda keberuntungan: penonton mengirim gift tertentu untuk memutar roda. Isi roda dan peluangnya Anda atur sendiri.",
         ["Settings"] = "Pengaturan aplikasi. Klik Simpan Pengaturan agar perubahan tersimpan.",
