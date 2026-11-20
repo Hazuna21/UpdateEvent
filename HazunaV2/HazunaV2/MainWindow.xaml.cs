@@ -300,9 +300,12 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        RulesGrid.CommitEdit(DataGridEditingUnit.Row, true);
-        RuleStore.Save(_rules);
-        LibraryStore.Save(_library);
+        if (!_skipCloseSave)   // setelah ganti profil, data di memori adalah data profil lama: jangan ditulis lagi
+        {
+            RulesGrid.CommitEdit(DataGridEditingUnit.Row, true);
+            RuleStore.Save(_rules);
+            LibraryStore.Save(_library);
+        }
         _connector.Disconnect();
         GiftCatalog.Flush();
         _queue.Clear();
@@ -314,7 +317,7 @@ public partial class MainWindow : Window
         _kindnessOverlay?.Close();
         _loyal.Save();
         CloseAllWheelOverlays();
-        WheelStore.Save(_wheelSet);
+        if (!_skipCloseSave) WheelStore.Save(_wheelSet);
         SoundService.Stop();
         base.OnClosing(e);
     }

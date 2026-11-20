@@ -50,6 +50,7 @@ public class AppSettings
     public int LoyalDiamonds { get; set; } = 500;         // atau total diamond sebesar ini (0 = abaikan)
     public bool LoyalSpeak { get; set; } = true;
     public int KindnessBigGift { get; set; } = 100;      // gift dengan total diamond sebesar ini memicu ucapan terima kasih besar (0 = mati)
+    public string ActiveProfile { get; set; } = "Utama";
     public int SoundboardVolume { get; set; } = 100;
     public bool SoundboardOverlap { get; set; } = false;
     public bool SongReqFollowerOnly { get; set; } = false;

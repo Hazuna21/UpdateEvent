@@ -21,6 +21,7 @@ public partial class MainWindow
         ShowSongReqSettings();
         ShowYtSettings();
         InitSoundboard();
+        InitProfiles();
         KindnessBigBox.Text = _settings.KindnessBigGift.ToString();
         LoyalEnableCheck.IsChecked = _settings.LoyalEnabled;
         LoyalSpeakCheck.IsChecked = _settings.LoyalSpeak;

@@ -933,6 +933,22 @@
                     <StackPanel>
 
                         <StackPanel Orientation="Horizontal">
+                            <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource AmberBrush}" Margin="0,0,10,0"/>
+                            <TextBlock Text="Profil game" Foreground="{DynamicResource TextBrush}" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <TextBlock Text="Satu profil per game. Yang disimpan per profil: aturan Gift Rules, pustaka Media &amp; Sounds, Lucky Wheel, dan Soundboard. Akun, TTS, AI, dan tema tetap sama untuk semua profil."
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="14,2,0,6"/>
+                        <TextBlock x:Name="ProfileActiveText" Foreground="{DynamicResource CyanBrush}" FontWeight="SemiBold" Margin="14,0,0,6"/>
+                        <WrapPanel Margin="0,0,0,4">
+                            <ComboBox x:Name="ProfileCombo" Width="200" Margin="0,0,8,6"/>
+                            <Button Content="Ganti profil" Click="ProfileSwitch_Click" Style="{StaticResource PrimaryButton}" Padding="14,7" Margin="0,0,8,6"/>
+                            <Button Content="Profil baru" Click="ProfileNew_Click" Style="{StaticResource GhostButton}" Padding="14,7" Margin="0,0,8,6"/>
+                            <Button Content="Ubah nama" Click="ProfileRename_Click" Style="{StaticResource GhostButton}" Padding="14,7" Margin="0,0,8,6"/>
+                            <Button Content="Hapus" Click="ProfileDelete_Click" Style="{StaticResource GhostButton}" Padding="14,7" Margin="0,0,0,6"/>
+                        </WrapPanel>
+                        <TextBlock x:Name="ProfileStatus" Foreground="{DynamicResource GreenBrush}" FontSize="12" Margin="0,0,0,22" TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal">
                             <Border Width="4" Height="16" CornerRadius="2" Background="{DynamicResource PinkBrush}" Margin="0,0,10,0"/>
                             <TextBlock Text="Tema aplikasi" Foreground="{DynamicResource TextBrush}" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
